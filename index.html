@@ -671,7 +671,8 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   <a class="ox-nav-item" href="#setup" data-view="setup">ตั้งค่า</a>
 </nav>
 <main class="ox-main"><div class="ox-main__inner">
-  <div class="ox-alert ox-alert--warning proto-alert"><span><b>หน้าตัวอย่าง</b>TikTok Eloop เดือน ต.ค. ใช้ไฟล์ export จริงจาก TikTok Studio (ภาพรวม, ผู้ติดตาม, วิดีโอ) ตัวเลขเดือนอื่นเป็นตัวอย่างจากชีตเดิม ระบบจริงจะดึงจากแพลตฟอร์มโดยตรง สถานะการเชื่อมต่อเป็นข้อมูลสมมติ และปุ่มต่างๆ ยังไม่บันทึกข้อมูลจริง</span></div>
+  <div class="ox-alert ox-alert--info" id="live-state" hidden></div>
+  <div class="ox-alert ox-alert--warning proto-alert" id="data-banner"><span><b>หน้าตัวอย่าง</b>TikTok Eloop เดือน ต.ค. ใช้ไฟล์ export จริงจาก TikTok Studio (ภาพรวม, ผู้ติดตาม, วิดีโอ) ตัวเลขเดือนอื่นเป็นตัวอย่างจากชีตเดิม ระบบจริงจะดึงจากแพลตฟอร์มโดยตรง สถานะการเชื่อมต่อเป็นข้อมูลสมมติ และปุ่มต่างๆ ยังไม่บันทึกข้อมูลจริง</span></div>
   <section id="v-overview" data-v="overview">
     <div class="view-head">
       <div><h1>ภาพรวม OKR</h1><p>เทียบยอดสะสมกับเป้าทั้งปี และดูว่าแต่ละบัญชีเร็วหรือช้ากว่าแผน</p></div>
@@ -710,7 +711,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     <div class="view-head"><div><h1>Top Ranking คอนเทนต์</h1><p>จัดอันดับคลิปที่โพสต์ในเดือน จากไฟล์วิดีโอที่ export จาก TikTok Studio</p></div></div>
     <div class="filters">
       <select id="f-acc" aria-label="บัญชี"></select>
-      <select id="f-month" aria-label="เดือน"><option value="2026-10">ต.ค. 2026</option></select>
+      <select id="f-month" aria-label="เดือน"></select>
       <select id="f-type" aria-label="ประเภทคอนเทนต์"><option value="all">ทุกประเภทคอนเทนต์</option></select>
       <div class="seg" role="group" aria-label="เรียงตาม" id="sort-seg">
         <button type="button" data-sort="views" aria-pressed="true">วิว</button>
@@ -784,6 +785,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   </section>
 
   <section id="v-upload" data-v="upload" hidden>
+    <div class="ox-alert ox-alert--info" id="upload-live" hidden style="margin-bottom:var(--omnix-space-5)"><span><b>ขึ้นข้อมูลจริง:</b> ลากไฟล์ที่ export จาก TikTok Studio ไปวางในโฟลเดอร์ Google Drive <b>CT Social OKR · ไฟล์ TikTok</b> (โฟลเดอร์ TikTok Eloop หรือ TikTok Moov) ระบบนำเข้าให้ทุกชั่วโมง ส่วนหน้านี้ใช้ตรวจไฟล์ก่อนวางเท่านั้น ไม่ได้บันทึก</span></div>
     <div class="view-head"><div><h1>อัปโหลดข้อมูล TikTok</h1><p>Export ไฟล์จาก TikTok Studio แล้วลากมาวางพร้อมกันทั้งหมด ระบบแยกให้เองว่าไฟล์ไหนเป็นข้อมูลอะไร</p></div></div>
     <div class="grid2">
       <div class="panel">
@@ -814,11 +816,11 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     <div class="view-head"><div><h1>ตั้งค่า</h1><p>สถานะการเชื่อมต่อ ผู้รับแจ้งเตือน และสิทธิ์การเข้าถึง (สถานะในหน้านี้เป็นตัวอย่าง)</p></div></div>
     <div class="grid2">
       <div class="panel"><h2>การเชื่อมต่อ</h2><p class="desc">ดึงข้อมูลอัตโนมัติทุกวันเวลา 06:00 น.</p>
-        <div class="conn"><span class="name">YouTube Eloop</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
+        <div id="conn-list"><div class="conn"><span class="name">YouTube Eloop</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
         <div class="conn"><span class="name">YouTube Moov</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
         <div class="conn"><span class="name">Facebook Eloop</span><span class="st crit">เชื่อมต่อไม่สำเร็จ</span><span class="det">Token ใช้ไม่ได้แล้ว เพราะแอดมินที่ตั้งค่าเปลี่ยนรหัสผ่าน · <button class="btn" type="button" style="padding:2px 10px;font-size:12.5px">เชื่อมต่อใหม่</button></span></div>
         <div class="conn"><span class="name">Facebook Moov</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:03 · ข้อมูลถึง 4 พ.ย.</span></div>
-        <div class="conn"><span class="name">TikTok Eloop, TikTok Moov</span><span class="st none">อัปโหลดไฟล์</span><span class="det">ไม่ต้องเชื่อมต่อ ดูสถานะได้ที่หน้าอัปโหลด TikTok</span></div>
+        <div class="conn"><span class="name">TikTok Eloop, TikTok Moov</span><span class="st none">อัปโหลดไฟล์</span><span class="det">ไม่ต้องเชื่อมต่อ ดูสถานะได้ที่หน้าอัปโหลด TikTok</span></div></div>
       </div>
       <div class="panel"><h2>แจ้งเตือนและสิทธิ์</h2><p class="desc">ใครเห็นอะไร และใครได้อีเมลเมื่อระบบมีปัญหา</p>
         <div class="conn"><span class="name">ผู้รับอีเมลแจ้งเตือน</span><span class="tag">2 คน</span><span class="det">เจ้าของระบบ และผู้แก้ไขสำรอง</span></div>
@@ -1085,7 +1087,8 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     if (!a.metrics.find(m => m.key === curMetric && m.kind === 'sum')) curMetric = 'views';
     $('#acc-title').textContent = a.name;
     const lastV = lastIdx(a.metrics[0].data);
-    $('#acc-sub').textContent = `ข้อมูลถึงสิ้นเดือน ${MONTHS[lastV]} 2026 · ที่มา: ชีต Data OKR 2026`;
+    const lm = LIVE.months[a.id] || [];
+    $('#acc-sub').textContent = `ข้อมูลถึงเดือน ${MONTHS[lastV]} 2026 · ` + (lm.length ? (lm.length >= lastV + 1 ? 'ที่มา: ระบบ (ดึงอัตโนมัติ)' : `ที่มา: ระบบ เดือน ${lm.map(i => MONTHS[i]).join(', ')} · เดือนอื่นจากชีต Data OKR 2026`) : 'ที่มา: ชีต Data OKR 2026 (ตัวอย่าง)');
     $('#acc-chips').innerHTML = ACCOUNTS.map(x => `<button class="chip" type="button" data-acc="${x.id}" aria-pressed="${x.id === curAcc}">${x.name}</button>`).join('');
     const sumMetrics = a.metrics.filter(m => m.kind === 'sum');
     $('#metric-chips').innerHTML = sumMetrics.map(m => `<button class="chip" type="button" data-metric="${m.key}" aria-pressed="${m.key === curMetric}">${m.label}</button>`).join('');
@@ -1185,7 +1188,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   }
 
   /* ---------- content view ---------- */
-  const AS_OF = new Date('2026-11-10T00:00:00+07:00');
+  let AS_OF = new Date('2026-11-10T00:00:00+07:00');
   const CLIP_TYPES = ['แคมเปญ', 'โปรโมตไลฟ์', 'กิจกรรม', 'สินค้า', 'รีวิว', 'แกะกล่อง', 'เกาะกระแส'];
   const parsePosted = t => new Date(String(t).trim().replace(/\//g, '-').replace(' ', 'T').slice(0, 16) + ':00+07:00');
   function mkClip(acc, r, url) {
@@ -1201,17 +1204,22 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
   function renderContent() {
     const acc = $('#f-acc').value, ft = $('#f-type').value;
-    const all = CLIPS.filter(c => c.acc === acc);
+    const months = [...new Set(CLIPS.filter(c => c.acc === acc).map(c => c.posted.getFullYear() + '-' + String(c.posted.getMonth() + 1).padStart(2, '0')))].sort().reverse();
+    const prevM = $('#f-month').value;
+    $('#f-month').innerHTML = months.length ? months.map(m => `<option value="${m}">${MONTHS[+m.slice(5) - 1]} ${m.slice(0, 4)}</option>`).join('') : '<option value="">–</option>';
+    if (months.includes(prevM)) $('#f-month').value = prevM;
+    const ym = $('#f-month').value, mi = ym ? +ym.slice(5) - 1 : 9, mLabel = ym ? `${MONTHS[mi]} ${ym.slice(0, 4)}` : '';
+    const all = CLIPS.filter(c => c.acc === acc && (!ym || (c.posted.getFullYear() === +ym.slice(0, 4) && c.posted.getMonth() === mi)));
     $('#content-body').hidden = !all.length;
     $('#content-empty').hidden = !!all.length;
-    $('#content-src').textContent = all.length ? 'ข้อมูลจริง · ไฟล์วิดีโอจาก TikTok Studio' : 'ยังไม่มีข้อมูล';
+    $('#content-src').textContent = all.length ? (LIVE.on ? 'ข้อมูลจริงจากระบบ · ไฟล์วิดีโอ TikTok Studio' : 'ข้อมูลจริง · ไฟล์วิดีโอจาก TikTok Studio') : 'ยังไม่มีข้อมูล';
     if (!all.length) return;
     const rows = all.filter(c => ft === 'all' || c.type === ft).sort((p, q) => q[sortKey] - p[sortKey]);
     const tv = all.reduce((s, c) => s + c.views, 0);
     const rv = rows.reduce((s, c) => s + c.views, 0);
     const er = rv ? rows.reduce((s, c) => s + c.likes + c.comments + c.shares + c.saves, 0) / rv * 100 : 0;
     const boosted = all.filter(c => c.boosted).length;
-    const accViews = accById(acc).metrics.find(m => m.key === 'views').data[9];
+    const accViews = accById(acc).metrics.find(m => m.key === 'views').data[mi];
     $('#content-sum').innerHTML = `
       <div class="stat"><div class="lbl">คลิปที่โพสต์ (Monthly Output)</div><div class="val">${all.length}</div><div class="sub">นับจากไฟล์อัตโนมัติ</div></div>
       <div class="stat"><div class="lbl">Monthly Upload Views</div><div class="val">${fmtC(tv)}</div><div class="sub">วิวรวมของคลิปที่โพสต์เดือนนี้</div></div>
@@ -1224,11 +1232,11 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
         <div class="legend-line" style="margin:10px 0 0"><span class="item"><span class="sw-sq s1"></span>คลิปที่โพสต์เดือนนี้ <b>${pct(sh, 1)}</b></span><span class="item"><span class="sw-sq s2"></span>คลิปเก่าและอื่นๆ <b>${pct(100 - sh, 1)}</b></span></div>`;
     }
     const sortLbl = { views: 'วิว', vpd: 'วิวเฉลี่ยต่อวัน', er: 'ER' }[sortKey];
-    $('#rank-title').textContent = `Top คลิปประจำเดือน ต.ค. 2026 · เรียงตาม${sortLbl}`;
+    $('#rank-title').textContent = `Top คลิปประจำเดือน ${mLabel} · เรียงตาม${sortLbl}`;
     $('#rank-desc').textContent = 'วิวเป็นยอดสะสมถึงวันที่ export คลิปที่โพสต์ต้นเดือนจึงได้เปรียบ ดูคอลัมน์วิวต่อวันประกอบ · คลิกชื่อคลิปเพื่อเปิดใน TikTok';
     $('#content-table').innerHTML = rows.length ? `<table><thead><tr><th>#</th><th style="text-align:left">คลิป</th><th style="text-align:left">โพสต์</th><th style="text-align:left">ประเภท</th><th style="text-align:left">สินค้า</th><th>วิว</th><th>วิว/วัน</th><th>ไลก์</th><th>คอมเมนต์</th><th>แชร์</th><th>เซฟ</th><th>ER</th><th>บูสต์</th></tr></thead><tbody>`
       + rows.map((c, i) => `<tr><td class="rank">${i + 1}</td>
-        <td class="wrap"><a class="clip" href="https://www.tiktok.com/@eloopth/video/${c.id}" target="_blank" rel="noopener">${esc(c.title.length > 90 ? c.title.slice(0, 88) + '…' : c.title)}</a></td>
+        <td class="wrap"><a class="clip" href="${clipUrl(c)}" target="_blank" rel="noopener">${esc(c.title.length > 90 ? c.title.slice(0, 88) + '…' : c.title)}</a></td>
         <td style="text-align:left">${fmtDate(c.posted)}</td>
         <td style="text-align:left"><select class="tag-sel" id="t-${c.id}" data-id="${c.id}" aria-label="ประเภทคอนเทนต์">${CLIP_TYPES.map(t => `<option${t === c.type ? ' selected' : ''}>${t}</option>`).join('')}</select></td>
         <td style="text-align:left">${c.product ? `<span class="tag">${c.product}</span>` : '<span class="em">–</span>'}</td>
@@ -1267,6 +1275,8 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   Object.entries(BASE).forEach(([id, o]) => Object.entries(o).forEach(([k, v]) => { const m = accById(id).metrics.find(x => x.key === k); if (m) m.base = v; }));
   // YouTube-only fields (channel total, watch hours, top videos, YPP) need the YouTube API. Until it is connected these are copied from the team's deck and shown with a "sample" badge.
   const SAMPLE = '<span class="sample" title="ยังไม่ได้เชื่อม YouTube API ตัวเลขนี้คัดลอกจากสไลด์ของทีม">ตัวอย่างจากสไลด์</span>';
+  const LIVE = { on: false, yt: {}, months: {}, ypp: false, at: null };
+  const smp = id => LIVE.yt[id] ? '' : SAMPLE;
   const YT_EXTRA = {
     'yt-eloop': { 8: { subs: 1414, wth: 608, wthMom: 264.6, long: 2, shorts: 29, top: [['สรุป iOS 27 มีอะไรใหม่? อัปแล้วลื่นขึ้น และฟีเจอร์ใหม่เพียบ!', 'วิดีโอยาว', 18884, 330.1], ['iPhone 18 ปรับแค่นี้จริงหรอ?', 'Shorts', 2765, 12.51], ['อัปเดต 5 Power Bank รุ่นใหม่! ปี 2025', 'Shorts', 2641, 27.58]] } },
     'yt-moov': { 8: { subs: 1334, wth: 161.3, wthMom: -1.58, long: 0, shorts: 27, top: [['วิธีอัปเดต beta iOS 27', 'Shorts', 5619, null], ['เคส iPhone 17 Pro Max ใส่ 16 Pro Max ได้มั้ย??', 'Shorts', 2409, null], ['How to วิธีฟังเพลงยูทูปขณะล็อคหน้าจอ', 'Shorts', 1419, null]] } },
@@ -1305,7 +1315,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     const prev = mi > 0 ? sum(mi - 1) : 0;
     return { v, mom: prev ? momOf(v, prev) : null };
   }
-  const clipUrl = c => c.url || `https://www.tiktok.com/@eloopth/video/${c.id}`;
+  const clipUrl = c => c.url || `https://www.tiktok.com/@${c.acc === 'tt-moov' ? 'moovthailand' : 'eloopth'}/video/${c.id}`;
   const shortT = (s, n = 70) => s.length > n ? s.slice(0, n - 1) + '…' : s;
   function noClips(a) {
     const where = a.platform === 'TikTok' ? `ยังไม่มีไฟล์วิดีโอของเดือนนี้ · <a href="#upload">อัปโหลดไฟล์</a>` : 'รอเชื่อม Facebook API (ระบบจริงดึงรายคลิปให้อัตโนมัติ)';
@@ -1374,7 +1384,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       const accs = ACCOUNTS.filter(a => a.platform === p && brandOk(a));
       const rows = accs.flatMap(a => a.metrics.filter(m => m.target).map(m => krRow(a, m))).join('');
       const obs = autoObs(p);
-      const extra = p === 'YouTube' ? accs.map(a => { const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth]; return x ? `<li>${a.name} ลงวิดีโอยาว ${x.long || '–'} คลิป · Shorts ${x.shorts} คลิป ${SAMPLE}</li>` : ''; }).join('') : '';
+      const extra = p === 'YouTube' ? accs.map(a => { const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth]; return x ? `<li>${a.name} ลงวิดีโอยาว ${x.long || '–'} คลิป · Shorts ${x.shorts} คลิป ${smp(a.id)}</li>` : ''; }).join('') : '';
       return `<div class="panel"><h3 class="ph">${p}</h3><div class="okr-split">
         <div>${rows || '<p class="empty-note">ไม่มีเป้าหมายของแพลตฟอร์มนี้</p>'}</div>
         <div>
@@ -1429,14 +1439,14 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       const d = k => a.metrics.find(m => m.key === k).data;
       const v = d('views'), l = d('likes'), n = d('nf');
       const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth];
-      const head = `<h3 class="ph">${a.name}${x ? `<span class="right">${SAMPLE} <span class="pill">ผู้ติดตาม <b>${fmt(x.subs)}</b></span></span>` : ''}</h3>`;
+      const head = `<h3 class="ph">${a.name}${x ? `<span class="right">${smp(a.id)} <span class="pill">ผู้ติดตาม <b>${fmt(x.subs)}</b></span></span>` : ''}</h3>`;
       if (v[repMonth] == null) return `<div class="panel">${head}<p class="empty-note">ยังไม่มีข้อมูลเดือน ${MONTHS[repMonth]} · ข้อมูล YouTube ล่าสุดถึง ${MONTHS[lastIdx(v)]} · รอเชื่อม YouTube API (ระบบจริงดึงให้ทุกเช้า)</p></div>`;
       const row = (lbl, val, unit, mo) => `<div class="yt-num"><span>${lbl}</span><b>${val}</b><span>${unit} ${momEl(mo)}</span></div>`;
-      const top = x ? `<p class="src" style="margin:0 0 6px">${SAMPLE}</p><ol class="top-list">${x.top.map((t, i) => `<li><span class="n">${i + 1}</span><span class="t" title="${esc(t[0])}">${esc(t[0])} <small>${t[1]}</small></span><span class="val">${fmt(t[2])}</span></li>`).join('')}</ol>` : '<p class="empty-note">รอเชื่อม YouTube API (ระบบจริงดึง 3 อันดับให้อัตโนมัติ)</p>';
+      const top = x ? `${smp(a.id) ? `<p class="src" style="margin:0 0 6px">${SAMPLE}</p>` : ''}<ol class="top-list">${x.top.map((t, i) => `<li><span class="n">${i + 1}</span><span class="t" title="${esc(t[0])}">${esc(t[0])} <small>${t[1]}</small></span><span class="val">${fmt(t[2])}</span></li>`).join('')}</ol>` : '<p class="empty-note">รอเชื่อม YouTube API (ระบบจริงดึง 3 อันดับให้อัตโนมัติ)</p>';
       return `<div class="panel">${head}
         ${row('ยอดการดู (Views)', fmt(v[repMonth]), 'ครั้ง', momOf(v[repMonth], v[repMonth - 1]))}
         ${row('ยอดกดชอบ (Likes)', fmt(l[repMonth]), 'ครั้ง', momOf(l[repMonth], l[repMonth - 1]))}
-        ${row('เวลาเข้าชม (Watch time)', x ? x.wth.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '<span class="em" style="font-weight:400;font-size:13px">รอเชื่อม API</span>', x ? 'ชม. ' + SAMPLE : '', x ? x.wthMom : null)}
+        ${row('เวลาเข้าชม (Watch time)', x ? x.wth.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '<span class="em" style="font-weight:400;font-size:13px">รอเชื่อม API</span>', x ? 'ชม. ' + smp(a.id) : '', x && !partial() ? x.wthMom : null)}
         ${row('ผู้ติดตามใหม่', '+' + fmt(n[repMonth]), 'คน', momOf(n[repMonth], n[repMonth - 1]))}
         <h3 class="mini">วิดีโอเด่น 3 อันดับ</h3>${top}
         <div class="ins" style="margin-top:14px"><h3>วิเคราะห์และข้อแนะนำ</h3>${ta(`yt-${a.id}-ins`, 'หัวข้อที่คนสนใจ คีย์เวิร์ด แหล่งที่มาของคนดู')}</div>
@@ -1446,7 +1456,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   }
 
   function renderYpp() {
-    $('#ypp-asof').innerHTML = `ข้อมูล ณ ${YPP.asOf} ${SAMPLE}`;
+    $('#ypp-asof').innerHTML = `ข้อมูล ณ ${YPP.asOf} ${LIVE.ypp ? '' : SAMPLE}`;
     const bar = (lbl, have, need, unit) => {
       const p = Math.min(100, have / need * 100), met = have >= need;
       return `<div class="kpi kr"><span class="k">${lbl}</span><span class="v" style="font-size:15px">${fmtC(have)} <small>/ ${fmtC(need)}</small></span>
@@ -1470,7 +1480,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
 
   function renderReport() {
     const latest = latestMonth(ACCOUNTS);
-    if (repMonth == null || repMonth > latest) repMonth = latest;
+    if (repMonth == null || repMonth > latest) repMonth = latest === AS_OF.getMonth() && latest > 0 ? latest - 1 : latest; // monthly report = last full month
     $('#rep-month').innerHTML = MONTHS.slice(0, latest + 1).map((m, i) => `<option value="${i}">${m} 2026</option>`).reverse().join('');
     $('#rep-month').value = String(repMonth);
     $('#rep-title').textContent = `สรุปประจำเดือน ${MONTH_FULL[repMonth]} 2026${partial() ? ` (ถึง ${AS_OF.getDate() - 1} ${MONTHS[repMonth]} · เดือนยังไม่จบ ไม่เทียบเดือนก่อน)` : ''}`;
@@ -1693,7 +1703,79 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     r.setAttribute('data-theme', dark ? 'light' : 'dark'); r.classList.toggle('dark', !dark); route();
   });
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', route);
-  route();
+  /* ---------- live data from the Apps Script web app ---------- */
+  // Paste the web app URL (ends with /exec) here after deploying the Apps Script. Empty = sample data only.
+  const DATA_URL = '';
+  const GENDER_TH = { Female: 'หญิง', Male: 'ชาย', Other: 'อื่นๆ' };
+  const TERR_TH = { TH: 'ไทย', LA: 'ลาว', KR: 'เกาหลีใต้', MM: 'เมียนมา', KH: 'กัมพูชา', VN: 'เวียดนาม', MY: 'มาเลเซีย', SG: 'สิงคโปร์', JP: 'ญี่ปุ่น', CN: 'จีน', US: 'สหรัฐฯ', TW: 'ไต้หวัน', ID: 'อินโดนีเซีย', PH: 'ฟิลิปปินส์', Others: 'อื่นๆ' };
+  const thDate = s => { const [y, m, d] = String(s).slice(0, 10).split('-'); return y && m ? `${+d} ${MONTHS[+m - 1]} ${y}` : s; };
+
+  function applyLive(j) {
+    LIVE.on = true; LIVE.at = j.generatedAt;
+    if (j.generatedAt) { const d = new Date(String(j.generatedAt).replace(' ', 'T') + ':00+07:00'); if (!isNaN(d)) AS_OF = d; }
+    (j.targets || []).forEach(t => { const a = accById(t.account), m = a && a.metrics.find(x => x.key === t.key); if (m) { m.target = t.target; m.base = t.base; } });
+    Object.entries(j.accounts || {}).forEach(([id, la]) => {
+      const a = accById(id); if (!a) return;
+      const months = new Set();
+      a.metrics.forEach(m => {
+        const v = la.monthly[m.key]; if (!v) return;
+        v.forEach((x, i) => { if (x != null) { while (m.data.length <= i) m.data.push(N); m.data[i] = x; months.add(i); } });
+      });
+      LIVE.months[id] = [...months].sort((p, q) => p - q);
+      if (id.startsWith('yt-')) {
+        const mon = k => la.monthly[k] || [];
+        const top = (j.ytTop[id] || {}), ch = (j.ytChannel || {})[id];
+        YT_EXTRA[id] = {};
+        for (let i = 0; i < 12; i++) {
+          const wh = mon('watch_hours');
+          if (wh[i] == null) continue;
+          const ym = `${j.year}-${String(i + 1).padStart(2, '0')}`;
+          YT_EXTRA[id][i] = { subs: ch ? ch.subscribers : null, wth: wh[i], wthMom: i && wh[i - 1] ? (wh[i] - wh[i - 1]) / wh[i - 1] * 100 : null,
+            long: mon('output_long')[i], shorts: mon('output_shorts')[i], top: (top[ym] || []).sort((p, q) => p.rank - q.rank).map(t => [t.title, t.format, t.views, null]) };
+        }
+        LIVE.yt[id] = true;
+        if (ch) { YPP[id] = { subs: ch.subscribers, hours: ch.longHours365 || 0, shorts: ch.shortsViews90 || 0 }; YPP.asOf = thDate(ch.asOf); LIVE.ypp = true; }
+      }
+    });
+    const liveClipAccs = new Set((j.clips || []).map(c => c.acc));
+    for (let i = CLIPS.length - 1; i >= 0; i--) if (liveClipAccs.has(CLIPS[i].acc)) CLIPS.splice(i, 1);
+    (j.clips || []).forEach(c => { const k = mkClip(c.acc, [c.title, c.id, c.posted, c.views, c.likes, c.comments, c.shares, c.saves, c.type || 'สินค้า', c.product || ''], c.url); k.boosted = !!c.boosted; CLIPS.push(k); });
+    Object.entries(j.audience || {}).forEach(([id, au]) => {
+      const days = {};
+      (au.activity || []).forEach(([label, v]) => { const [d, h] = label.split(' '); (days[d] = days[d] || Array(24).fill(null))[+h] = v; });
+      TT_AUDIENCE[id] = { asOf: thDate(au.asOf), gender: (au.gender || []).filter(g => g[1] > 0).map(g => [GENDER_TH[g[0]] || g[0], Math.round(g[1] * 100)]),
+        terr: (au.territory || []).slice(0, 4).map(t => [TERR_TH[t[0]] || t[0], Math.round(t[1] * 1000) / 10]),
+        activity: Object.keys(days).sort().map(d => [String(+d.slice(8)), days[d]]) };
+    });
+    const st = j.status || {};
+    const ytRow = id => { const x = st[id] || {}; return `<div class="conn"><span class="name">${accById(id).name}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || '–')}${x.error ? ' · ' + esc(x.error) : ''}` : 'เจ้าของช่องล็อกอิน Gmail ของช่องจากเมนู CT OKR ในชีต ครั้งเดียว'}</span></div>`; };
+    $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
+      + ['fb-eloop', 'fb-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ยังไม่ได้เชื่อม</span><span class="det">รอข้อมูล token ของ Facebook · ตัวเลขในแดชบอร์ดยังเป็นตัวอย่าง</span></div>`).join('')
+      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ไฟล์ใน Google Drive</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span></div>`).join('');
+    const b = $('#data-banner');
+    b.className = 'ox-alert ox-alert--info proto-alert';
+    b.innerHTML = `<span><b>ข้อมูลจากระบบ</b>TikTok และ YouTube ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · Facebook ยังเป็นตัวอย่างจากชีตเดิม · เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`;
+    $('#upload-live').hidden = false;
+  }
+
+  async function boot() {
+    if (!DATA_URL) { route(); return; }
+    const box = $('#live-state');
+    box.hidden = false; box.className = 'ox-alert ox-alert--info'; box.textContent = 'กำลังโหลดข้อมูลจากระบบ…';
+    document.querySelectorAll('[data-v]').forEach(x => { x.hidden = true; });
+    try {
+      const r = await fetch(DATA_URL, { cache: 'no-store' });
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.error || 'ระบบตอบกลับไม่ถูกต้อง');
+      applyLive(j);
+      box.hidden = true;
+    } catch (e) {
+      box.className = 'ox-alert ox-alert--danger';
+      box.innerHTML = `<span>โหลดข้อมูลจากระบบไม่สำเร็จ (${esc(e.message)}) ตอนนี้แสดงข้อมูลตัวอย่างแทน</span><span class="ox-topbar__spacer"></span><button class="ox-btn ox-btn--secondary ox-btn--sm" type="button" onclick="location.reload()">โหลดใหม่</button>`;
+    }
+    route();
+  }
+  boot();
 })();
 </script>
 </body>
