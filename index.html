@@ -1,0 +1,1700 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CT Social OKR</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* OMNIX Design System — standalone CSS (derived from DESIGN-SYSTEM.md)
+   ใช้กับ artifact / HTML เดี่ยว / โปรเจกต์ที่ไม่ใช่ Tailwind
+   ในโปรเจกต์ OMNIX จริง token อยู่ที่ src/index.css และคอมโพเนนต์อยู่ที่ src/components/ui.tsx */
+
+:root {
+  --omnix-bg: #f5f6f8;
+  --omnix-surface: #ffffff;
+  --omnix-surface-2: #eef1f5;
+  --omnix-border: #dfe3e9;
+  --omnix-fg: #131820;
+  --omnix-fg-muted: #5b6472;
+  --omnix-accent: #5b5bd6;
+  --omnix-accent-soft: #e8e8fb;
+
+  /* semantic — คู่ละสองค่า (พื้น / ตัวอักษร) ตามข้อเสนอในเอกสาร */
+  --omnix-success-fg: #059669;
+  --omnix-success-bg: #d1fae5;
+  --omnix-warning-fg: #d97706;
+  --omnix-warning-bg: #fef3c7;
+  --omnix-danger-fg: #dc2626;
+  --omnix-danger-bg: #fee2e2;
+  --omnix-info-fg: #2563eb;
+  --omnix-info-bg: #dbeafe;
+
+  --omnix-font: "Inter", "IBM Plex Sans Thai", "Noto Sans Thai", "Noto Sans SC", system-ui, sans-serif;
+  --omnix-text-xs: 12px;
+  --omnix-text-sm: 14px;
+  --omnix-text-base: 16px;
+  --omnix-text-lg: 18px;
+  --omnix-text-2xl: 24px;
+
+  --omnix-space-1: 4px;
+  --omnix-space-2: 8px;
+  --omnix-space-3: 12px;
+  --omnix-space-4: 16px;
+  --omnix-space-5: 20px;
+  --omnix-space-6: 24px;
+  --omnix-space-8: 32px;
+
+  --omnix-radius-lg: 8px;
+  --omnix-radius-xl: 12px;
+  --omnix-radius-2xl: 16px;
+  --omnix-radius-full: 9999px;
+
+  --omnix-sidebar-w: 240px;
+  --omnix-control-h: 36px;
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) {
+    --omnix-bg: #0d1117;
+    --omnix-surface: #161b22;
+    --omnix-surface-2: #1d242e;
+    --omnix-border: #2b323d;
+    --omnix-fg: #e7ebf1;
+    --omnix-fg-muted: #98a2b1;
+    --omnix-accent: #8b8bf0;
+    --omnix-accent-soft: #23244a;
+    --omnix-success-fg: #34d399;
+    --omnix-success-bg: #064e3b;
+    --omnix-warning-fg: #fbbf24;
+    --omnix-warning-bg: #451a03;
+    --omnix-danger-fg: #f87171;
+    --omnix-danger-bg: #450a0a;
+    --omnix-info-fg: #60a5fa;
+    --omnix-info-bg: #172554;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"],
+:root.dark {
+  --omnix-bg: #0d1117;
+  --omnix-surface: #161b22;
+  --omnix-surface-2: #1d242e;
+  --omnix-border: #2b323d;
+  --omnix-fg: #e7ebf1;
+  --omnix-fg-muted: #98a2b1;
+  --omnix-accent: #8b8bf0;
+  --omnix-accent-soft: #23244a;
+  --omnix-success-fg: #34d399;
+  --omnix-success-bg: #064e3b;
+  --omnix-warning-fg: #fbbf24;
+  --omnix-warning-bg: #451a03;
+  --omnix-danger-fg: #f87171;
+  --omnix-danger-bg: #450a0a;
+  --omnix-info-fg: #60a5fa;
+  --omnix-info-bg: #172554;
+  color-scheme: dark;
+}
+
+/* ---------- base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--omnix-bg);
+  color: var(--omnix-fg);
+  font-family: var(--omnix-font);
+  font-size: var(--omnix-text-sm);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.ox-app { min-height: 100vh; background: var(--omnix-bg); color: var(--omnix-fg); font-family: var(--omnix-font); font-size: var(--omnix-text-sm); }
+.ox-scope { color: var(--omnix-fg); font-family: var(--omnix-font); font-size: var(--omnix-text-sm); }
+a { color: var(--omnix-accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.25; text-wrap: balance; }
+p { margin: 0; }
+code, pre, kbd { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; }
+pre { background: var(--omnix-surface-2); border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-lg); padding: var(--omnix-space-3) var(--omnix-space-4); overflow-x: auto; }
+code:not(pre code) { background: var(--omnix-surface-2); border-radius: var(--omnix-space-1); padding: 1px 5px; }
+svg { display: inline-block; vertical-align: middle; }
+
+/* โฟกัส — กฎ global ห้ามลบโดยไม่มีตัวแทน (WCAG 2.2: ≥2px, 3:1) */
+:focus-visible { outline: 2px solid var(--omnix-accent); outline-offset: 2px; }
+.focus-delegated:focus-visible { outline: none; }
+.focus-delegated:focus-visible + *, :has(> .focus-delegated:focus-visible) { outline: 2px solid var(--omnix-accent); outline-offset: 2px; }
+
+/* ---------- typography ---------- */
+.ox-page-title { font-size: var(--omnix-text-2xl); font-weight: 600; }
+.ox-h2 { font-size: var(--omnix-text-lg); font-weight: 600; }
+.ox-muted { color: var(--omnix-fg-muted); }
+.ox-xs { font-size: var(--omnix-text-xs); }
+.ox-label-caps { font-size: var(--omnix-text-xs); font-weight: 500; letter-spacing: 0.04em; text-transform: uppercase; color: var(--omnix-fg-muted); }
+.ox-num { font-variant-numeric: tabular-nums; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---------- layout ---------- */
+.ox-topbar { display: flex; align-items: center; gap: var(--omnix-space-3); height: 52px; padding: 0 var(--omnix-space-4); background: var(--omnix-surface); border-bottom: 1px solid var(--omnix-border); }
+.ox-topbar__spacer { flex: 1; }
+.ox-brand { display: flex; align-items: center; gap: var(--omnix-space-2); font-weight: 600; font-size: var(--omnix-text-base); }
+.ox-brand__mark { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: var(--omnix-radius-lg); background: var(--omnix-accent); color: #fff; font-size: var(--omnix-text-xs); font-weight: 600; }
+.ox-shell { display: flex; min-height: calc(100vh - 52px); }
+.ox-sidebar { width: var(--omnix-sidebar-w); flex: 0 0 auto; background: var(--omnix-surface); border-right: 1px solid var(--omnix-border); padding: var(--omnix-space-3); display: flex; flex-direction: column; gap: var(--omnix-space-1); }
+.ox-nav-group__label { padding: var(--omnix-space-3) var(--omnix-space-3) var(--omnix-space-1); }
+.ox-nav-item { display: flex; align-items: center; gap: var(--omnix-space-2); padding: var(--omnix-space-2) var(--omnix-space-3); border-radius: var(--omnix-radius-lg); color: var(--omnix-fg); cursor: pointer; text-decoration: none; }
+.ox-nav-item:hover { background: var(--omnix-surface-2); text-decoration: none; }
+.ox-nav-item.is-active { background: var(--omnix-accent-soft); color: var(--omnix-accent); font-weight: 500; }
+.ox-main { flex: 1; min-width: 0; }
+.ox-main__inner { padding: var(--omnix-space-5); max-width: 1200px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--omnix-space-5); }
+.ox-page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--omnix-space-4); flex-wrap: wrap; }
+.ox-page-head__actions { display: flex; gap: var(--omnix-space-2); flex-wrap: wrap; }
+.ox-grid-cards { display: grid; gap: var(--omnix-space-4); grid-template-columns: 1fr; }
+@media (min-width: 640px) { .ox-grid-cards { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1280px) { .ox-grid-cards { grid-template-columns: repeat(3, 1fr); } }
+.ox-stack { display: flex; flex-direction: column; gap: var(--omnix-space-3); }
+.ox-row { display: flex; align-items: center; gap: var(--omnix-space-2); flex-wrap: wrap; }
+.ox-prose { max-width: 68ch; }
+.ox-prose > * + * { margin-top: var(--omnix-space-3); }
+
+/* ---------- Card / SectionTitle ---------- */
+.ox-card { display: flex; flex-direction: column; background: var(--omnix-surface); border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-lg); }
+.ox-card__body { padding: var(--omnix-space-4); display: flex; flex-direction: column; gap: var(--omnix-space-3); flex: 1; }
+.ox-card__foot { margin-top: auto; padding: var(--omnix-space-3) var(--omnix-space-4); border-top: 1px solid var(--omnix-border); display: flex; gap: var(--omnix-space-2); align-items: center; }
+.ox-section-title { display: flex; align-items: center; justify-content: space-between; gap: var(--omnix-space-3); }
+.ox-section-title h2 { font-size: var(--omnix-text-base); font-weight: 600; }
+.ox-tile-icon { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: var(--omnix-radius-xl); background: var(--omnix-surface-2); color: var(--omnix-accent); }
+
+/* ---------- Badge / chip / dot ---------- */
+.ox-badge { display: inline-flex; align-items: center; gap: var(--omnix-space-1); padding: 2px var(--omnix-space-2); border-radius: var(--omnix-radius-full); font-size: var(--omnix-text-xs); font-weight: 500; line-height: 1.4; background: var(--omnix-surface-2); color: var(--omnix-fg-muted); border: 1px solid var(--omnix-border); }
+.ox-badge--accent { background: var(--omnix-accent-soft); color: var(--omnix-accent); border-color: transparent; }
+.ox-badge--success { background: var(--omnix-success-bg); color: var(--omnix-success-fg); border-color: transparent; }
+.ox-badge--warning { background: var(--omnix-warning-bg); color: var(--omnix-warning-fg); border-color: transparent; }
+.ox-badge--danger { background: var(--omnix-danger-bg); color: var(--omnix-danger-fg); border-color: transparent; }
+.ox-badge--info { background: var(--omnix-info-bg); color: var(--omnix-info-fg); border-color: transparent; }
+.ox-badge[style*="--c"] { background: color-mix(in srgb, var(--c) 15%, transparent); color: var(--c); border-color: transparent; }
+.ox-dot { display: inline-block; width: 8px; height: 8px; border-radius: var(--omnix-radius-full); background: var(--omnix-fg-muted); }
+.ox-dot--success { background: var(--omnix-success-fg); }
+.ox-dot--warning { background: var(--omnix-warning-fg); }
+.ox-dot--danger { background: var(--omnix-danger-fg); }
+.ox-chip { display: inline-flex; align-items: center; gap: var(--omnix-space-1); height: 28px; padding: 0 var(--omnix-space-3); border-radius: var(--omnix-radius-full); border: 1px solid var(--omnix-border); background: var(--omnix-surface); color: var(--omnix-fg); font: inherit; cursor: pointer; }
+.ox-chip.is-active { background: var(--omnix-accent-soft); color: var(--omnix-accent); border-color: transparent; }
+
+/* ---------- Button ---------- */
+.ox-btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--omnix-space-2); height: var(--omnix-control-h); padding: 0 var(--omnix-space-4); border-radius: var(--omnix-radius-lg); border: 1px solid transparent; font: inherit; font-weight: 500; cursor: pointer; white-space: nowrap; transition: background .12s, border-color .12s; }
+.ox-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ox-btn--primary { background: var(--omnix-accent); color: #fff; }
+.ox-btn--primary:hover:not(:disabled) { filter: brightness(1.08); }
+.ox-btn--secondary { background: var(--omnix-surface); color: var(--omnix-fg); border-color: var(--omnix-border); }
+.ox-btn--secondary:hover:not(:disabled) { background: var(--omnix-surface-2); }
+.ox-btn--ghost { background: transparent; color: var(--omnix-fg-muted); }
+.ox-btn--ghost:hover:not(:disabled) { background: var(--omnix-surface-2); color: var(--omnix-fg); }
+.ox-btn--danger { background: transparent; color: var(--omnix-danger-fg); border-color: var(--omnix-danger-fg); }
+.ox-btn--danger:hover:not(:disabled) { background: var(--omnix-danger-bg); }
+.ox-btn--sm { height: 30px; padding: 0 var(--omnix-space-3); font-size: var(--omnix-text-xs); }
+.ox-btn--icon { width: var(--omnix-control-h); padding: 0; }
+.ox-btn--icon.ox-btn--sm { width: 30px; }
+.ox-btn--round { border-radius: var(--omnix-radius-full); }
+.ox-btn--block { width: 100%; }
+
+/* ---------- Form (CONTROL_CLASS) ---------- */
+.ox-field { display: flex; flex-direction: column; gap: var(--omnix-space-1); }
+.ox-label { font-size: var(--omnix-text-xs); font-weight: 500; color: var(--omnix-fg-muted); }
+.ox-label--required::after { content: " *"; color: var(--omnix-danger-fg); }
+.ox-control { width: 100%; height: var(--omnix-control-h); padding: 0 var(--omnix-space-3); border-radius: var(--omnix-radius-lg); border: 1px solid var(--omnix-border); background: var(--omnix-surface); color: var(--omnix-fg); font: inherit; }
+.ox-control::placeholder { color: var(--omnix-fg-muted); }
+.ox-control:focus-visible { outline: 2px solid var(--omnix-accent); outline-offset: 0; border-color: var(--omnix-accent); }
+.ox-control[aria-invalid="true"] { border-color: var(--omnix-danger-fg); }
+textarea.ox-control { height: auto; min-height: 88px; padding: var(--omnix-space-2) var(--omnix-space-3); resize: vertical; }
+select.ox-control { appearance: none; padding-right: var(--omnix-space-8); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235b6472'%3E%3Cpath d='M16.293 9.293 12 13.586 7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
+.ox-help { font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.ox-error { font-size: var(--omnix-text-xs); color: var(--omnix-danger-fg); }
+.ox-toggle { position: relative; display: inline-flex; align-items: center; gap: var(--omnix-space-2); cursor: pointer; }
+.ox-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.ox-toggle__track { width: 36px; height: 20px; border-radius: var(--omnix-radius-full); background: var(--omnix-border); position: relative; transition: background .15s; }
+.ox-toggle__track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: var(--omnix-radius-full); background: var(--omnix-surface); transition: transform .15s; }
+.ox-toggle input:checked + .ox-toggle__track { background: var(--omnix-accent); }
+.ox-toggle input:checked + .ox-toggle__track::after { transform: translateX(16px); }
+.ox-toggle input:focus-visible + .ox-toggle__track { outline: 2px solid var(--omnix-accent); outline-offset: 2px; }
+.ox-check { display: inline-flex; align-items: center; gap: var(--omnix-space-2); cursor: pointer; }
+.ox-check input { width: 16px; height: 16px; accent-color: var(--omnix-accent); margin: 0; }
+
+/* ---------- Table ---------- */
+.ox-table-wrap { overflow-x: auto; border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-lg); background: var(--omnix-surface); }
+.ox-table { width: 100%; border-collapse: collapse; }
+.ox-table th { text-align: left; font-size: var(--omnix-text-xs); font-weight: 500; color: var(--omnix-fg-muted); padding: var(--omnix-space-2) var(--omnix-space-3); background: var(--omnix-surface-2); border-bottom: 1px solid var(--omnix-border); }
+.ox-table td { padding: var(--omnix-space-3); border-bottom: 1px solid var(--omnix-border); vertical-align: top; }
+.ox-table tr:last-child td { border-bottom: 0; }
+.ox-table th.is-num, .ox-table td.is-num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- Alert / Modal / Empty ---------- */
+.ox-alert { display: flex; gap: var(--omnix-space-2); padding: var(--omnix-space-3) var(--omnix-space-4); border-radius: var(--omnix-radius-lg); border: 1px solid var(--omnix-border); background: var(--omnix-surface-2); }
+.ox-alert--success { background: var(--omnix-success-bg); color: var(--omnix-success-fg); border-color: transparent; }
+.ox-alert--warning { background: var(--omnix-warning-bg); color: var(--omnix-warning-fg); border-color: transparent; }
+.ox-alert--danger { background: var(--omnix-danger-bg); color: var(--omnix-danger-fg); border-color: transparent; }
+.ox-alert--info { background: var(--omnix-info-bg); color: var(--omnix-info-fg); border-color: transparent; }
+.ox-modal-mask { position: fixed; inset: 0; background: rgb(0 0 0 / .45); display: grid; place-items: center; padding: var(--omnix-space-4); z-index: 50; }
+.ox-modal { width: min(520px, 100%); background: var(--omnix-surface); border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-xl); display: flex; flex-direction: column; }
+.ox-modal__head { padding: var(--omnix-space-4); border-bottom: 1px solid var(--omnix-border); font-weight: 600; }
+.ox-modal__body { padding: var(--omnix-space-4); display: flex; flex-direction: column; gap: var(--omnix-space-3); }
+.ox-modal__foot { padding: var(--omnix-space-3) var(--omnix-space-4); border-top: 1px solid var(--omnix-border); display: flex; justify-content: flex-end; gap: var(--omnix-space-2); }
+.ox-empty { display: flex; flex-direction: column; align-items: center; gap: var(--omnix-space-3); padding: var(--omnix-space-8) var(--omnix-space-4); text-align: center; color: var(--omnix-fg-muted); border: 1px dashed var(--omnix-border); border-radius: var(--omnix-radius-lg); }
+.ox-empty__title { color: var(--omnix-fg); font-weight: 600; }
+
+/* ---------- Steps (สำหรับคู่มือ/ลำดับขั้น) ---------- */
+.ox-steps { display: flex; flex-direction: column; gap: var(--omnix-space-4); counter-reset: step; }
+.ox-step { display: grid; grid-template-columns: 32px 1fr; gap: var(--omnix-space-3); }
+.ox-step::before { counter-increment: step; content: counter(step); display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--omnix-radius-full); background: var(--omnix-accent-soft); color: var(--omnix-accent); font-weight: 600; font-size: var(--omnix-text-xs); }
+.ox-step__title { font-weight: 600; margin-bottom: var(--omnix-space-1); }
+
+/* ---------- responsive ---------- */
+@media (max-width: 767px) {
+  .ox-shell { flex-direction: column; }
+  .ox-sidebar { width: auto; border-right: 0; border-bottom: 1px solid var(--omnix-border); flex-direction: row; flex-wrap: wrap; }
+  .ox-main__inner { padding: var(--omnix-space-4); }
+  .ox-table-wrap { border-radius: var(--omnix-radius-lg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+}
+
+/* =====================================================================
+   Dashboard / BI  — มาตรฐานเดียวกันทุก dashboard
+   ลำดับหน้า: filter-bar → kpi-grid → chart (หลัก) → chart-grid → table
+   ===================================================================== */
+:root {
+  /* series ในกราฟ — ลำดับตายตัว ห้ามสลับ ห้ามเลือกสีเอง (ผ่านการตรวจตาบอดสีแล้ว) */
+  --omnix-chart-1: #5b5bd6;
+  --omnix-chart-2: #0e9f8f;
+  --omnix-chart-3: #d97706;
+  --omnix-chart-4: #db2777;
+  --omnix-chart-5: #2563eb;
+  --omnix-chart-other: #94a3b8;
+  --omnix-chart-grid: #e6e9ee;
+  --omnix-chart-axis: #5b6472;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) {
+    --omnix-chart-1: #7c7ce8; --omnix-chart-2: #0d9488; --omnix-chart-3: #d97706;
+    --omnix-chart-4: #ec4899; --omnix-chart-5: #3b82f6; --omnix-chart-other: #64748b;
+    --omnix-chart-grid: #232a35; --omnix-chart-axis: #98a2b1;
+  }
+}
+:root[data-theme="dark"], :root.dark {
+  --omnix-chart-1: #7c7ce8; --omnix-chart-2: #0d9488; --omnix-chart-3: #d97706;
+  --omnix-chart-4: #ec4899; --omnix-chart-5: #3b82f6; --omnix-chart-other: #64748b;
+  --omnix-chart-grid: #232a35; --omnix-chart-axis: #98a2b1;
+}
+
+/* แถวตัวกรอง — แถวเดียว อยู่บนสุดเสมอ */
+.ox-filter-bar { display: flex; align-items: center; gap: var(--omnix-space-2); flex-wrap: wrap; padding: var(--omnix-space-3); background: var(--omnix-surface); border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-lg); }
+.ox-filter-bar .ox-control { width: auto; min-width: 160px; }
+.ox-filter-bar__spacer { flex: 1; }
+.ox-filter-bar__meta { font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.ox-segment { display: inline-flex; padding: 2px; background: var(--omnix-surface-2); border-radius: var(--omnix-radius-lg); }
+.ox-segment button { height: 28px; padding: 0 var(--omnix-space-3); border: 0; border-radius: 6px; background: transparent; color: var(--omnix-fg-muted); font: inherit; font-weight: 500; cursor: pointer; }
+.ox-segment button.is-active { background: var(--omnix-surface); color: var(--omnix-fg); box-shadow: inset 0 0 0 1px var(--omnix-border); }
+
+/* KPI — 2/4 คอลัมน์ ค่าเดียว + เดลต้าเทียบช่วงก่อน */
+.ox-kpi-grid { display: grid; gap: var(--omnix-space-4); grid-template-columns: repeat(2, 1fr); }
+@media (min-width: 1024px) { .ox-kpi-grid { grid-template-columns: repeat(4, 1fr); } }
+.ox-kpi { display: flex; flex-direction: column; gap: var(--omnix-space-1); padding: var(--omnix-space-4); background: var(--omnix-surface); border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-lg); min-width: 0; }
+.ox-kpi__label { font-size: var(--omnix-text-xs); font-weight: 500; color: var(--omnix-fg-muted); letter-spacing: .02em; }
+.ox-kpi__value { font-size: var(--omnix-text-2xl); font-weight: 600; line-height: 1.15; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ox-kpi__delta { display: inline-flex; align-items: center; gap: var(--omnix-space-1); font-size: var(--omnix-text-xs); font-variant-numeric: tabular-nums; color: var(--omnix-fg-muted); }
+.ox-kpi__delta.is-up { color: var(--omnix-success-fg); }
+.ox-kpi__delta.is-down { color: var(--omnix-danger-fg); }
+.ox-kpi__delta .ox-ico { width: 12px; height: 12px; }
+.ox-kpi__spark { height: 32px; margin-top: var(--omnix-space-1); color: var(--omnix-chart-1); }
+.ox-kpi__spark svg { width: 100%; height: 100%; display: block; overflow: visible; }
+
+/* กราฟ — การ์ดสูงคงที่ หัว + คำอธิบาย + พื้นที่วาด */
+.ox-chart-grid { display: grid; gap: var(--omnix-space-4); grid-template-columns: 1fr; }
+@media (min-width: 1024px) { .ox-chart-grid { grid-template-columns: repeat(2, 1fr); } .ox-chart-grid > .is-wide { grid-column: 1 / -1; } }
+.ox-chart { display: flex; flex-direction: column; background: var(--omnix-surface); border: 1px solid var(--omnix-border); border-radius: var(--omnix-radius-lg); min-width: 0; }
+.ox-chart__head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--omnix-space-3); padding: var(--omnix-space-4) var(--omnix-space-4) 0; }
+.ox-chart__title { font-weight: 600; }
+.ox-chart__sub { font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.ox-chart__body { position: relative; flex: 1; padding: var(--omnix-space-3) var(--omnix-space-4) var(--omnix-space-4); min-height: 0; }
+.ox-chart__canvas { position: relative; height: 260px; }
+.ox-chart--tall .ox-chart__canvas { height: 340px; }
+.ox-chart__foot { padding: 0 var(--omnix-space-4) var(--omnix-space-3); font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.ox-legend { display: flex; flex-wrap: wrap; gap: var(--omnix-space-3); font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.ox-legend__item { display: inline-flex; align-items: center; gap: var(--omnix-space-1); }
+.ox-legend__swatch { width: 10px; height: 10px; border-radius: 2px; background: var(--c, var(--omnix-chart-1)); }
+
+/* สถานะโหลด/ว่างในการ์ดกราฟ */
+.ox-skeleton { background: linear-gradient(90deg, var(--omnix-surface-2) 25%, var(--omnix-border) 50%, var(--omnix-surface-2) 75%); background-size: 200% 100%; animation: ox-shimmer 1.2s linear infinite; border-radius: var(--omnix-radius-lg); }
+@keyframes ox-shimmer { to { background-position: -200% 0; } }
+.ox-chart__empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--omnix-fg-muted); font-size: var(--omnix-text-xs); padding: var(--omnix-space-4); }
+
+/* ตารางรายละเอียดใต้กราฟ — แถวบางกว่าตารางจัดการ */
+.ox-table--data td { padding: var(--omnix-space-2) var(--omnix-space-3); }
+.ox-table--data .ox-bar { display: inline-block; height: 6px; border-radius: 3px; background: var(--omnix-chart-1); vertical-align: middle; }
+.ox-ico { width: 14px; height: 14px; fill: currentColor; }
+
+/* =====================================================================
+   CT Social OKR — page tokens mapped onto OMNIX tokens (no hex below)
+   ===================================================================== */
+:root {
+  --bg: var(--omnix-bg); --surface: var(--omnix-surface); --surface-2: var(--omnix-surface-2);
+  --ink: var(--omnix-fg); --ink-2: var(--omnix-fg-muted); --muted: var(--omnix-fg-muted);
+  --line: var(--omnix-border); --axis: var(--omnix-border);
+  --accent: var(--omnix-accent); --accent-soft: var(--omnix-accent-soft);
+  --series-1: var(--omnix-chart-1); --series-2: var(--omnix-chart-2); --target: var(--omnix-chart-2);
+  --good: var(--omnix-success-fg); --good-ink: var(--omnix-success-fg); --good-soft: var(--omnix-success-bg);
+  --warn: var(--omnix-warning-fg); --warn-ink: var(--omnix-warning-fg); --warn-soft: var(--omnix-warning-bg);
+  --crit: var(--omnix-danger-fg); --crit-ink: var(--omnix-danger-fg); --crit-soft: var(--omnix-danger-bg);
+  --f-display: var(--omnix-font); --f-ui: var(--omnix-font);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-ui); font-size: 14.5px; line-height: 1.55; }
+
+
+.btn { font: inherit; font-weight: 500; border-radius: 8px; padding: 7px 14px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+.btn:hover { border-color: var(--axis); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn.primary:hover { filter: brightness(1.08); }
+
+
+.view-head { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px 24px; margin-bottom: 18px; }
+.view-head h1 { font-family: var(--f-display); font-weight: 700; font-size: 24px; margin: 0; line-height: 1.25; text-wrap: balance; }
+.view-head p { margin: 2px 0 0; color: var(--ink-2); }
+.view-head .right { margin-left: auto; }
+
+.seg { display: inline-flex; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; flex-wrap: wrap; }
+.seg button { font: inherit; border: 0; background: transparent; color: var(--ink-2); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); box-shadow: 0 0 0 1px var(--line); }
+
+/* summary strip */
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; }
+.stat .lbl { color: var(--ink-2); font-size: 13px; display: flex; align-items: center; gap: 6px; }
+.stat .val { font-size: 26px; font-weight: 600; line-height: 1.2; margin-top: 2px; }
+.stat .sub { color: var(--muted); font-size: 12.5px; }
+
+/* status */
+.st { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 600; padding: 1px 8px 1px 6px; border-radius: 999px; white-space: nowrap; }
+.st::before { content: ""; width: 8px; height: 8px; }
+.st.good { background: var(--good-soft); color: var(--good-ink); } .st.good::before { background: var(--good); border-radius: 50%; }
+.st.warn { background: var(--warn-soft); color: var(--warn-ink); } .st.warn::before { background: var(--warn); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.st.crit { background: var(--crit-soft); color: var(--crit-ink); } .st.crit::before { background: var(--crit); border-radius: 1px; }
+.st.none { background: var(--bg); color: var(--muted); } .st.none::before { border: 1.5px solid var(--muted); border-radius: 50%; width: 7px; height: 7px; }
+.sw { width: 10px; height: 10px; display: inline-block; }
+.sw.good { background: var(--good); border-radius: 50%; } .sw.warn { background: var(--warn); clip-path: polygon(50% 0, 100% 100%, 0 100%); } .sw.crit { background: var(--crit); border-radius: 1px; }
+
+/* account cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+@media (max-width: 420px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+.card-head { display: flex; align-items: center; gap: 10px; }
+.plat { font-size: 11.5px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ink-2); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 1px 7px; }
+.card-head h3 { font-family: var(--f-display); font-weight: 600; font-size: 17px; margin: 0; }
+.card-head .st { margin-left: auto; }
+.kpis { display: grid; gap: 10px; }
+.kpi { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: baseline; }
+.kpi .k { color: var(--ink-2); font-size: 13px; }
+.kpi .v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.kpi .v small { color: var(--muted); font-weight: 400; }
+.kpi .track { grid-column: 1 / -1; position: relative; height: 6px; background: var(--bg); border-radius: 3px; margin-top: 3px; }
+.kpi .fill { position: absolute; inset: 0 auto 0 0; border-radius: 3px; }
+.kpi .fill.good { background: var(--good); } .kpi .fill.warn { background: var(--warn); } .kpi .fill.crit { background: var(--crit); }
+.kpi .tick { position: absolute; top: -3px; width: 2px; height: 12px; background: var(--ink); border-radius: 1px; }
+.kpi .meta { grid-column: 1 / -1; display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+.kpi.untargeted .v { color: var(--ink-2); }
+.card-foot { display: flex; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 10px; font-size: 12px; color: var(--muted); }
+.card-foot svg { flex: 1; min-width: 0; height: 30px; }
+.card-foot .link { color: var(--accent); background: none; border: 0; font: inherit; font-weight: 500; cursor: pointer; padding: 0; white-space: nowrap; }
+.legend-line { display: flex; gap: 14px; flex-wrap: wrap; color: var(--ink-2); font-size: 12.5px; align-items: center; margin-bottom: 14px; }
+.legend-line .item { display: inline-flex; align-items: center; gap: 6px; }
+.legend-line .tickkey { width: 2px; height: 12px; background: var(--ink); display: inline-block; }
+
+/* panels & charts */
+.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px; min-width: 0; }
+.panel h2 { font-family: var(--f-display); font-weight: 600; font-size: 17px; margin: 0; }
+.panel .desc { color: var(--ink-2); font-size: 13px; margin: 2px 0 12px; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 14px; margin-bottom: 14px; }
+.chart { position: relative; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+.chart text { fill: var(--muted); font-family: var(--f-ui); font-size: 11px; }
+.chart .lbl-strong { fill: var(--ink); font-weight: 600; font-size: 12px; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .base { stroke: var(--axis); stroke-width: 1; }
+.tip { position: absolute; pointer-events: none; background: var(--surface); color: var(--ink); border: 1px solid var(--line); box-shadow: 0 4px 16px rgba(0,0,0,.12); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; line-height: 1.5; min-width: 150px; z-index: 3; transform: translate(-50%, calc(-100% - 10px)); white-space: nowrap; }
+.tip .t { font-weight: 600; margin-bottom: 2px; }
+.tip .r { display: flex; justify-content: space-between; gap: 14px; font-variant-numeric: tabular-nums; }
+.tip .r span:first-child { color: var(--ink-2); display: inline-flex; align-items: center; gap: 6px; }
+.tip .note { color: var(--ink-2); margin-top: 4px; max-width: 220px; white-space: normal; }
+.key { width: 12px; height: 2px; display: inline-block; }
+.key.actual { background: var(--series-1); } .key.target { background: var(--target); }
+.notes { list-style: none; padding: 0; margin: 12px 0 0; display: grid; gap: 6px; font-size: 13px; }
+.notes li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; color: var(--ink-2); }
+.notes li b { color: var(--ink); font-weight: 600; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+.chip { font: inherit; font-size: 13.5px; border: 1px solid var(--line); background: var(--surface); color: var(--ink-2); padding: 6px 12px; border-radius: 999px; cursor: pointer; display: inline-flex; gap: 6px; align-items: center; }
+.chip[aria-pressed="true"] { border-color: var(--accent); color: var(--ink); background: var(--accent-soft); }
+
+/* tables */
+.tbl { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+th { font-weight: 500; color: var(--ink-2); background: var(--bg); font-size: 12px; position: sticky; top: 0; }
+th:first-child, td:first-child { text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 1; }
+th:first-child { background: var(--bg); }
+tr:last-child td { border-bottom: 0; }
+td.em { color: var(--muted); }
+td.sumcol { font-weight: 600; border-left: 1px solid var(--line); }
+td.wrap { white-space: normal; min-width: 240px; text-align: left; }
+.neg { color: var(--crit-ink); }
+.has-note { text-decoration: underline dotted var(--muted); text-underline-offset: 3px; cursor: help; }
+
+/* content */
+.filters { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; align-items: center; }
+select, input[type="text"], input[type="month"], input[type="number"] { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 10px; }
+.tag { display: inline-block; font-size: 12px; padding: 0 8px; border-radius: 999px; background: var(--bg); border: 1px solid var(--line); color: var(--ink-2); }
+.boost { font-size: 11px; color: var(--warn-ink); background: var(--warn-soft); border-radius: 4px; padding: 0 6px; margin-left: 6px; }
+.rank { color: var(--muted); width: 28px; }
+
+/* upload */
+.drop { border: 2px dashed var(--axis); border-radius: 12px; padding: 32px 16px; text-align: center; background: var(--bg); cursor: pointer; transition: border-color .15s; }
+.drop.over, .drop:hover { border-color: var(--accent); }
+.drop strong { display: block; font-size: 16px; margin-bottom: 4px; }
+.drop span { color: var(--ink-2); font-size: 13px; }
+.form-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 14px 0; align-items: end; }
+.form-row label { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); }
+.coverage { display: grid; gap: 8px; }
+.cov { display: flex; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; flex-wrap: wrap; }
+.msg { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); color: var(--ink); font-size: 13.5px; }
+
+/* setup */
+.conn { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; padding: 12px 0; border-bottom: 1px solid var(--line); align-items: center; }
+.conn:last-child { border-bottom: 0; }
+.conn .name { font-weight: 600; }
+.conn .det { grid-column: 1 / -1; color: var(--ink-2); font-size: 13px; }
+
+/* slides drawer */
+.drawer { position: fixed; inset: 0; z-index: 20; background: rgba(10,14,12,.45); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.drawer .box { background: var(--surface); border-radius: 14px; max-width: 560px; width: 100%; max-height: 100%; overflow: auto; padding: 20px; border: 1px solid var(--line); }
+.drawer h2 { font-family: var(--f-display); font-size: 20px; margin: 0 0 4px; }
+.slide-list { list-style: none; padding: 0; margin: 14px 0; display: grid; gap: 8px; counter-reset: s; }
+.slide-list li { counter-increment: s; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+.slide-list li::before { content: counter(s); font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 6px; text-align: center; padding: 2px 0; }
+.slide-list small { display: block; color: var(--ink-2); }
+.clip { color: var(--ink); text-decoration: none; }
+.clip:hover { color: var(--accent); text-decoration: underline; }
+.tag-sel { font-size: 12.5px; padding: 2px 6px; }
+.segbar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; }
+.segbar .s1 { background: var(--series-1); } .segbar .s2 { background: var(--axis); }
+.sw-sq { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.sw-sq.s1 { background: var(--series-1); } .sw-sq.s2 { background: var(--axis); } .sw-sq.none { background: var(--bg); border: 1px solid var(--line); }
+.gbar { display: flex; gap: 2px; height: 14px; border-radius: 4px; overflow: hidden; }
+.gbar span:nth-child(1) { background: var(--series-1); } .gbar span:nth-child(2) { background: var(--series-2); }
+.terr { display: grid; grid-template-columns: 80px minmax(0, 1fr) 48px; gap: 6px 10px; align-items: center; font-size: 13px; margin-top: 8px; }
+.terr .b { height: 8px; min-width: 2px; border-radius: 0 4px 4px 0; background: var(--series-1); }
+.terr .v { text-align: right; font-variant-numeric: tabular-nums; }
+.mini { font-family: var(--f-display); font-weight: 600; font-size: 15px; margin: 16px 0 6px; }
+.kinds { margin: 0; padding-left: 1.2em; font-size: 13px; color: var(--ink-2); display: grid; gap: 4px; }
+.kinds b { color: var(--ink); font-weight: 600; }
+.warn-t { color: var(--warn-ink); }
+/* monthly report */
+.rep-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.toc { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 6px; }
+.rep-sec { margin-top: 26px; scroll-margin-top: 150px; }
+.rep-sec > h2 { font-family: var(--f-display); font-weight: 700; font-size: 20px; margin: 0; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.rep-sec > h2 small { font-family: var(--f-ui); font-weight: 500; font-size: 12px; color: var(--muted); }
+.rep-sec > .desc { color: var(--ink-2); margin: 2px 0 12px; font-size: 13.5px; }
+.rep-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 14px; }
+.rep-grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 14px; }
+.rep-stack { display: grid; gap: 14px; }
+.ph { font-family: var(--f-display); font-weight: 600; font-size: 17px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ph .right { margin-left: auto; }
+.mom { font-size: 12px; font-weight: 600; white-space: nowrap; }
+.mom.up { color: var(--good-ink); } .mom.down { color: var(--crit-ink); }
+.sv { display: grid; grid-template-columns: 74px repeat(2, minmax(0, 1fr)); gap: 4px 12px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.sv:first-of-type { border-top: 1px solid var(--line); }
+.sv .k { color: var(--ink-2); font-size: 12px; }
+.sv .v { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.3; }
+.sv .v .em { font-size: 13px; font-weight: 400; color: var(--muted); }
+.top2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 6px 18px; }
+.top-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 7px; }
+.top-list li { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; font-size: 13px; }
+.top-list .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.top-list .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top-list .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+.top-list small { color: var(--muted); }
+.foot { color: var(--muted); font-size: 12px; margin: 12px 0 0; }
+.empty-note { color: var(--ink-2); font-size: 13px; margin: 0; }
+.linkbtn { color: var(--accent); background: none; border: 0; font: inherit; font-weight: 500; cursor: pointer; padding: 0; }
+.okr-split { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 18px; }
+.kr { padding: 10px 0; border-bottom: 1px solid var(--line); }
+.kr:last-child { border-bottom: 0; }
+.kr .k b { color: var(--ink); font-weight: 600; }
+.kr .k small { color: var(--muted); }
+.kr .v { font-size: 18px; }
+.fill.prog { background: var(--series-1); }
+.ins h3 { font-size: 13px; font-weight: 600; margin: 0 0 6px; color: var(--ink); }
+.ins + .ins { margin-top: 12px; }
+.facts { margin: 0; padding-left: 1.1em; font-size: 13px; color: var(--ink-2); display: grid; gap: 4px; }
+.note-ta { display: block; width: 100%; font: inherit; font-size: 13.5px; line-height: 1.55; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; resize: vertical; min-height: 66px; }
+.note-ta:focus { outline: 2px solid var(--accent); outline-offset: 1px; background: var(--surface); }
+.note-ta::placeholder { color: var(--muted); }
+.vs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 14px; }
+.clipcard { border: 1px solid var(--line); border-radius: 10px; padding: 12px; display: grid; gap: 10px; min-width: 0; }
+.clipcard .hd { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.clipcard .hd label { margin-left: auto; display: inline-flex; gap: 6px; align-items: center; font-size: 12.5px; color: var(--ink-2); }
+.clipcard .hd input { width: 110px; padding: 3px 8px; font-size: 13px; }
+.badge { font-size: 12px; font-weight: 600; padding: 1px 9px; border-radius: 999px; }
+.badge.top { background: var(--good-soft); color: var(--good-ink); }
+.badge.low { background: var(--bg); color: var(--ink-2); border: 1px solid var(--line); }
+.clipcard .title { font-size: 13.5px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.nums { display: grid; grid-template-columns: repeat(auto-fit, minmax(72px, 1fr)); gap: 6px; background: var(--bg); border-radius: 8px; padding: 8px 10px; }
+.nums div { font-size: 11.5px; color: var(--ink-2); }
+.nums b { display: block; font-size: 15px; color: var(--ink); font-variant-numeric: tabular-nums; }
+.fields { display: grid; gap: 8px; }
+.fields label { display: grid; gap: 3px; font-size: 12.5px; font-weight: 600; color: var(--ink-2); }
+.fields .note-ta { min-height: 52px; font-weight: 400; }
+.yt-num { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 10px; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+.yt-num:last-child { border-bottom: 0; }
+.yt-num b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.pill { display: inline-flex; gap: 6px; align-items: baseline; background: var(--ink); color: var(--surface); border-radius: 999px; padding: 3px 12px; font-size: 13px; }
+.pill b { font-size: 15px; }
+.ypp-tier { margin-top: 10px; }
+.ypp-tier h3 { font-size: 13.5px; font-weight: 600; margin: 0 0 2px; }
+.ypp-tier .or { font-size: 12px; color: var(--muted); margin: 4px 0; }
+.rec { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--accent-soft); font-size: 13.5px; }
+.sample { font-size: 11px; font-weight: 600; color: var(--warn-ink); background: var(--warn-soft); border-radius: 4px; padding: 0 6px; white-space: nowrap; }
+.src { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+.src b { color: var(--ink-2); font-weight: 600; }
+.fresh { display: flex; flex-wrap: wrap; gap: 6px; margin: 0 0 4px; }
+.tgt input { width: 120px; text-align: right; padding: 4px 8px; }
+/* ---- OMNIX layout & components for this page ---- */
+body { font-size: var(--omnix-text-sm); line-height: 1.5; }
+main.ox-main { padding: 0; }
+.ox-topbar { position: sticky; top: 0; z-index: 10; }
+.ox-brand small { font-weight: 500; font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.ox-main__inner { max-width: 1240px; padding-bottom: var(--omnix-space-8); }
+@media (min-width: 768px) { .ox-sidebar { position: sticky; top: 52px; align-self: flex-start; height: calc(100vh - 52px); } }
+.proto-alert { font-size: var(--omnix-text-xs); line-height: 1.6; }
+.proto-alert b { font-weight: 600; margin-right: var(--omnix-space-1); }
+.view-head { margin-bottom: var(--omnix-space-5); }
+.view-head h1, .drawer h2 { font-size: var(--omnix-text-2xl); font-weight: 600; }
+.view-head p { color: var(--omnix-fg-muted); }
+.panel h2, .card-head h3, .ph, .mini, .rep-sec > h2 { font-weight: 600; }
+.panel h2 { font-size: var(--omnix-text-base); }
+.rep-sec > h2 { font-size: var(--omnix-text-lg); }
+.card-head h3, .ph { font-size: var(--omnix-text-base); }
+.mini { font-size: var(--omnix-text-sm); }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: var(--omnix-space-2); height: var(--omnix-control-h); padding: 0 var(--omnix-space-4); border-radius: var(--omnix-radius-lg); border: 1px solid var(--omnix-border); background: var(--omnix-surface); color: var(--omnix-fg); white-space: nowrap; transition: background .12s; }
+.btn:hover { background: var(--omnix-surface-2); border-color: var(--omnix-border); }
+.btn.primary { background: var(--omnix-accent); border-color: transparent; color: #fff; }
+.btn.primary:hover { background: var(--omnix-accent); filter: brightness(1.08); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.seg { background: var(--omnix-surface-2); border: 0; border-radius: var(--omnix-radius-lg); padding: 2px; gap: 0; }
+.seg button { height: 28px; padding: 0 var(--omnix-space-3); color: var(--omnix-fg-muted); }
+.seg button[aria-pressed="true"] { background: var(--omnix-surface); color: var(--omnix-fg); box-shadow: inset 0 0 0 1px var(--omnix-border); }
+.chip { height: 28px; padding: 0 var(--omnix-space-3); font-size: var(--omnix-text-sm); color: var(--omnix-fg); border-radius: var(--omnix-radius-full); }
+.chip[aria-pressed="true"] { background: var(--omnix-accent-soft); color: var(--omnix-accent); border-color: transparent; }
+.stat, .card, .panel, .clipcard, .cov, .slide-list li { border-radius: var(--omnix-radius-lg); }
+.summary { gap: var(--omnix-space-4); grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: var(--omnix-space-5); }
+@media (min-width: 1024px) { .summary { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.stat { display: flex; flex-direction: column; gap: var(--omnix-space-1); padding: var(--omnix-space-4); min-width: 0; }
+.stat .lbl { font-size: var(--omnix-text-xs); font-weight: 500; color: var(--omnix-fg-muted); }
+.stat .val { font-size: var(--omnix-text-2xl); font-weight: 600; line-height: 1.15; margin: 0; font-variant-numeric: tabular-nums; }
+.stat .sub { font-size: var(--omnix-text-xs); color: var(--omnix-fg-muted); }
+.cards, .grid2, .rep-grid, .rep-stack, .vs { gap: var(--omnix-space-4); }
+.grid2 { margin-bottom: var(--omnix-space-4); }
+.panel, .card { padding: var(--omnix-space-4); }
+select, input[type="text"], input[type="month"], input[type="number"] { height: var(--omnix-control-h); padding: 0 var(--omnix-space-3); border-radius: var(--omnix-radius-lg); border-color: var(--omnix-border); }
+select { appearance: none; padding-right: var(--omnix-space-8); background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%235b6472'%3E%3Cpath d='M16.293 9.293 12 13.586 7.707 9.293l-1.414 1.414L12 16.414l5.707-5.707z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 16px; }
+.tag-sel, .clipcard .hd input, .tgt input { height: 30px; }
+.tag-sel { padding-right: 28px; background-position: right 6px center; }
+.tbl { background: var(--omnix-surface); border-radius: var(--omnix-radius-lg); }
+th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-muted); font-size: var(--omnix-text-xs); }
+.plat, .tag { display: inline-flex; align-items: center; padding: 2px var(--omnix-space-2); border-radius: var(--omnix-radius-full); background: var(--omnix-surface-2); border: 1px solid var(--omnix-border); color: var(--omnix-fg-muted); font-size: var(--omnix-text-xs); font-weight: 500; letter-spacing: 0; text-transform: none; line-height: 1.4; }
+.badge { display: inline-flex; align-items: center; gap: var(--omnix-space-1); }
+.badge .ox-ico, .mom .ox-ico { width: 12px; height: 12px; }
+.mom { display: inline-flex; align-items: center; gap: 2px; }
+.pill { background: var(--omnix-accent-soft); color: var(--omnix-accent); }
+.tip { box-shadow: none; }
+.msg, .rec { background: var(--omnix-accent-soft); }
+.note-ta { background: var(--omnix-surface); border-radius: var(--omnix-radius-lg); }
+.note-ta:focus { outline: 2px solid var(--omnix-accent); outline-offset: 0; }
+.drop { border: 1px dashed var(--omnix-border); border-radius: var(--omnix-radius-lg); background: var(--omnix-surface-2); }
+.drop.over, .drop:hover { border-color: var(--omnix-accent); }
+.drawer { background: rgb(0 0 0 / .45); }
+.drawer .box { border-radius: var(--omnix-radius-xl); }
+.segbar .s2, .sw-sq.s2 { background: var(--omnix-chart-other); }
+.legend-line .tickkey, .kpi .tick { background: var(--omnix-fg); }
+.card-foot svg { color: var(--omnix-chart-1); }
+.chart-legend { margin-bottom: var(--omnix-space-3); min-height: 18px; }
+.rep-sec { scroll-margin-top: 70px; }
+.ox-brand { white-space: nowrap; }
+@media (max-width: 600px) {
+  .ox-topbar { gap: var(--omnix-space-2); padding: 0 var(--omnix-space-3); }
+  .ox-brand small, .hide-sm, .ox-nav-group__label { display: none; }
+  .ox-topbar .ox-btn { height: 30px; padding: 0 var(--omnix-space-3); font-size: var(--omnix-text-xs); }
+  .ox-sidebar { padding: var(--omnix-space-2) var(--omnix-space-3); gap: var(--omnix-space-1); }
+  .ox-nav-item { padding: var(--omnix-space-1) var(--omnix-space-3); }
+}
+@media print {
+  .ox-topbar, .ox-sidebar, .proto-alert, .rep-tools, .toc, .drawer { display: none !important; }
+  body { background: var(--omnix-surface); }
+  main { padding: 0; }
+  .panel, .clipcard { break-inside: avoid; }
+  .note-ta { border: 0; background: none; resize: none; padding: 0; min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<div class="ox-app">
+<header class="ox-topbar">
+  <div class="ox-brand"><span class="ox-brand__mark">CT</span>CT Social OKR <small>ปี 2026</small></div>
+  <span class="ox-topbar__spacer"></span>
+  <button class="ox-btn ox-btn--ghost" id="btn-theme" type="button">สลับธีม</button>
+  <button class="ox-btn ox-btn--primary" id="btn-slides" type="button">สร้างสไลด์<span class="hide-sm">เดือนนี้</span></button>
+</header>
+<div class="ox-shell">
+<nav class="ox-sidebar" id="nav" aria-label="เมนูหลัก">
+  <div class="ox-label-caps ox-nav-group__label">แดชบอร์ด</div>
+  <a class="ox-nav-item" href="#overview" data-view="overview">ภาพรวม</a>
+  <a class="ox-nav-item" href="#report" data-view="report">สรุปรายเดือน</a>
+  <a class="ox-nav-item" href="#account" data-view="account">รายบัญชี</a>
+  <a class="ox-nav-item" href="#content" data-view="content">คอนเทนต์</a>
+  <div class="ox-label-caps ox-nav-group__label">ข้อมูล</div>
+  <a class="ox-nav-item" href="#upload" data-view="upload">อัปโหลด TikTok</a>
+  <a class="ox-nav-item" href="#setup" data-view="setup">ตั้งค่า</a>
+</nav>
+<main class="ox-main"><div class="ox-main__inner">
+  <div class="ox-alert ox-alert--warning proto-alert"><span><b>หน้าตัวอย่าง</b>TikTok Eloop เดือน ต.ค. ใช้ไฟล์ export จริงจาก TikTok Studio (ภาพรวม, ผู้ติดตาม, วิดีโอ) ตัวเลขเดือนอื่นเป็นตัวอย่างจากชีตเดิม ระบบจริงจะดึงจากแพลตฟอร์มโดยตรง สถานะการเชื่อมต่อเป็นข้อมูลสมมติ และปุ่มต่างๆ ยังไม่บันทึกข้อมูลจริง</span></div>
+  <section id="v-overview" data-v="overview">
+    <div class="view-head">
+      <div><h1>ภาพรวม OKR</h1><p>เทียบยอดสะสมกับเป้าทั้งปี และดูว่าแต่ละบัญชีเร็วหรือช้ากว่าแผน</p></div>
+      <div class="right"><div class="seg" role="group" aria-label="กรองแบรนด์" id="brand-seg">
+        <button type="button" data-brand="all" aria-pressed="true">ทุกแบรนด์</button>
+        <button type="button" data-brand="Eloop" aria-pressed="false">Eloop</button>
+        <button type="button" data-brand="Moov" aria-pressed="false">Moov</button>
+      </div></div>
+    </div>
+    <div class="summary" id="summary"></div>
+    <div class="legend-line">
+      <span class="item"><span class="tickkey"></span>ขีดดำ = ควรอยู่ตรงนี้ตามเวลาที่ผ่านไป</span>
+      <span class="item"><span class="sw good"></span>ตามแผน (80% ขึ้นไป)</span>
+      <span class="item"><span class="sw warn"></span>เสี่ยง (60–79%)</span>
+      <span class="item"><span class="sw crit"></span>ช้ากว่าแผน (ต่ำกว่า 60%)</span>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section id="v-account" data-v="account" hidden>
+    <div class="view-head"><div><h1 id="acc-title">รายบัญชี</h1><p id="acc-sub"></p></div></div>
+    <div class="chips" id="acc-chips" role="group" aria-label="เลือกบัญชี"></div>
+    <div class="chips" id="metric-chips" role="group" aria-label="เลือกตัวชี้วัด"></div>
+    <div class="grid2">
+      <div class="panel"><h2>ยอดสะสมเทียบเป้า</h2><p class="desc" id="cum-desc"></p><div class="ox-legend chart-legend" id="cum-legend"></div><div class="chart" id="chart-cum"></div></div>
+      <div class="panel"><h2>รายเดือน</h2><p class="desc" id="mon-desc"></p><div class="chart" id="chart-mon"></div><ul class="notes" id="notes"></ul></div>
+    </div>
+    <div class="grid2" id="aud" hidden>
+      <div class="panel"><h2>ช่วงเวลาที่ผู้ติดตามออนไลน์</h2><p class="desc" id="act-desc"></p><div class="chart" id="chart-act"></div></div>
+      <div class="panel"><h2>ผู้ติดตามเป็นใคร</h2><p class="desc" id="who-desc"></p><div id="who"></div></div>
+    </div>
+    <div class="panel"><h2>ตารางรายเดือน</h2><p class="desc">หน้าตาเหมือนชีตเดิม ระบบคำนวณ SUM, Progress และ Pace ให้เอง ตัวเลขที่ขีดเส้นใต้มีโน้ต วางเมาส์เพื่อดู</p><div class="tbl" id="acc-table"></div></div>
+  </section>
+
+  <section id="v-content" data-v="content" hidden>
+    <div class="view-head"><div><h1>Top Ranking คอนเทนต์</h1><p>จัดอันดับคลิปที่โพสต์ในเดือน จากไฟล์วิดีโอที่ export จาก TikTok Studio</p></div></div>
+    <div class="filters">
+      <select id="f-acc" aria-label="บัญชี"></select>
+      <select id="f-month" aria-label="เดือน"><option value="2026-10">ต.ค. 2026</option></select>
+      <select id="f-type" aria-label="ประเภทคอนเทนต์"><option value="all">ทุกประเภทคอนเทนต์</option></select>
+      <div class="seg" role="group" aria-label="เรียงตาม" id="sort-seg">
+        <button type="button" data-sort="views" aria-pressed="true">วิว</button>
+        <button type="button" data-sort="vpd" aria-pressed="false">วิวต่อวัน</button>
+        <button type="button" data-sort="er" aria-pressed="false">ER</button>
+      </div>
+      <span class="tag" id="content-src"></span>
+    </div>
+    <div id="content-body">
+      <div class="summary" id="content-sum"></div>
+      <div class="grid2">
+        <div class="panel"><h2>วิวเฉลี่ยต่อคลิป แยกตามประเภทคอนเทนต์</h2><p class="desc">ระบบเดาประเภทจากชื่อคลิป แก้ได้ในตารางด้านล่าง</p><div class="chart" id="chart-type"></div></div>
+        <div class="panel"><h2>วิวจากคลิปใหม่เทียบวิวทั้งบัญชี</h2><p class="desc" id="share-desc"></p><div id="share-bar"></div></div>
+      </div>
+      <div class="panel"><h2 id="rank-title">Top คลิปประจำเดือน</h2><p class="desc" id="rank-desc"></p><div class="tbl" id="content-table"></div></div>
+    </div>
+    <div class="panel" id="content-empty" hidden><h2>ยังไม่มีข้อมูลรายคลิปของบัญชีนี้</h2><p class="desc" style="margin:0">ในระบบจริง YouTube และ Facebook จะดึงรายคลิปอัตโนมัติ ส่วน TikTok อัปโหลดไฟล์วิดีโอจากหน้าอัปโหลด TikTok ตอนนี้มีตัวอย่างข้อมูลจริงเฉพาะ TikTok Eloop เดือน ต.ค. 2026</p></div>
+  </section>
+
+  <section id="v-report" data-v="report" hidden>
+    <div class="view-head">
+      <div><h1 id="rep-title">สรุปประจำเดือน</h1><p id="rep-sub"></p></div>
+      <div class="right rep-tools">
+        <select id="rep-month" aria-label="เดือนของรายงาน"></select>
+        <div class="seg" role="group" aria-label="กรองแบรนด์" id="rep-brand">
+          <button type="button" data-rbrand="all" aria-pressed="true">ทุกแบรนด์</button>
+          <button type="button" data-rbrand="Eloop" aria-pressed="false">Eloop</button>
+          <button type="button" data-rbrand="Moov" aria-pressed="false">Moov</button>
+        </div>
+        <button class="btn" type="button" id="rep-print">พิมพ์ / PDF</button>
+      </div>
+    </div>
+    <div class="fresh" id="rep-fresh"></div>
+    <div class="toc" role="group" aria-label="ไปยังหัวข้อ">
+      <button class="chip" type="button" data-jump="sec-short">Short VDO</button>
+      <button class="chip" type="button" data-jump="sec-okr">OKR แยกแพลตฟอร์ม</button>
+      <button class="chip" type="button" data-jump="sec-va">วิเคราะห์คลิป</button>
+      <button class="chip" type="button" data-jump="sec-yt">YouTube</button>
+      <button class="chip" type="button" data-jump="sec-ypp">YPP</button>
+    </div>
+
+    <div class="rep-sec" id="sec-short">
+      <h2>Short VDO ประจำเดือน <small>TikTok และ Facebook Reels</small></h2>
+      <p class="desc">จำนวนคลิปที่ลง วิวรวมของคลิปที่ลงในเดือน และ Top 5 คลิปวิวสูงสุด เทียบกับเดือนก่อน · ที่มา: รายคลิปจากไฟล์วิดีโอ TikTok และ Facebook API</p>
+      <div class="rep-grid" id="rep-short"></div>
+    </div>
+
+    <div class="rep-sec" id="sec-okr">
+      <h2>Objective &amp; Key Result <small id="okr-period"></small></h2>
+      <p class="desc">เทียบยอดสะสมกับเป้าทั้งปี สีสถานะดูจาก Pace (เร็วหรือช้ากว่าเวลาที่ผ่านไป) ข้อสังเกตระบบเขียนให้อัตโนมัติ ส่วน Monthly Update กับ Next Step ทีมเขียนเอง · ที่มา: ข้อมูลรายเดือนของทุกบัญชี เป้าและค่าปีก่อนจากหน้าตั้งค่า</p>
+      <div class="rep-stack" id="rep-okr"></div>
+    </div>
+
+    <div class="rep-sec" id="sec-va">
+      <h2>Video Analysis <small>คลิปวิวสูงสุดและต่ำสุดของแต่ละบัญชี</small></h2>
+      <p class="desc">ระบบเลือกคลิปและสรุปตัวเลขให้ ทีมใส่ชื่อ Creator และเขียนบทวิเคราะห์ 4 ด้านเหมือนในสไลด์</p>
+      <div class="rep-stack" id="rep-va"></div>
+    </div>
+
+    <div class="rep-sec" id="sec-yt">
+      <h2>YouTube Content Performance</h2>
+      <p class="desc">ตัวเลขสำคัญของเดือนเทียบเดือนก่อน วิดีโอเด่น 3 อันดับ และข้อแนะนำ · ที่มา: YouTube API</p>
+      <div class="rep-grid" id="rep-yt"></div>
+    </div>
+
+    <div class="rep-sec" id="sec-ypp">
+      <h2>สถานะ YouTube Partner Program <small id="ypp-asof"></small></h2>
+      <p class="desc">ระยะทางถึงเกณฑ์สร้างรายได้ เลือกสะสมชั่วโมงคลิปยาว หรือยอดดู Shorts อย่างใดอย่างหนึ่ง · ที่มา: YouTube API</p>
+      <div class="rep-grid" id="rep-ypp"></div>
+    </div>
+  </section>
+
+  <section id="v-upload" data-v="upload" hidden>
+    <div class="view-head"><div><h1>อัปโหลดข้อมูล TikTok</h1><p>Export ไฟล์จาก TikTok Studio แล้วลากมาวางพร้อมกันทั้งหมด ระบบแยกให้เองว่าไฟล์ไหนเป็นข้อมูลอะไร</p></div></div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>อัปโหลดไฟล์</h2><p class="desc">รองรับไฟล์ .csv จาก TikTok Studio: ภาพรวม (Overview), ผู้ติดตาม (4 ไฟล์) และวิดีโอ</p>
+        <label class="drop" id="drop" for="file"><strong>ลากไฟล์ทั้งหมดของเดือนมาวาง หรือคลิกเพื่อเลือกไฟล์</strong><span>เลือกได้หลายไฟล์พร้อมกัน ระบบเดาบัญชีจากชื่อไฟล์และลิงก์คลิป</span></label>
+        <input type="file" id="file" accept=".csv" multiple hidden>
+        <div class="form-row">
+          <label for="up-acc">บัญชี<select id="up-acc"><option value="tt-eloop">TikTok Eloop</option><option value="tt-moov">TikTok Moov</option></select></label>
+          <label for="up-month">เดือนของข้อมูล<input type="month" id="up-month" value="2026-10"></label>
+        </div>
+        <div id="preview"></div>
+      </div>
+      <div class="panel">
+        <h2>ข้อมูลของแต่ละบัญชี</h2><p class="desc">ระบบส่งอีเมลเตือนทุกวันที่ 3 ถ้ายังไม่มีไฟล์ของเดือนก่อน</p>
+        <div class="coverage" id="coverage"></div>
+        <h3 class="mini">ไฟล์ที่ระบบรู้จัก</h3>
+        <ul class="kinds">
+          <li><b>ภาพรวม (Overview)</b> วิว, Profile Views, ไลก์, คอมเมนต์, แชร์ รายวัน</li>
+          <li><b>FollowerHistory</b> ผู้ติดตามรวมรายวัน ใช้คำนวณ Net Follower</li>
+          <li><b>FollowerActivity, FollowerGender, FollowerTopTerritories</b> เวลาที่ผู้ติดตามออนไลน์ เพศ และประเทศ</li>
+          <li><b>วิดีโอ</b> รายคลิป ใช้ทำ Top Ranking และนับ Monthly Output</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="v-setup" data-v="setup" hidden>
+    <div class="view-head"><div><h1>ตั้งค่า</h1><p>สถานะการเชื่อมต่อ ผู้รับแจ้งเตือน และสิทธิ์การเข้าถึง (สถานะในหน้านี้เป็นตัวอย่าง)</p></div></div>
+    <div class="grid2">
+      <div class="panel"><h2>การเชื่อมต่อ</h2><p class="desc">ดึงข้อมูลอัตโนมัติทุกวันเวลา 06:00 น.</p>
+        <div class="conn"><span class="name">YouTube Eloop</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
+        <div class="conn"><span class="name">YouTube Moov</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
+        <div class="conn"><span class="name">Facebook Eloop</span><span class="st crit">เชื่อมต่อไม่สำเร็จ</span><span class="det">Token ใช้ไม่ได้แล้ว เพราะแอดมินที่ตั้งค่าเปลี่ยนรหัสผ่าน · <button class="btn" type="button" style="padding:2px 10px;font-size:12.5px">เชื่อมต่อใหม่</button></span></div>
+        <div class="conn"><span class="name">Facebook Moov</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:03 · ข้อมูลถึง 4 พ.ย.</span></div>
+        <div class="conn"><span class="name">TikTok Eloop, TikTok Moov</span><span class="st none">อัปโหลดไฟล์</span><span class="det">ไม่ต้องเชื่อมต่อ ดูสถานะได้ที่หน้าอัปโหลด TikTok</span></div>
+      </div>
+      <div class="panel"><h2>แจ้งเตือนและสิทธิ์</h2><p class="desc">ใครเห็นอะไร และใครได้อีเมลเมื่อระบบมีปัญหา</p>
+        <div class="conn"><span class="name">ผู้รับอีเมลแจ้งเตือน</span><span class="tag">2 คน</span><span class="det">เจ้าของระบบ และผู้แก้ไขสำรอง</span></div>
+        <div class="conn"><span class="name">ผู้แก้ไข</span><span class="tag">3 คน</span><span class="det">อัปโหลดไฟล์ แก้เป้า เขียนโน้ต และสร้างสไลด์ได้</span></div>
+        <div class="conn"><span class="name">ผู้ดู</span><span class="tag">ทีม CT</span><span class="det">ดูแดชบอร์ดได้อย่างเดียว</span></div>
+        <div class="conn"><span class="name">เป้าหมายปี 2027</span><span class="st none">ยังไม่ตั้ง</span><span class="det">ตั้งเป้าปีหน้าได้ก่อนขึ้นปีใหม่</span></div>
+      </div>
+    </div>
+    <div class="panel" style="margin-top:16px"><h2>เป้าหมายและค่าปีก่อน · ปี 2026</h2>
+      <p class="desc">ตั้งครั้งเดียวต้นปี แก้ตัวเลขแล้วภาพรวม หน้าบัญชี และหน้าสรุปรายเดือนเปลี่ยนตามทันที ค่าปีก่อนใช้แสดงคำว่า "เดิม" ในสไลด์</p>
+      <div class="tbl"><table class="tgt"><thead><tr><th style="text-align:left">บัญชี</th><th style="text-align:left">Key Result</th><th>เป้าทั้งปี</th><th>ค่าปีก่อน</th></tr></thead><tbody id="tgt-body"></tbody></table></div>
+      <div id="tgt-msg"></div>
+    </div>
+  </section>
+</div></main>
+</div>
+</div>
+
+<div class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dr-title">
+  <div class="box">
+    <h2 id="dr-title">สร้างสไลด์สรุปประจำเดือน</h2>
+    <p style="margin:0;color:var(--ink-2)">ระบบคัดลอกสไลด์เทมเพลตของทีม (หน้าตาเดียวกับไฟล์ Content OKR เดิม) แล้วเติมตัวเลขและข้อความจากหน้าสรุปรายเดือนให้ประมาณ 16 หน้า</p>
+    <ol class="slide-list">
+      <li><span>ปก และ Update KPI &amp; OKR<small>ชื่อเดือน และช่วงวันที่ของข้อมูล</small></span></li>
+      <li><span>Short VDO แยกแบรนด์ (2 หน้า)<small>จำนวนคลิป วิวรวม เทียบเดือนก่อน และ Top 5 TikTok กับ Facebook Reels</small></span></li>
+      <li><span>OKR แยกแพลตฟอร์ม (3 หน้า)<small>TikTok, Facebook, YouTube พร้อม % เทียบเป้า สีสถานะ และ Key Insights ที่ทีมเขียน</small></span></li>
+      <li><span>Video Analysis (บัญชีละ 1 หน้า)<small>คลิปวิวสูงสุดและต่ำสุด ตัวเลข และบทวิเคราะห์ 4 ด้าน</small></span></li>
+      <li><span>YouTube Content Performance (2 หน้า)<small>ตัวเลขสำคัญ วิดีโอเด่น 3 อันดับ และข้อแนะนำ</small></span></li>
+      <li><span>สถานะ YouTube Partner Program<small>ระยะทางถึงเกณฑ์สร้างรายได้ของทั้ง 2 ช่อง</small></span></li>
+      <li><span>ข้อสังเกตอัตโนมัติ<small id="dr-insight"></small></span></li>
+    </ol>
+    <div id="dr-msg"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
+      <button class="btn" type="button" id="dr-close">ปิด</button>
+      <button class="btn primary" type="button" id="dr-go">สร้างสไลด์</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const CUM_DAYS = [31,59,90,120,151,181,212,243,273,304,334,365];
+  const N = null;
+
+  // Monthly figures from sheet "Data OKR 2026". kind: sum = adds up toward an annual target; rate = monthly average vs target.
+  const ACCOUNTS = [
+    { id: 'tt-eloop', brand: 'Eloop', platform: 'TikTok', name: 'TikTok Eloop', metrics: [
+      { key: 'views', label: 'Views', kind: 'sum', target: 46000000, data: [1949171,3213561,2314387,1448529,2000797,1864228,3790559,2871909,2351477,3069341] },
+      { key: 'nf', label: 'Net Follower', kind: 'sum', target: 35000, data: [1752,3087,1993,1314,1704,2614,3164,1448,443,1403] },
+      { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', target: 1.80, data: [0.92,0.56,0.93,1.03,0.65,1.36,0.73,0.47,0.60,0.47] },
+      { key: 'likes', label: 'Like', kind: 'sum', data: [15172,15281,18200,12388,10903,22842,24317,11721,12438,12838] },
+      { key: 'comments', label: 'Comment', kind: 'sum', data: [763,519,846,698,376,296,424,306,236,225] },
+      { key: 'shares', label: 'Share', kind: 'sum', data: [1960,2089,2364,1785,1652,2299,2768,1516,1506,1295] },
+      { key: 'pv', label: 'Profile Views', kind: 'sum', data: [N,N,N,N,N,N,N,N,N,21272] },
+      { key: 'output', label: 'จำนวนคลิป', kind: 'sum', data: [31,36,53,27,25,20,31,36,55,38] },
+    ], notes: [[6,'output','มีคอนเทนต์ภาพใส่เพลง'],[7,'nf','Unfollow −2,703'],[8,'nf','Unfollow −1,176'],[9,'nf','จากไฟล์ FollowerHistory · ผู้ติดตาม 286,280 → 287,621']] },
+    { id: 'tt-moov', brand: 'Moov', platform: 'TikTok', name: 'TikTok Moov', metrics: [
+      { key: 'views', label: 'Views', kind: 'sum', target: 5000000, data: [156162,222114,920104,397543,204745,154852,204359,205017,280261,162287] },
+      { key: 'nf', label: 'Net Follower', kind: 'sum', target: 10000, data: [363,301,560,422,333,260,558,256,284,262] },
+      { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', target: 2.15, data: [1.34,1.76,1.46,1.13,1.80,1.50,1.61,1.82,1.38,0.92] },
+      { key: 'likes', label: 'Like', kind: 'sum', data: [1785,2989,11114,3656,3144,2001,2897,3409,3424,1268] },
+      { key: 'comments', label: 'Comment', kind: 'sum', data: [59,43,260,133,53,36,88,44,72,31] },
+      { key: 'shares', label: 'Share', kind: 'sum', data: [245,880,2057,698,480,280,307,277,384,192] },
+      { key: 'output', label: 'จำนวนคลิป', kind: 'sum', data: [29,33,37,35,27,22,20,18,37,21] },
+    ], notes: [[0,'output','มีคลิปจากปีก่อนหน้า']] },
+    { id: 'fb-eloop', brand: 'Eloop', platform: 'Facebook', name: 'Facebook Eloop', metrics: [
+      { key: 'views', label: 'Views organic', kind: 'sum', target: 5900000, data: [86693,51361,219712,194922,40323,85688,98447,45403,81652] },
+      { key: 'watch', label: 'Watch time (นาที)', kind: 'sum', target: 17000, data: [1064,529,649,1560,1277,1860,1740,2220,3000] },
+      { key: 'nf', label: 'Net Follower', kind: 'sum', target: N, pending: 'เป้า 88,000 รอยืนยันว่าเป็นยอดสะสมหรือไม่', data: [53,37,76,72,4,-28,40,2,179] },
+      { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', target: 1.50, data: [1.58,1.45,0.50,1.03,5.40,3.86,3.37,5.30,3.20] },
+      { key: 'inter', label: 'Content Interaction', kind: 'sum', data: [1373,743,1094,2007,2178,3307,3317,2408,2610] },
+      { key: 'output', label: 'จำนวนคลิป', kind: 'sum', data: [20,3,14,32,8,29,16,27,54] },
+    ], notes: [[4,'nf','Unfollow 122'],[5,'nf','Unfollow 140'],[8,'output','คลิปไวรัล iP 18 Pro เปิดตัว']] },
+    { id: 'fb-moov', brand: 'Moov', platform: 'Facebook', name: 'Facebook Moov', metrics: [
+      { key: 'views', label: 'Views organic', kind: 'sum', target: 230000, data: [11994,13318,10126,10595,9323,14260,40267,11334,15718] },
+      { key: 'watch', label: 'Watch time (นาที)', kind: 'sum', target: 16000, data: [1299,1189,1096,1251,1196,1407,7920,3360,1740] },
+      { key: 'nf', label: 'Net Follower', kind: 'sum', target: N, pending: 'ยังไม่มีเป้า', data: [14,14,7,19,21,10,371,-21,14] },
+      { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', target: 2.30, data: [2.60,1.92,1.91,3.09,6.52,2.34,6.30,1.39,1.46] },
+      { key: 'inter', label: 'Content Interaction', kind: 'sum', data: [312,256,193,327,608,334,2537,157,229] },
+      { key: 'output', label: 'จำนวนคลิป', kind: 'sum', data: [10,8,12,32,22,21,13,22,27] },
+    ], notes: [] },
+    { id: 'yt-eloop', brand: 'Eloop', platform: 'YouTube', name: 'YouTube Eloop', metrics: [
+      { key: 'views', label: 'Views', kind: 'sum', target: 160000, data: [15797,10070,12394,14140,12538,13878,14263,16740,56386] },
+      { key: 'nf', label: 'Subscriber ใหม่', kind: 'sum', target: 2000, data: [42,39,43,31,45,96,78,62,997] },
+      { key: 'awt', label: 'Avg watch %', kind: 'rate', unit: '%', target: 42, data: [34.80,34.80,35.30,36.80,37.05,43.83,43.90,44.95,42.26] },
+      { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', target: 1.20, data: [0.69,1.06,1.39,1.46,1.47,1.99,2.23,1.83,0.94] },
+      { key: 'likes', label: 'Like', kind: 'sum', data: [91,92,144,185,151,204,207,267,442] },
+      { key: 'comments', label: 'Comment', kind: 'sum', data: [6,6,2,8,5,6,4,8,9] },
+      { key: 'shares', label: 'Share', kind: 'sum', data: [12,9,26,13,28,67,107,32,76] },
+    ], notes: [[8,'nf','กิจกรรมชวนกดติดตามแบบ Cross-platform']] },
+    { id: 'yt-moov', brand: 'Moov', platform: 'YouTube', name: 'YouTube Moov', metrics: [
+      { key: 'views', label: 'Views', kind: 'sum', target: 350000, data: [27603,25057,51878,51624,22410,31270,16888,24305,36572] },
+      { key: 'nf', label: 'Subscriber ใหม่', kind: 'sum', target: 2000, data: [37,25,40,26,34,39,17,26,23] },
+      { key: 'awt', label: 'Avg watch %', kind: 'rate', unit: '%', target: 55, data: [45.90,47.10,50.50,55.31,50.37,49.88,47.65,50.32,55.15] },
+      { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', target: 1.50, data: [0.89,0.95,0.76,0.58,0.95,1.20,0.94,1.06,0.43] },
+      { key: 'likes', label: 'Like', kind: 'sum', data: [209,199,363,260,175,328,131,228,124] },
+      { key: 'comments', label: 'Comment', kind: 'sum', data: [3,7,3,1,3,1,3,2,4] },
+      { key: 'shares', label: 'Share', kind: 'sum', data: [33,32,27,37,34,46,24,28,29] },
+    ], notes: [] },
+  ];
+
+  // Real TikTok Eloop clips from the October 2026 video export: [title, id, posted, views, likes, comments, shares, saves, guessed type, product]
+  const TT_CLIPS = [["(7-11 ต.ค. 69) ช้อป EW40 CCC, EW35 CCC รับ Magnetic Stand ST02 . (10 ต.ค. 69) ช้อปแบตสำรองมูลค่าเกิน 500.- รับขาตั้งมือถือ PS02 #orsenbyeloop #1010sale #tiktokshop1010 #eloopของแท้","7693406624790088966","2026/10/07 05:30",58785,88,2,13,4,"แคมเปญ","EW40/EW35"],["10.10 (7-11 ต.ค. 69) หัวชาร์จ สำหรับ iPhone 18 Eloop C42T 65W ลด 50% จำกัดพิเศษสำหรับในไลฟ์สดเท่านั้น #orsenbyeloop #1010sale #tiktokshop1010 #iPhone18","7693405976124345618","2026/10/06 04:24",46857,106,0,9,5,"แคมเปญ","C42T"],["เข้าร่วม LIVE ของเรา แล้วรับโปรโมชั่นพิเศษ!","7693728850483727637","2026/10/07 01:17",30900,50,0,2,4,"โปรโมตไลฟ์",""],["แบตสำรองอะไร ตัวเล็กกว่าฝ่ามืออีก! #แบตสำรองพกพา #พาวเวอร์แบงค์ไซส์มินิ #พาวเวอร์แบงค์ไร้สาย #แบตสำรองตัวเล็ก #EloopThailand","7694482504358628615","2026/10/12 12:00",27581,139,0,2,13,"สินค้า",""],["เข้าร่วม LIVE ของเรา แล้วรับโปรโมชั่นพิเศษ!","7691902060790353159","2026/10/02 03:08",18079,23,0,0,1,"โปรโมตไลฟ์",""],["จีนคุมเข้มพาวเวอร์แบงค์ข้อกำหนดใหม่ที่สายเที่ยวต้องรู้ 🇨🇳✈️ . #พาวเวอร์แบงค์ไปจีน #เที่ยวจีน #มาตรฐานCCC #OrsenEW35 #EloopThailand","7691928203459349778","2026/10/02 12:00",16662,87,0,2,10,"สินค้า","EW35"],["ประกาศผลผู้โชคดี! กิจกรรมลุ้นรับ EW40 ขอแสดงความยินดีกับผู้โชคดีทั้ง 5 ท่าน ผู้โชคดีต้องติดต่อกลับแอดมินเพื่อยืนยันตัวตน ภายในวันที่ 5 ตุลาคม 2026 นี้เท่านั้น หากพ้นกำหนดจะถือว่าสละสิทธิ์","7692001695244586258","2026/10/02 10:30",11462,17,0,0,1,"กิจกรรม","EW40"],["PAYDAY ช้อปวันเงินออก ชาร์จด่วน ชาร์จเร็ว E29Ultra , E59 ราคาพิเศษ หัวชาร์จ C42T , C62TC ราคาถูกกว่าเดิม *ราคาสินค้าอาจเปลี่ยนแปลงตามคูปองส่วนลด TikTok Shop ณ ช่วงเวลาสั่งซื้อ* #paydaysale #tiktokshopช้อปกันวันเงินออก #eloop","7699419448184229121","2026/10/25 05:00",11003,23,0,1,0,"แคมเปญ","E29Ultra/E59"],["[3/3] สรุป iOS 27 มีอะไรใหม่? อัปแล้วลื่นขึ้น และฟีเจอร์ใหม่เพียบ! #ios #Apple #ios27 #iphone","7690791911266848001","2026/10/01 05:00",8955,16,0,0,0,"รีวิว",""],["ใครอัปเดตเป็น iOS 27 มาครบ 1 อาทิตย์แล้วบ้าง รู้สึกยังไงกันบ้าง? #iOS27 #อัปเดตiOS #iPhone13 #ทริคไอโฟน #รีวิวไอโฟน #EloopThailand","7693036808313113874","2026/10/05 04:50",8814,31,0,0,3,"รีวิว",""],["iPhone Duo มีรอยพับไหม ? #iphone #iphoneduo #ไอโฟน","7699874544911273237","2026/10/23 14:45",8411,30,0,1,3,"เกาะกระแส",""],["😍ใหม่ล่าสุด! แบตสำรอง Orsen by Eloop E41 สายชาร์จ Type-C และ Lightning ในตัว ดึงมาใช้งานได้ทันที ไม่ต้องพกสายแยก #OrsenE41 #พาวเวอร์แบงค์มีสายในตัว #แบตสำรอง10000mAh #พาวเวอร์แบงค์ชาร์จเร็ว #EloopThailand","7696805160718486804","2026/10/15 12:30",8334,35,0,0,4,"สินค้า","E41"],["[1/5] รีวิวiPhone18ProSeriesสเปกเทพมีอะไรใหม่บ้าง 📱✨ #iPhone18ProSeries #รีวิวiPhone18Pro #iPhone18ProMax #รีวิวไอโฟน #มือถือใหม่ #EloopThailand","7695716860960034069","2026/10/13 02:00",8086,54,0,0,3,"รีวิว",""],["😱คุณพรี่เอางี้จริงดิ #กล้องหน้า #iphonedo #apple","7701174342993841428","2026/10/27 02:49",7797,59,4,2,1,"เกาะกระแส",""],["[2/5] รีวิวiPhone18ProSeriesสเปกเทพมีอะไรใหม่บ้าง 📱✨ #EloopThailand #iPhone18ProSeries #รีวิวiPhone18Pro #iPhone18ProMax #รีวิวไอโฟน","7695717206558018836","2026/10/13 03:30",5766,31,0,1,0,"รีวิว",""],["แกะกล่องOrsenEW40ความจุเยอะรองรับCCC 🔋🇨🇳 #OrsenEW40 #พาวเวอร์แบงค์ไปจีน #เที่ยวจีน #มาตรฐานCCC #พาวเวอร์แบงค์ชาร์จเร็ว #EloopThailand","7691925177948507400","2026/10/02 05:00",5367,18,0,0,0,"แกะกล่อง","EW40"],["พับแรกพบ! Unbox iPhone Duo 📱😎 #iphoneduo #iphone #ios #แกะกล่อง #unboxiphone","7699888161249381652","2026/10/23 16:00",4865,35,0,2,1,"แกะกล่อง",""],["[3/5] รีวิวiPhone18ProSeriesสเปกเทพมีอะไรใหม่บ้าง 📱✨ #EloopThailand #iPhone18ProSeries #รีวิวiPhone18Pro #iPhone18ProMax #รีวิวไอโฟน","7695718295789440277","2026/10/13 08:00",4570,22,0,0,0,"รีวิว",""],["สายเที่ยวตัวจบ Orsen by Eloop EW40 ความจุแน่นๆ 20000 mAh ตอบโจทย์ทุกการเดินทาง 🔋✨ #OrsenEW40#พาวเวอร์แบงค์ไปจีน#เที่ยวจีน#มาตรฐานCCC#พาวเวอร์แบงค์ไร้สาย#EloopThailand","7694140713251999028","2026/10/08 04:50",4565,17,0,1,4,"สินค้า","EW40"],["PAYDAY ช้อปวันเงินออก 25-31 ต.ค. 69 ช้อปในไลฟ์สดราคาคุ้มกว่า คูปองไลฟ์คุ้มลดสูงสด 90% พร้อมโปรเด็ดช้อป EW40 CCC รับเลย พัดลมหูแมว จำกัด 200 ออเดอร์เท่านั้น #paydaysale #tiktokshopช้อปกันวันเงินออก #eloop #EW40","7699403278726991105","2026/10/23 14:00",4327,11,0,0,2,"แคมเปญ","EW40"],["[5/5] รีวิวiPhone18ProSeriesสเปกเทพมีอะไรใหม่บ้าง 📱✨ #EloopThailand #iPhone18ProSeries #รีวิวiPhone18Pro #iPhone18ProMax #รีวิวไอโฟน","7696346725744708885","2026/10/14 05:30",3847,25,0,0,1,"รีวิว",""],["[4/5] รีวิวiPhone18ProSeriesสเปกเทพมีอะไรใหม่บ้าง 📱✨ #EloopThailand #iPhone18ProSeries #รีวิวiPhone18Pro #iPhone18ProMax #รีวิวไอโฟน #มือถือใหม่","7696346016894913812","2026/10/14 02:50",3467,23,0,0,1,"รีวิว",""],["พาวเวอร์แบงค์แม่เหล็ก MagSafe มาแปะติดกับเคส iPhone จะติดกล้องไหม หรือบังเลนส์หรือเปล่า? คลิปนี้สรุปมาให้ดูชัดๆ ทั้งรุ่นตัวเล็กและตัวใหญ่ #พาวเวอร์แบงค์แม่เหล็ก #MagSafePowerBank #แบตสำรองไร้สาย #พาวเวอร์แบงค์ #EloopThailand","7696405715371429141","2026/10/15 00:30",3249,20,0,22,1,"รีวิว",""],["มีเวลาแค่ 15 นาทีก่อนออกจากบ้าน มาดูกันว่าชาร์จ iPhone 18 Pro Max ได้กี่เปอร์เซ็นต์! ⚡️📱 #iPhone18ProMax #เทสชาร์จเร็ว #หัวชาร์จไอโฟน #OrsenC62T #EloopThailand","7694143858761911558","2026/10/08 13:20",3245,12,0,1,2,"สินค้า","C62T"],["เปิดตัวแล้ว! แบตสำรองรุ่นใหม่ ดีไซน์สุดคูล ตอบโจทย์คนชอบความสะดวกสบาย พกตัวเดียวจบ ไม่ต้องกลัวลืมสาย #พาวเวอร์แบงค์มีสายในตัว #แบตสำรอง20000mAh #พาวเวอร์แบงค์ชาร์จเร็ว #eloopthailand","7697086553830460693","2026/10/16 03:00",3185,14,0,0,4,"สินค้า",""],["พาซิ่งแบบจัดเต็มกับเกม Asphalt Legends บนจอพับสุดล้ำแบบ iPhone Duo! 🏎️💨 จอใหญ่เล่นสะใจ แบ่งจอควบคุมได้ถนัดมือ กราฟิกสมจริง สายเกมมิ่งต้องถูกใจสิ่งนี้ 🎮📱 #EloopTH #iPhoneDuo #AsphaltLegends #มือถือจอพับ #เกมมิ่ง #รีวิวไอโฟน","7701947523153366293","2026/10/29 05:15",2382,20,0,2,1,"รีวิว",""],["ใช้แบตสำรอง 10,000 mAh แล้วรู้สึกว่าความจุไม่พอ แนะนำให้อัปเกรดเป็นตัวนี้เลย Orsen by Eloop EW40 พาวเวอร์แบงค์ไซส์กำลังดี แต่ความจุจัดเต็มถึง 20,000 mAh พกเที่ยวทั้งวันสบายๆ #OrsenEW40 #พาวเวอร์แบงค์ไปจีน #เที่ยวจีน #มาตรฐานCCC #แบตสำรอง20000mAh #EloopThailand","7698636452594322709","2026/10/20 12:00",1984,5,2,0,1,"สินค้า","EW40"],["เทสชาร์จ iPhone Duo กัน! 📱✨ จะชาร์จได้กี่วัตต์ #EloopTH #OrsenC42T #หัวชาร์จมีสายในตัว #iPhoneDuo #ชาร์จเร็ว","7701947955758107956","2026/10/30 13:30",1931,8,0,0,0,"สินค้า","C42T"],["iPhone Duo เครื่องเล็กๆ พับได้แบบนี้ จะติดพาวเวอร์แบงค์แบบแม่เหล็กได้มั้ย คลิปนี้มีคำตอบ! #iPhoneDuo #พาวเวอร์แบงค์แม่เหล็ก #รีวิวมือถือจอพับได้ #แบตสำรองไร้สาย #OrsenEW35 #EloopThailand","7701660779833085204","2026/10/28 14:00",1900,9,0,0,0,"รีวิว","EW35"],["พาวเวอร์แบงค์ไซส์มินิOrsenE50คู่หูiPhoneDuo 📱🔋 #OrsenE50 #แบตสำรองแม่เหล็ก #แบตสำรองไซส์มินิ #iPhoneDuo #พาวเวอร์แบงค์พกพา #EloopThailand","7701661214421552405","2026/10/29 14:00",1838,12,0,0,2,"สินค้า","E50"],["เห็นดีไซน์หน้าตาแบบนี้ อย่าเพิ่งคิดว่าเป็นรุ่น EW55 นะครับ เพราะตัวนี้คือ Orsen EW40 CCC รุ่นอัปเกรดใหม่ล่าสุด! #OrsenEW40 #พาวเวอร์แบงค์ไปจีน #มาตรฐานCCC #แบตสำรองแม่เหล็ก #EloopThailand","7700920962543570197","2026/10/27 13:30",1785,7,0,1,0,"สินค้า","EW55/EW40"],["ฟีเจอร์กล้อง iPhoneDuo โหมด Kid Cue ถ่ายรูปเด็กง่ายสายคอนเทนต์ต้องเลิฟ 📱✨ #iPhoneDuo #ทริคถ่ายรูป #ถ่ายรูปเด็ก #Apple #EloopTH #รีวิวมือถือ","7701228517127654677","2026/10/29 13:00",1784,6,0,0,1,"รีวิว",""],["แกะกล่องพาวเวอร์แบงค์ตัวจบสายพกพา Orsen by Eloop E39 ความจุจุใจ 20,000 mAh ฟังก์ชันครบครัน พกแค่ตัวเดียวไม่ต้องพกสายชาร์จเพิ่ม!! #OrsenE39 #พาวเวอร์แบงค์มีสายในตัว #แบตสำรอง20000mAh #พาวเวอร์แบงค์ชาร์จเร็ว #EloopThailand","7698215543081422101","2026/10/19 03:28",1758,3,0,0,0,"แกะกล่อง","E39"],["ใหม่! Orsen by Eloop E41 ความจุ 10,000 mAh พกพาสะดวก ไม่ต้องพกสายชาร์จให้ยุ่งยาก! #OrsenE41 #แบตสำรองมีสายในตัว #พาวเวอร์แบงค์10000mAh #พาวเวอร์แบงค์ชาร์จเร็ว #แบตสำรองพกพา#EloopThailand","7697087084150000916","2026/10/17 05:00",1510,13,0,0,2,"สินค้า","E41"],["🔋✨ Orsen by Eloop E50 แบตสำรองแม่เหล็กไซส์มินิ ความจุ 5,000 mAh พกพาง่าย น้ำหนักเบา ตอบโจทย์คนชอบความกะทัดรัด #OrsenE50 #พาวเวอร์แบงค์แม่เหล็ก #แบตสำรอง5000mAh #แบตสำรองไซส์มินิ #EloopThailand","7698635752564919573","2026/10/21 12:00",1255,3,0,0,1,"สินค้า","E50"],["แบตสำรองตัวเล็กOrsenE41อัปเกรดชาร์จเร็ว20W 🔋✨ #OrsenE41 #พาวเวอร์แบงค์มีสายในตัว #แบตสำรอง10000mAh #พาวเวอร์แบงค์ชาร์จเร็ว #EloopThailand","7698637034642017557","2026/10/21 12:00",1057,6,0,1,1,"สินค้า","E41"],["แบตสำรองตัวจบOrsenE39 ความจุ20000mAhมีสายในตัว 🔋✨ #OrsenE39 #พาวเวอร์แบงค์มีสายในตัว #แบตสำรอง20000mAh #พาวเวอร์แบงค์ชาร์จเร็ว #EloopThailand","7699063710207315206","2026/10/26 13:30",908,5,2,0,1,"สินค้า","E39"],["มัดรวม 3 แบตสำรองความจุ 10,000 mAh ไซส์กะทัดรัด พกพาสะดวกจาก Orsen by Eloop รุ่นไหนตอบ #แบตสำรอง10000mAh #พาวเวอร์แบงค์ไร้สาย #OrsenEW35 #OrsenEW31 #EloopThailand","7693037730653048071","2026/10/07 03:00",768,4,0,0,1,"สินค้า","EW35/EW31"]];
+  // Hourly active followers from FollowerActivity.csv, 2–8 Nov (null = not yet available at export time)
+  const TT_ACTIVITY = [["2",[49166,32221,21825,16053,16112,27987,53377,66968,71607,73801,78315,82863,91387,84324,81769,85277,87152,89572,93873,100677,105888,103604,91078,68503]],["3",[47182,30079,20646,15927,16731,28796,55275,69364,73996,74561,78611,83034,91564,84360,81966,85119,87015,89887,94086,100482,105439,104267,92017,70276]],["4",[48279,30314,21054,16443,16960,29400,55395,70370,74031,74861,79386,83713,92305,84887,81767,85378,87583,91329,95499,101839,106512,104714,91609,68699]],["5",[47137,29773,20783,16524,16895,29410,55967,70741,74563,75660,79468,83762,92206,85551,81688,86347,88341,91406,94939,101296,106279,104028,91107,69235]],["6",[47602,30495,21140,16425,17176,29582,55820,70780,74910,76091,80509,84583,92580,85869,83965,86509,87886,91313,94891,100453,104175,102430,91655,71654]],["7",[51188,33460,23243,17933,17352,25066,44571,62340,73971,80207,85667,88936,93973,90388,89591,90652,91527,92913,95599,100343,103775,101660,91275,73424]],["8",[54622,36518,25118,19031,17371,23018,39842,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null]]];
+
+  const $ = (s, el = document) => el.querySelector(s);
+  const accById = id => ACCOUNTS.find(a => a.id === id);
+  const fmt = n => n == null ? '–' : Math.round(n).toLocaleString('en-US');
+  const fmtC = n => {
+    const a = Math.abs(n);
+    if (a >= 1e6) return (n / 1e6).toFixed(a >= 1e7 ? 1 : 2).replace(/\.?0+$/, '') + 'M';
+    if (a >= 1e4) return (n / 1e3).toFixed(a >= 1e5 ? 0 : 1).replace(/\.0$/, '') + 'K';
+    return Math.round(n).toLocaleString('en-US');
+  };
+  const pct = (n, d = 0) => n == null ? '–' : n.toFixed(d) + '%';
+  const ARR_UP = '<svg class="ox-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 5-7 7 1.4 1.4L11 8.8V19h2V8.8l4.6 4.6L19 12z"/></svg>';
+  const ARR_DN = '<svg class="ox-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19 7-7-1.4-1.4L13 15.2V5h-2v10.2l-4.6-4.6L5 12z"/></svg>';
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  function lastIdx(arr) { for (let i = arr.length - 1; i >= 0; i--) if (arr[i] != null) return i; return -1; }
+
+  // Progress, pace and status for one metric
+  function evalMetric(m) {
+    const li = lastIdx(m.data);
+    const vals = m.data.filter(v => v != null);
+    if (m.kind === 'sum') {
+      const ytd = vals.reduce((a, b) => a + b, 0);
+      if (!m.target) return { ytd, li, status: 'none' };
+      const progress = ytd / m.target * 100;
+      const daysGone = li === AS_OF.getMonth() ? (li ? CUM_DAYS[li - 1] : 0) + AS_OF.getDate() - 1 : CUM_DAYS[li];
+      const timeGone = daysGone / 365 * 100;
+      const pace = progress / timeGone * 100;
+      const needPerMonth = daysGone < 365 ? (m.target - ytd) / ((365 - daysGone) / (365 / 12)) : 0;
+      return { ytd, li, progress, timeGone, pace, needPerMonth, status: statusOf(pace) };
+    }
+    const avg = vals.reduce((a, b) => a + b, 0) / vals.length;
+    if (!m.target) return { avg, li, status: 'none' };
+    const ratio = avg / m.target * 100;
+    return { avg, li, ratio, status: statusOf(ratio) };
+  }
+  function statusOf(p) { return p >= 80 ? 'good' : p >= 60 ? 'warn' : 'crit'; }
+  const ST_LABEL = { good: 'ตามแผน', warn: 'เสี่ยง', crit: 'ช้ากว่าแผน', none: 'ไม่มีเป้า' };
+  const RANK = { crit: 0, warn: 1, good: 2, none: 3 };
+
+  /* ---------- tooltip ---------- */
+  function tipIn(container) {
+    let t = container.querySelector('.tip');
+    if (!t) { t = document.createElement('div'); t.className = 'tip'; t.hidden = true; container.appendChild(t); }
+    return t;
+  }
+  function placeTip(container, tip, xFrac, yPx) {
+    const w = container.clientWidth;
+    let x = xFrac * w;
+    tip.hidden = false;
+    const half = tip.offsetWidth / 2;
+    x = Math.max(half, Math.min(w - half, x));
+    tip.style.left = x + 'px';
+    tip.style.top = Math.max(tip.offsetHeight + 10, yPx) + 'px';
+  }
+
+  function niceMax(v) {
+    if (v <= 0) return 1;
+    const p = Math.pow(10, Math.floor(Math.log10(v)));
+    const steps = [1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10];
+    for (const s of steps) if (s * p >= v) return s * p;
+    return 10 * p;
+  }
+
+  /* ---------- charts: Chart.js with OMNIX defaults ---------- */
+  const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  function oxChartDefaults() {
+    Chart.defaults.font.family = tok('--omnix-font');
+    Chart.defaults.font.size = 12;
+    Chart.defaults.color = tok('--omnix-chart-axis');
+    Chart.defaults.plugins.legend.display = false;
+    Chart.defaults.plugins.tooltip.backgroundColor = tok('--omnix-surface');
+    Chart.defaults.plugins.tooltip.titleColor = tok('--omnix-fg');
+    Chart.defaults.plugins.tooltip.bodyColor = tok('--omnix-fg');
+    Chart.defaults.plugins.tooltip.footerColor = tok('--omnix-fg-muted');
+    Chart.defaults.plugins.tooltip.borderColor = tok('--omnix-border');
+    Chart.defaults.plugins.tooltip.borderWidth = 1;
+    Chart.defaults.plugins.tooltip.padding = 10;
+    Chart.defaults.plugins.tooltip.cornerRadius = 8;
+    Chart.defaults.plugins.tooltip.mode = 'index';
+    Chart.defaults.plugins.tooltip.intersect = false;
+    Chart.defaults.animation = false;
+    Chart.defaults.maintainAspectRatio = false;
+    Chart.defaults.elements.line.borderWidth = 2;
+    Chart.defaults.elements.line.tension = 0.25;
+    Chart.defaults.elements.point.radius = 0;
+    Chart.defaults.elements.point.hoverRadius = 5;
+    Chart.defaults.elements.point.hoverBorderWidth = 2;
+    Chart.defaults.elements.bar.borderRadius = 4;
+    Chart.defaults.elements.bar.borderSkipped = 'start';
+  }
+  const gridOpts = () => ({ color: tok('--omnix-chart-grid'), drawTicks: false });
+  const noGrid = { display: false };
+  const yAxis = cb => ({ beginAtZero: true, grid: gridOpts(), border: { display: false }, ticks: { callback: cb, maxTicksLimit: 5 } });
+  const xMonths = () => ({ grid: noGrid, ticks: { maxRotation: 0, autoSkip: true } });
+  const CHARTS = {};
+  function drawChart(el, label, cfg, height) {
+    if (CHARTS[el.id]) { CHARTS[el.id].destroy(); delete CHARTS[el.id]; }
+    if (typeof Chart === 'undefined') { el.innerHTML = '<div class="ox-alert ox-alert--danger">โหลดไลบรารีกราฟไม่สำเร็จ ตรวจการเชื่อมต่ออินเทอร์เน็ตแล้วรีเฟรชหน้า</div>'; return; }
+    el.innerHTML = `<div class="ox-chart__canvas"${height ? ` style="height:${height}px"` : ''}><canvas role="img" aria-label="${esc(label)}"></canvas></div>`;
+    oxChartDefaults();
+    CHARTS[el.id] = new Chart(el.querySelector('canvas'), cfg);
+  }
+  const lineDs = (label, data, color) => ({ label, data, borderColor: color, backgroundColor: color, pointHoverBackgroundColor: color, pointHoverBorderColor: tok('--omnix-surface') });
+
+  /* ---------- sparkline (inline SVG, KPI spark per OMNIX template) ---------- */
+  function sparkline(data) {
+    const W = 100, H = 30, n = 12;
+    const vals = data.map((v, i) => [i, v]).filter(p => p[1] != null);
+    const ys = vals.map(p => p[1]), max = Math.max(...ys), min = Math.min(0, ...ys), r = max - min || 1;
+    const pts = vals.map(([i, v]) => [i / (n - 1) * W, H - 2 - (v - min) / r * (H - 4)]);
+    const e = pts[pts.length - 1];
+    return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><polyline fill="none" stroke="currentColor" stroke-width="1.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" points="${pts.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ')}"/><circle r="2.5" fill="currentColor" cx="${e[0].toFixed(1)}" cy="${e[1].toFixed(1)}"/></svg>`;
+  }
+
+  /* ---------- overview ---------- */
+  let brandFilter = 'all';
+  function renderOverview() {
+    const accs = ACCOUNTS.filter(a => brandFilter === 'all' || a.brand === brandFilter);
+    const counts = { good: 0, warn: 0, crit: 0 };
+    accs.forEach(a => a.metrics.forEach(m => { const e = evalMetric(m); if (counts[e.status] != null) counts[e.status]++; }));
+    const total = counts.good + counts.warn + counts.crit;
+    $('#summary').innerHTML = `
+      <div class="stat"><div class="lbl">ตัวชี้วัดที่มีเป้า</div><div class="val">${total}</div><div class="sub">${accs.length} บัญชี</div></div>
+      <div class="stat"><div class="lbl"><span class="sw good"></span>ตามแผน</div><div class="val">${counts.good}</div><div class="sub">Pace 80% ขึ้นไป</div></div>
+      <div class="stat"><div class="lbl"><span class="sw warn"></span>เสี่ยง</div><div class="val">${counts.warn}</div><div class="sub">Pace 60–79%</div></div>
+      <div class="stat"><div class="lbl"><span class="sw crit"></span>ช้ากว่าแผน</div><div class="val">${counts.crit}</div><div class="sub">Pace ต่ำกว่า 60%</div></div>`;
+
+    $('#cards').innerHTML = accs.map(a => {
+      const evals = a.metrics.map(m => ({ m, e: evalMetric(m) }));
+      const targeted = evals.filter(x => x.m.target || x.m.pending);
+      const worst = evals.filter(x => x.e.status !== 'none').sort((p, q) => RANK[p.e.status] - RANK[q.e.status])[0];
+      const views = a.metrics.find(m => m.key === 'views');
+      const li = lastIdx(views.data);
+      const kpis = targeted.map(({ m, e }) => {
+        if (!m.target) return `<div class="kpi untargeted"><span class="k">${m.label}</span><span class="v">${fmt(e.ytd)}</span><div class="meta"><span>${m.pending}</span></div></div>`;
+        if (m.kind === 'sum') {
+          const w = Math.min(100, e.progress);
+          return `<div class="kpi"><span class="k">${m.label}</span><span class="v">${fmtC(e.ytd)} <small>/ ${fmtC(m.target)}</small></span>
+            <div class="track" role="img" aria-label="${m.label} ${pct(e.progress)} ของเป้า ควรอยู่ที่ ${pct(e.timeGone)}"><div class="fill ${e.status}" style="width:${w}%"></div><div class="tick" style="left:calc(${Math.min(100, e.timeGone)}% - 1px)"></div></div>
+            <div class="meta"><span>${pct(e.progress)} ของเป้า · ควรอยู่ที่ ${pct(e.timeGone)}</span><span class="st ${e.status}">${ST_LABEL[e.status]} ${pct(e.pace)}</span></div></div>`;
+        }
+        return `<div class="kpi"><span class="k">${m.label} <small>(เฉลี่ยรายเดือน)</small></span><span class="v">${pct(e.avg, 2)} <small>/ ${pct(m.target, m.target < 10 ? 2 : 0)}</small></span>
+          <div class="meta"><span>ได้ ${pct(e.ratio)} ของเป้า</span><span class="st ${e.status}">${ST_LABEL[e.status]}</span></div></div>`;
+      }).join('');
+      return `<article class="card">
+        <div class="card-head"><span class="plat">${a.platform}</span><h3>${a.brand}</h3>${worst ? `<span class="st ${worst.e.status}">${ST_LABEL[worst.e.status]}</span>` : ''}</div>
+        <div class="kpis">${kpis}</div>
+        <div class="card-foot"><span>วิวรายเดือน</span>${sparkline(views.data)}<span>ถึง ${MONTHS[li]}</span><button class="link" type="button" data-open="${a.id}">ดูรายละเอียด</button></div>
+      </article>`;
+    }).join('');
+  }
+
+  /* ---------- account view ---------- */
+  let curAcc = 'tt-eloop', curMetric = 'views';
+  function renderAccount() {
+    const a = accById(curAcc);
+    if (!a.metrics.find(m => m.key === curMetric && m.kind === 'sum')) curMetric = 'views';
+    $('#acc-title').textContent = a.name;
+    const lastV = lastIdx(a.metrics[0].data);
+    $('#acc-sub').textContent = `ข้อมูลถึงสิ้นเดือน ${MONTHS[lastV]} 2026 · ที่มา: ชีต Data OKR 2026`;
+    $('#acc-chips').innerHTML = ACCOUNTS.map(x => `<button class="chip" type="button" data-acc="${x.id}" aria-pressed="${x.id === curAcc}">${x.name}</button>`).join('');
+    const sumMetrics = a.metrics.filter(m => m.kind === 'sum');
+    $('#metric-chips').innerHTML = sumMetrics.map(m => `<button class="chip" type="button" data-metric="${m.key}" aria-pressed="${m.key === curMetric}">${m.label}</button>`).join('');
+
+    const m = a.metrics.find(x => x.key === curMetric);
+    const e = evalMetric(m);
+    $('#cum-desc').textContent = m.target
+      ? `${m.label} สะสม ${fmt(e.ytd)} จากเป้า ${fmt(m.target)} (${pct(e.progress)}) · ต้องทำได้อีกเดือนละ ${fmt(e.needPerMonth)}`
+      : `${m.label} สะสม ${fmt(e.ytd)} · ${m.pending || 'ตัวชี้วัดนี้ไม่มีเป้า จึงแสดงแค่ยอดสะสม'}`;
+    cumChart($('#chart-cum'), m);
+    const notes = a.notes.filter(n => n[1] === curMetric);
+    $('#mon-desc').textContent = `${m.label} รายเดือน` + (notes.length ? ' · วางเมาส์บนแท่งเพื่อดูโน้ตของเดือนนั้น' : '');
+    monthChart($('#chart-mon'), m, notes);
+    $('#notes').innerHTML = notes.map(n => `<li><b>${MONTHS[n[0]]}</b><span>${esc(n[2])}</span></li>`).join('');
+    renderAccTable(a);
+    renderAudience(a);
+  }
+
+  function cumChart(el, m) {
+    const cum = MONTHS.map(() => null); let s = 0;
+    m.data.forEach((v, i) => { if (v != null) { s += v; cum[i] = s; } });
+    const tgt = m.target ? CUM_DAYS.map(d => m.target * d / 365) : null;
+    const ds = [lineDs('ยอดสะสมจริง', cum, tok('--omnix-chart-1'))];
+    if (tgt) ds.push(lineDs('ควรอยู่ที่ (ตามเป้าทั้งปี)', tgt, tok('--omnix-chart-2')));
+    $('#cum-legend').innerHTML = ds.length > 1 ? ds.map(d => `<span class="ox-legend__item"><span class="ox-legend__swatch" style="--c:${d.borderColor}"></span>${d.label}</span>`).join('') : '';
+    drawChart(el, `${m.label} สะสมเทียบเป้า`, { type: 'line', data: { labels: MONTHS, datasets: ds },
+      options: { interaction: { mode: 'index', intersect: false }, scales: { x: xMonths(), y: yAxis(v => fmtC(v)) },
+        plugins: { tooltip: { callbacks: {
+          title: it => `สิ้นเดือน ${MONTHS[it[0].dataIndex]}`,
+          label: i => ` ${i.dataset.label}: ${fmt(i.parsed.y)}`,
+          footer: it => { const i = it[0].dataIndex; if (!tgt || cum[i] == null) return ''; const d = cum[i] / tgt[i] * 100; return `Pace ${pct(d)} · ${ST_LABEL[statusOf(d)]}`; } } } } } });
+  }
+
+  function barPath(x0, w, yBase, yTop, r) {
+    const up = yTop < yBase, h = Math.abs(yBase - yTop);
+    r = Math.min(r, h, w / 2);
+    if (h < .5) return '';
+    if (up) return `M${x0} ${yBase} V${yTop + r} Q${x0} ${yTop} ${x0 + r} ${yTop} H${x0 + w - r} Q${x0 + w} ${yTop} ${x0 + w} ${yTop + r} V${yBase} Z`;
+    return `M${x0} ${yBase} V${yTop - r} Q${x0} ${yTop} ${x0 + r} ${yTop} H${x0 + w - r} Q${x0 + w} ${yTop} ${x0 + w} ${yTop - r} V${yBase} Z`;
+  }
+
+  function monthChart(el, m, notes) {
+    const noteAt = {}; notes.forEach(n => noteAt[n[0]] = n[2]);
+    const vals = MONTHS.map((_, i) => m.data[i] ?? null);
+    drawChart(el, `${m.label} รายเดือน`, { type: 'bar', data: { labels: MONTHS, datasets: [{ label: m.label, data: vals, backgroundColor: tok('--omnix-chart-1'), maxBarThickness: 24 }] },
+      options: { scales: { x: xMonths(), y: yAxis(v => fmtC(v)) },
+        plugins: { tooltip: { callbacks: {
+          title: it => `${MONTHS[it[0].dataIndex]} 2026`,
+          label: i => ` ${m.label}: ${fmt(i.parsed.y)}`,
+          footer: it => { const i = it[0].dataIndex, v = vals[i], p = i ? vals[i - 1] : null, out = [];
+            if (v != null && p) out.push(`เทียบเดือนก่อน ${v >= p ? '+' : ''}${((v - p) / Math.abs(p) * 100).toFixed(1)}%`);
+            if (noteAt[i]) out.push(`โน้ต: ${noteAt[i]}`);
+            return out; } } } } } });
+  }
+
+  function renderAccTable(a) {
+    const head = `<tr><th>ตัวชี้วัด</th><th>เป้า</th>${MONTHS.map(mm => `<th>${mm}</th>`).join('')}<th>SUM / เฉลี่ย</th><th>% Progress</th><th>Pace</th></tr>`;
+    const rows = a.metrics.map(m => {
+      const e = evalMetric(m);
+      const noteFor = {}; a.notes.filter(n => n[1] === m.key).forEach(n => noteFor[n[0]] = n[2]);
+      const cells = MONTHS.map((_, i) => {
+        const v = m.data[i];
+        if (v == null) return `<td class="em">–</td>`;
+        const txt = m.kind === 'rate' ? pct(v, 2) : fmt(v);
+        const cls = v < 0 ? 'neg' : '';
+        return noteFor[i] ? `<td class="${cls}"><span class="has-note" title="${esc(noteFor[i])}">${txt}</span></td>` : `<td class="${cls}">${txt}</td>`;
+      }).join('');
+      const tgt = m.target ? (m.kind === 'rate' ? pct(m.target, m.target < 10 ? 2 : 0) : fmt(m.target)) : '<span class="em">–</span>';
+      const total = m.kind === 'sum' ? fmt(e.ytd) : pct(e.avg, 2);
+      const prog = m.target ? pct(m.kind === 'sum' ? e.progress : e.ratio, 1) : '–';
+      const pace = m.target ? `<span class="st ${e.status}">${m.kind === 'sum' ? pct(e.pace) : ST_LABEL[e.status]}</span>` : '–';
+      return `<tr><td>${m.label}</td><td>${tgt}</td>${cells}<td class="sumcol">${total}</td><td>${prog}</td><td>${pace}</td></tr>`;
+    }).join('');
+    $('#acc-table').innerHTML = `<table><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+  }
+
+  /* ---------- audience (TikTok follower files) ---------- */
+  const TT_AUDIENCE = { 'tt-eloop': { asOf: '8 พ.ย. 2026', gender: [['หญิง', 52], ['ชาย', 48]], terr: [['ไทย', 91], ['ลาว', 0.7], ['เกาหลีใต้', 0.3], ['อื่นๆ', 8]], activity: TT_ACTIVITY } };
+  function renderAudience(a) {
+    const au = TT_AUDIENCE[a.id];
+    $('#aud').hidden = !au;
+    if (!au) return;
+    const act = au.activity, full = act.filter(d => d[1].every(v => v != null));
+    const avg = Array.from({ length: 24 }, (_, h) => full.reduce((s, d) => s + d[1][h], 0) / full.length);
+    const best = avg.indexOf(Math.max(...avg)), low = avg.indexOf(Math.min(...avg));
+    $('#act-desc').textContent = `ออนไลน์มากที่สุดช่วง ${best}:00–${best + 1}:00 น. (เฉลี่ย ${fmtC(avg[best])} คน) น้อยที่สุดช่วง ${low}:00 น. · เฉลี่ย ${full.length} วันที่ข้อมูลครบ จากไฟล์ FollowerActivity`;
+    drawChart($('#chart-act'), 'จำนวนผู้ติดตามที่ออนไลน์เฉลี่ยรายชั่วโมง', { type: 'line',
+      data: { labels: avg.map((_, h) => `${h}:00`), datasets: [lineDs('ผู้ติดตามออนไลน์เฉลี่ย', avg, tok('--omnix-chart-1'))] },
+      options: { interaction: { mode: 'index', intersect: false }, scales: { x: { grid: noGrid, ticks: { maxRotation: 0, maxTicksLimit: 8 } }, y: yAxis(v => fmtC(v)) },
+        plugins: { tooltip: { callbacks: { title: it => `${it[0].dataIndex}:00–${it[0].dataIndex + 1}:00 น.`, label: i => ` เฉลี่ย ${fmt(i.parsed.y)} คน` } } } } });
+    $('#who-desc').textContent = `ภาพ ณ วันที่ export (${au.asOf}) จากไฟล์ FollowerGender และ FollowerTopTerritories`;
+    $('#who').innerHTML = `<div style="font-size:13px;color:var(--ink-2);margin-bottom:6px">เพศ</div>
+      <div class="gbar" role="img" aria-label="${au.gender.map(g => g[0] + ' ' + g[1] + '%').join(' ')}">${au.gender.map(g => `<span style="width:${g[1]}%"></span>`).join('')}</div>
+      <div class="legend-line" style="margin:8px 0 0">${au.gender.map((g, i) => `<span class="item"><span class="sw-sq" style="background:var(--series-${i + 1})"></span>${g[0]} <b>${g[1]}%</b></span>`).join('')}</div>
+      <div style="font-size:13px;color:var(--ink-2);margin-top:12px">ประเทศ</div>
+      <div class="terr">${au.terr.map(t => `<span>${t[0]}</span><div><div class="b" style="width:${t[1]}%"></div></div><span class="v">${t[1]}%</span>`).join('')}</div>`;
+  }
+
+  /* ---------- content view ---------- */
+  const AS_OF = new Date('2026-11-10T00:00:00+07:00');
+  const CLIP_TYPES = ['แคมเปญ', 'โปรโมตไลฟ์', 'กิจกรรม', 'สินค้า', 'รีวิว', 'แกะกล่อง', 'เกาะกระแส'];
+  const parsePosted = t => new Date(String(t).trim().replace(/\//g, '-').replace(' ', 'T').slice(0, 16) + ':00+07:00');
+  function mkClip(acc, r, url) {
+    const posted = parsePosted(r[2]);
+    const days = Math.max(1, (AS_OF - posted) / 864e5);
+    return { acc, title: r[0], id: r[1], url, posted, views: r[3], likes: r[4], comments: r[5], shares: r[6], saves: r[7], type: r[8], product: r[9],
+      vpd: r[3] / days, er: r[3] ? (r[4] + r[5] + r[6] + r[7]) / r[3] * 100 : 0, boosted: false };
+  }
+  const CLIPS = TT_CLIPS.map(r => mkClip('tt-eloop', r));
+  let sortKey = 'views';
+  $('#f-acc').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
+  $('#f-type').insertAdjacentHTML('beforeend', CLIP_TYPES.map(t => `<option>${t}</option>`).join(''));
+  const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  function renderContent() {
+    const acc = $('#f-acc').value, ft = $('#f-type').value;
+    const all = CLIPS.filter(c => c.acc === acc);
+    $('#content-body').hidden = !all.length;
+    $('#content-empty').hidden = !!all.length;
+    $('#content-src').textContent = all.length ? 'ข้อมูลจริง · ไฟล์วิดีโอจาก TikTok Studio' : 'ยังไม่มีข้อมูล';
+    if (!all.length) return;
+    const rows = all.filter(c => ft === 'all' || c.type === ft).sort((p, q) => q[sortKey] - p[sortKey]);
+    const tv = all.reduce((s, c) => s + c.views, 0);
+    const rv = rows.reduce((s, c) => s + c.views, 0);
+    const er = rv ? rows.reduce((s, c) => s + c.likes + c.comments + c.shares + c.saves, 0) / rv * 100 : 0;
+    const boosted = all.filter(c => c.boosted).length;
+    const accViews = accById(acc).metrics.find(m => m.key === 'views').data[9];
+    $('#content-sum').innerHTML = `
+      <div class="stat"><div class="lbl">คลิปที่โพสต์ (Monthly Output)</div><div class="val">${all.length}</div><div class="sub">นับจากไฟล์อัตโนมัติ</div></div>
+      <div class="stat"><div class="lbl">Monthly Upload Views</div><div class="val">${fmtC(tv)}</div><div class="sub">วิวรวมของคลิปที่โพสต์เดือนนี้</div></div>
+      <div class="stat"><div class="lbl">ER ของคลิปที่แสดง</div><div class="val">${pct(er, 2)}</div><div class="sub">(ไลก์+คอมเมนต์+แชร์+เซฟ) ÷ วิว</div></div>
+      <div class="stat"><div class="lbl">คลิปที่บูสต์</div><div class="val">${boosted}</div><div class="sub">ติ๊กในตารางเพื่อแยกออก</div></div>`;
+    if (accViews) {
+      const sh = tv / accViews * 100;
+      $('#share-desc').textContent = `คลิปที่โพสต์เดือนนี้ได้ ${fmt(tv)} วิว จากวิวทั้งบัญชี ${fmt(accViews)} วิว ที่เหลือมาจากคลิปเก่าและช่องทางอื่น เช่น LIVE`;
+      $('#share-bar').innerHTML = `<div class="segbar" role="img" aria-label="คลิปใหม่ ${pct(sh, 1)} ของวิวทั้งบัญชี"><span class="s1" style="width:${sh}%"></span><span class="s2" style="width:${100 - sh}%"></span></div>
+        <div class="legend-line" style="margin:10px 0 0"><span class="item"><span class="sw-sq s1"></span>คลิปที่โพสต์เดือนนี้ <b>${pct(sh, 1)}</b></span><span class="item"><span class="sw-sq s2"></span>คลิปเก่าและอื่นๆ <b>${pct(100 - sh, 1)}</b></span></div>`;
+    }
+    const sortLbl = { views: 'วิว', vpd: 'วิวเฉลี่ยต่อวัน', er: 'ER' }[sortKey];
+    $('#rank-title').textContent = `Top คลิปประจำเดือน ต.ค. 2026 · เรียงตาม${sortLbl}`;
+    $('#rank-desc').textContent = 'วิวเป็นยอดสะสมถึงวันที่ export คลิปที่โพสต์ต้นเดือนจึงได้เปรียบ ดูคอลัมน์วิวต่อวันประกอบ · คลิกชื่อคลิปเพื่อเปิดใน TikTok';
+    $('#content-table').innerHTML = rows.length ? `<table><thead><tr><th>#</th><th style="text-align:left">คลิป</th><th style="text-align:left">โพสต์</th><th style="text-align:left">ประเภท</th><th style="text-align:left">สินค้า</th><th>วิว</th><th>วิว/วัน</th><th>ไลก์</th><th>คอมเมนต์</th><th>แชร์</th><th>เซฟ</th><th>ER</th><th>บูสต์</th></tr></thead><tbody>`
+      + rows.map((c, i) => `<tr><td class="rank">${i + 1}</td>
+        <td class="wrap"><a class="clip" href="https://www.tiktok.com/@eloopth/video/${c.id}" target="_blank" rel="noopener">${esc(c.title.length > 90 ? c.title.slice(0, 88) + '…' : c.title)}</a></td>
+        <td style="text-align:left">${fmtDate(c.posted)}</td>
+        <td style="text-align:left"><select class="tag-sel" id="t-${c.id}" data-id="${c.id}" aria-label="ประเภทคอนเทนต์">${CLIP_TYPES.map(t => `<option${t === c.type ? ' selected' : ''}>${t}</option>`).join('')}</select></td>
+        <td style="text-align:left">${c.product ? `<span class="tag">${c.product}</span>` : '<span class="em">–</span>'}</td>
+        <td><b>${fmt(c.views)}</b></td><td>${fmt(c.vpd)}</td><td>${fmt(c.likes)}</td><td>${fmt(c.comments)}</td><td>${fmt(c.shares)}</td><td>${fmt(c.saves)}</td><td>${pct(c.er, 2)}</td>
+        <td><input type="checkbox" class="boost-cb" id="b-${c.id}" data-id="${c.id}" ${c.boosted ? 'checked' : ''} aria-label="คลิปนี้ถูกบูสต์"></td></tr>`).join('')
+      + `</tbody></table>` : `<p style="padding:16px;margin:0;color:var(--ink-2)">ไม่มีคลิปประเภทนี้ในเดือนนี้</p>`;
+    typeChart($('#chart-type'), all);
+  }
+  document.addEventListener('change', e => {
+    const sel = e.target.closest('.tag-sel');
+    if (sel) { CLIPS.find(c => c.id === sel.dataset.id).type = sel.value; renderContent(); }
+    const cb = e.target.closest('.boost-cb');
+    if (cb) { CLIPS.find(c => c.id === cb.dataset.id).boosted = cb.checked; renderContent(); }
+  });
+
+  function typeChart(el, rows) {
+    const byType = {};
+    rows.forEach(c => { (byType[c.type] = byType[c.type] || []).push(c.views); });
+    const data = Object.entries(byType).map(([t, v]) => ({ t, avg: v.reduce((a, b) => a + b, 0) / v.length, n: v.length })).sort((p, q) => q.avg - p.avg);
+    if (!data.length) { el.innerHTML = `<p style="color:var(--ink-2);margin:0">ไม่มีข้อมูล</p>`; return; }
+    drawChart(el, 'วิวเฉลี่ยต่อคลิปตามประเภทคอนเทนต์', { type: 'bar',
+      data: { labels: data.map(d => d.t), datasets: [{ label: 'วิวเฉลี่ยต่อคลิป', data: data.map(d => d.avg), backgroundColor: tok('--omnix-chart-1'), barThickness: 14 }] },
+      options: { indexAxis: 'y', scales: { x: yAxis(v => fmtC(v)), y: { grid: noGrid, ticks: { autoSkip: false } } },
+        plugins: { tooltip: { mode: 'nearest', intersect: true, callbacks: { label: i => ` วิวเฉลี่ย ${fmt(i.parsed.x)} ต่อคลิป · ${data[i.dataIndex].n} คลิป` } } } } }, Math.max(160, data.length * 34 + 40));
+  }
+
+  /* ---------- monthly report view ---------- */
+  const MONTH_FULL = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  const MONTH_DAYS = [31,28,31,30,31,30,31,31,30,31,30,31];
+  // Last year's value ("เดิม") is a setting stored next to each target (settings tab in the real system).
+  const BASE = {
+    'tt-eloop': { views: 40700000, er: 1.63 }, 'tt-moov': { views: 4600000, er: 2.01 },
+    'fb-eloop': { views: 5300000, er: 0.96, watch: 15180 }, 'fb-moov': { views: 194000, er: 0.48, watch: 8940 },
+    'yt-eloop': { awt: 37.40 }, 'yt-moov': { views: 239000, er: 1.01, awt: 51.70 },
+  };
+  Object.entries(BASE).forEach(([id, o]) => Object.entries(o).forEach(([k, v]) => { const m = accById(id).metrics.find(x => x.key === k); if (m) m.base = v; }));
+  // YouTube-only fields (channel total, watch hours, top videos, YPP) need the YouTube API. Until it is connected these are copied from the team's deck and shown with a "sample" badge.
+  const SAMPLE = '<span class="sample" title="ยังไม่ได้เชื่อม YouTube API ตัวเลขนี้คัดลอกจากสไลด์ของทีม">ตัวอย่างจากสไลด์</span>';
+  const YT_EXTRA = {
+    'yt-eloop': { 8: { subs: 1414, wth: 608, wthMom: 264.6, long: 2, shorts: 29, top: [['สรุป iOS 27 มีอะไรใหม่? อัปแล้วลื่นขึ้น และฟีเจอร์ใหม่เพียบ!', 'วิดีโอยาว', 18884, 330.1], ['iPhone 18 ปรับแค่นี้จริงหรอ?', 'Shorts', 2765, 12.51], ['อัปเดต 5 Power Bank รุ่นใหม่! ปี 2025', 'Shorts', 2641, 27.58]] } },
+    'yt-moov': { 8: { subs: 1334, wth: 161.3, wthMom: -1.58, long: 0, shorts: 27, top: [['วิธีอัปเดต beta iOS 27', 'Shorts', 5619, null], ['เคส iPhone 17 Pro Max ใส่ 16 Pro Max ได้มั้ย??', 'Shorts', 2409, null], ['How to วิธีฟังเพลงยูทูปขณะล็อคหน้าจอ', 'Shorts', 1419, null]] } },
+  };
+  const YPP = { asOf: '6 ต.ค. 2026', 'yt-eloop': { subs: 1536, uploads: 3, hours: 2217, shorts: 15000 }, 'yt-moov': { subs: 1361, uploads: 3, hours: 867, shorts: 30800 } };
+  // Text the team writes each month (the real system saves it in the notes tab). September is pre-filled from the deck.
+  const NOTES = { 8: {
+    'okr-TikTok-update': '- เปิดตัว iPhone 18 Pro\n- ผลิตคอนเทนต์เกี่ยวกับข่าวไอที\n- รีวิวสินค้าฟิล์ม + iPhone 18 Pro\n- มีมไวรัล iPhone 18 Pro',
+    'okr-TikTok-next': '- รีวิว EW40 CCC\n- รีวิวฟิล์ม Moov iPhone 18 Pro ต่อเนื่อง',
+    'okr-Facebook-update': '- กระแสเปิดตัว iPhone 18 และ Apple: เกาะข่าวลือ ฟีเจอร์ใหม่ iOS 27 และเทียบราคา/รุ่น iPhone 18\n- สาระน่ารู้เรื่องพาวเวอร์แบงค์กับการเดินทาง\n- เปรียบเทียบสเปกและแนะนำการใช้งาน Orsen E29, E29 Ultra, E66',
+    'okr-Facebook-next': '- ต่อยอดกระแส iPhone 18 สู่การขายสินค้า\n- เน้นปัญหาและทางแก้ (Pain Point & Solution)\n- ลุยคอนเทนต์รับฤดูกาลท่องเที่ยวช่วงปลายปี',
+    'yt-yt-eloop-ins': '- หัวข้อที่คนสนใจสูงสุด: อัปเดตระบบและแก้ปัญหา iPhone / iOS (ดึงคนดูใหม่สูงสุด) และไกด์เลือกพาวเวอร์แบงค์\n- คีย์เวิร์ดค้นหาหลัก: eloop e29 ultra, eloop e29 แท้ ปลอม, eloop ew54, ew31',
+    'yt-yt-eloop-next': '- คอนเทนต์จับคู่ iPhone กับ Power Bank / หัวชาร์จ\n- เปรียบเทียบรุ่นชนรุ่นเชิงลึก\n- เช็กลิสต์ของแท้ vs ของปลอม และการดูแลรักษา',
+    'yt-yt-moov-ins': '- ยอดดูจากฟีด Shorts ~46%\n- หัวข้อที่คนสนใจ: ที่ยึดมือถือสุญญากาศในรถยนต์ และอุปกรณ์เสริมมือถือเรือธง เช่น Samsung Galaxy S25 Ultra',
+    'yt-yt-moov-next': '- ใส่ลูกเล่นกระตุ้นท้ายคลิป เช่น "มีใครเจอปัญหานี้บ้าง เมนต์บอกหน่อย"\n- ใส่แฮชแท็กคำค้น เช่น เคสไอแพด, เคส iPhone 17 Pro Max, ios27',
+  } };
+  const noteVal = k => (NOTES[repMonth] && NOTES[repMonth][k]) || '';
+  const ta = (k, ph, rows = 3) => `<textarea class="note-ta" rows="${Math.max(rows, noteVal(k).split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 55)), 0))}" data-note="${k}" placeholder="${esc(ph)}" aria-label="${esc(ph)}">${esc(noteVal(k))}</textarea>`;
+  document.addEventListener('input', e => {
+    const t = e.target.closest('[data-note]');
+    if (t) { (NOTES[repMonth] = NOTES[repMonth] || {})[t.dataset.note] = t.value; }
+  });
+
+  let repMonth = null, repBrand = 'all';
+  const latestMonth = accs => Math.max(-1, ...accs.flatMap(a => a.metrics.map(m => lastIdx(m.data))), ...CLIPS.filter(c => accs.some(a => a.id === c.acc) && c.posted.getFullYear() === 2026).map(c => c.posted.getMonth()));
+  const brandOk = a => repBrand === 'all' || a.brand === repBrand;
+  const partial = () => repMonth === AS_OF.getMonth();
+  const momOf = (cur, prev) => (partial() || cur == null || prev == null || prev === 0) ? null : (cur - prev) / Math.abs(prev) * 100;
+  const momEl = v => v == null ? '' : `<span class="mom ${v >= 0 ? 'up' : 'down'}">${v >= 0 ? ARR_UP : ARR_DN}${Math.abs(v) >= 100 ? Math.abs(v).toFixed(0) : Math.abs(v).toFixed(1)}%</span>`;
+  const clipsFor = (id, mi) => CLIPS.filter(c => c.acc === id && c.posted.getFullYear() === 2026 && c.posted.getMonth() === mi);
+  const anyClipMonth = id => { const c = CLIPS.find(x => x.acc === id); return c ? c.posted.getMonth() : null; };
+  function uploadViews(id, mi) {
+    const sum = m2 => clipsFor(id, m2).reduce((s, c) => s + c.views, 0);
+    const v = sum(mi);
+    if (!v) return null;
+    const prev = mi > 0 ? sum(mi - 1) : 0;
+    return { v, mom: prev ? momOf(v, prev) : null };
+  }
+  const clipUrl = c => c.url || `https://www.tiktok.com/@eloopth/video/${c.id}`;
+  const shortT = (s, n = 70) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+  function noClips(a) {
+    const where = a.platform === 'TikTok' ? `ยังไม่มีไฟล์วิดีโอของเดือนนี้ · <a href="#upload">อัปโหลดไฟล์</a>` : 'รอเชื่อม Facebook API (ระบบจริงดึงรายคลิปให้อัตโนมัติ)';
+    const m = anyClipMonth(a.id);
+    return `<p class="empty-note">${where}${m != null && m !== repMonth ? ` · <button class="linkbtn" type="button" data-repmonth="${m}">ดูตัวอย่างเดือน ${MONTHS[m]}</button>` : ''}</p>`;
+  }
+
+  function renderShort() {
+    const brands = ['Eloop', 'Moov'].filter(b => repBrand === 'all' || b === repBrand);
+    $('#rep-short').innerHTML = brands.map(b => {
+      const plats = ['TikTok', 'Facebook'].map(p => ACCOUNTS.find(a => a.brand === b && a.platform === p));
+      const rows = plats.map(a => {
+        const out = a.metrics.find(m => m.key === 'output').data;
+        const n = out[repMonth], uv = uploadViews(a.id, repMonth);
+        return `<div class="sv"><span class="plat">${a.platform === 'Facebook' ? 'FB Reels' : 'TikTok'}</span>
+          <div><div class="k">คลิปที่ลง</div><div class="v">${n == null ? '<span class="em">รอข้อมูล</span>' : fmt(n) + ' ' + momEl(momOf(n, out[repMonth - 1]))}</div></div>
+          <div><div class="k">วิวรวมของคลิปที่ลง</div><div class="v">${uv ? fmt(uv.v) + ' ' + momEl(uv.mom) : `<span class="em">${a.platform === 'TikTok' ? 'รอไฟล์วิดีโอ' : 'รอเชื่อม API'}</span>`}</div></div></div>`;
+      }).join('');
+      const tops = plats.map(a => {
+        const cl = clipsFor(a.id, repMonth).sort((p, q) => q.views - p.views).slice(0, 5);
+        const body = cl.length ? `<ol class="top-list">${cl.map((c, i) => `<li><span class="n">${i + 1}</span><a class="clip t" href="${clipUrl(c)}" target="_blank" rel="noopener" title="${esc(c.title)}">${esc(shortT(c.title, 60))}</a><span class="val">${fmtC(c.views)}</span></li>`).join('')}</ol>` : noClips(a);
+        return `<div><h3 class="mini" style="margin-top:14px">${a.platform === 'Facebook' ? 'Facebook Reels' : 'TikTok'} Top 5</h3>${body}</div>`;
+      }).join('');
+      return `<div class="panel"><h3 class="ph">${b}<span class="tag right">${MONTHS[repMonth]} 2026</span></h3>${rows}<div class="top2">${tops}</div>
+        <p class="foot">วิวเป็นยอดสะสมถึงวันที่ดึงข้อมูล · TikTok รวมคลิปแคมเปญและแอด ไม่รวม Highlight Live · Facebook นับแบบ organic</p></div>`;
+    }).join('');
+  }
+
+  function krRow(a, m) {
+    const mm = Object.assign({}, m, { data: m.data.slice(0, repMonth + 1) });
+    const e = evalMetric(mm);
+    if (e.li < 0) return '';
+    const isSum = m.kind === 'sum';
+    const f = v => isSum ? fmtC(v) : pct(v, v < 10 ? 2 : 1);
+    const base = m.base;
+    const prog = isSum ? e.progress : e.ratio;
+    const lbl = isSum ? ST_LABEL[e.status] : { good: 'ผ่านเกณฑ์', warn: 'ใกล้เป้า', crit: 'ต่ำกว่าเป้า' }[e.status];
+    const stale = e.li < repMonth ? ` · ข้อมูลถึง ${MONTHS[e.li]}` : '';
+    return `<div class="kpi kr">
+      <span class="k"><b>${a.brand}</b> ${m.label} › ${f(m.target)}${base != null ? ` <small>(ปีก่อน ${f(base)})</small>` : ''}</span>
+      <span class="v">${pct(prog, 1)}</span>
+      <div class="track"><div class="fill ${e.status}" style="width:${Math.min(100, prog)}%"></div>${isSum ? `<div class="tick" style="left:calc(${e.timeGone}% - 1px)"></div>` : ''}</div>
+      <div class="meta"><span>${isSum ? 'สะสม' : 'เฉลี่ย'} <b style="color:var(--ink)">${isSum ? fmt(e.ytd) : pct(e.avg, 2)}</b>${stale}</span><span class="st ${e.status}">${lbl}</span></div>
+    </div>`;
+  }
+  function autoObs(platform) {
+    const off = [], big = [];
+    ACCOUNTS.filter(a => a.platform === platform && brandOk(a)).forEach(a => {
+      a.metrics.filter(m => m.target).forEach(m => {
+        const e = evalMetric(Object.assign({}, m, { data: m.data.slice(0, repMonth + 1) }));
+        if (e.li < 0 || e.status === 'good') return;
+        if (m.kind === 'sum') off.push([e.pace, `${a.name} ${m.label} ได้ ${pct(e.progress)} ของเป้า ขณะที่เวลาผ่านไป ${pct(e.timeGone)} ต้องทำเฉลี่ยเดือนละ ${fmtC(e.needPerMonth)} ในเดือนที่เหลือ`]);
+        else off.push([e.ratio, `${a.name} ${m.label} เฉลี่ย ${pct(e.avg, 2)} ยังต่ำกว่าเป้า ${pct(m.target, 2)}`]);
+      });
+      const v = a.metrics.find(m => m.key === 'views').data;
+      const mo = momOf(v[repMonth], v[repMonth - 1]);
+      if (mo != null && Math.abs(mo) >= 25) big.push([-Math.abs(mo), `${a.name} วิวเดือนนี้ ${mo >= 0 ? 'เพิ่มขึ้น' : 'ลดลง'} ${Math.abs(mo).toFixed(0)}% จากเดือนก่อน (${fmtC(v[repMonth - 1])} → ${fmtC(v[repMonth])})`]);
+    });
+    off.sort((p, q) => p[0] - q[0]); big.sort((p, q) => p[0] - q[0]);
+    return [...big.slice(0, 2), ...off.slice(0, 3)].map(x => x[1]);
+  }
+  function renderOkr() {
+    const lastDay = MONTH_DAYS[repMonth];
+    $('#okr-period').textContent = `สะสม 1 ม.ค. – ${partial() ? AS_OF.getDate() - 1 : lastDay} ${MONTHS[repMonth]} 2026`;
+    $('#rep-okr').innerHTML = ['TikTok', 'Facebook', 'YouTube'].map(p => {
+      const accs = ACCOUNTS.filter(a => a.platform === p && brandOk(a));
+      const rows = accs.flatMap(a => a.metrics.filter(m => m.target).map(m => krRow(a, m))).join('');
+      const obs = autoObs(p);
+      const extra = p === 'YouTube' ? accs.map(a => { const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth]; return x ? `<li>${a.name} ลงวิดีโอยาว ${x.long || '–'} คลิป · Shorts ${x.shorts} คลิป ${SAMPLE}</li>` : ''; }).join('') : '';
+      return `<div class="panel"><h3 class="ph">${p}</h3><div class="okr-split">
+        <div>${rows || '<p class="empty-note">ไม่มีเป้าหมายของแพลตฟอร์มนี้</p>'}</div>
+        <div>
+          <div class="ins"><h3>ข้อสังเกตจากระบบ</h3>${obs.length || extra ? `<ul class="facts">${obs.map(o => `<li>${esc(o)}</li>`).join('')}${extra}</ul>` : '<p class="empty-note">ทุกตัวชี้วัดตามแผน</p>'}</div>
+          <div class="ins"><h3>Monthly Update</h3>${ta(`okr-${p}-update`, 'เดือนนี้ทำอะไรไปบ้าง เช่น เกาะกระแสอะไร ลงคอนเทนต์แนวไหน')}</div>
+          <div class="ins"><h3>Next Step</h3>${ta(`okr-${p}-next`, 'เดือนหน้าจะทำอะไรต่อ', 2)}</div>
+        </div></div></div>`;
+    }).join('');
+  }
+
+  function clipCard(a, c, kind, ctx) {
+    const k = `va-${a.id}-${kind}`;
+    const typeRows = ctx.all.filter(x => x.type === c.type);
+    const typeAvg = typeRows.reduce((s, x) => s + x.views, 0) / typeRows.length;
+    const facts = [
+      kind === 'top' ? `วิวสูงกว่าค่ากลางของเดือน ${(c.views / ctx.med).toFixed(1)} เท่า (ค่ากลาง ${fmt(ctx.med)})` : `วิวเป็น ${(c.views / ctx.med * 100).toFixed(0)}% ของค่ากลางของเดือน (${fmt(ctx.med)})`,
+      `ER ${pct(c.er, 2)} เทียบเฉลี่ยทั้งเดือน ${pct(ctx.er, 2)}`,
+      `ประเภท${c.type}: วิวเฉลี่ย ${fmtC(typeAvg)} ต่อคลิป (${typeRows.length} คลิป)${c.product ? ` · สินค้า ${esc(c.product)}` : ''}`,
+      `โพสต์ ${fmtDate(c.posted)} · วิวเฉลี่ย ${fmt(c.vpd)} ต่อวัน`,
+    ];
+    return `<div class="clipcard">
+      <div class="hd"><span class="badge ${kind}">${kind === 'top' ? ARR_UP + 'วิวสูงสุด' : ARR_DN + 'วิวต่ำสุด'}</span><label>Creator <input type="text" data-note="${k}-creator" value="${esc(noteVal(k + '-creator'))}" placeholder="ชื่อ"></label></div>
+      <a class="clip title" href="${clipUrl(c)}" target="_blank" rel="noopener" title="${esc(c.title)}">${esc(c.title)}</a>
+      <div class="nums"><div><b>${fmtC(c.views)}</b>วิว</div><div><b>${fmt(c.likes)}</b>ไลก์</div><div><b>${fmt(c.comments)}</b>คอมเมนต์</div><div><b>${fmt(c.shares)}</b>แชร์</div><div><b>${fmt(c.saves)}</b>เซฟ</div></div>
+      <ul class="facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul>
+      <div class="fields">
+        <label>ด้านเนื้อหา (Content)${ta(k + '-content', kind === 'top' ? 'ทำไมหัวข้อนี้ได้ผล' : 'เนื้อหาติดตรงไหน', 2)}</label>
+        <label>การเปิดคลิป (Hook)${ta(k + '-hook', '3 วินาทีแรกเป็นอย่างไร', 2)}</label>
+        <label>การตัดต่อและงานภาพ${ta(k + '-edit', 'ความยาว จังหวะ ภาพ', 2)}</label>
+        <label>สิ่งที่ควรปรับปรุง${ta(k + '-fix', 'ครั้งหน้าจะแก้อะไร', 2)}</label>
+      </div></div>`;
+  }
+  function renderVa() {
+    const accs = ACCOUNTS.filter(brandOk);
+    const withClips = accs.filter(a => clipsFor(a.id, repMonth).length);
+    const without = accs.filter(a => !clipsFor(a.id, repMonth).length);
+    const median = arr => { const s = [...arr].sort((p, q) => p - q), h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; };
+    const cards = withClips.map(a => {
+      const all = clipsFor(a.id, repMonth);
+      const s = [...all].sort((p, q) => q.views - p.views);
+      const tv = all.reduce((x, c) => x + c.views, 0);
+      const ctx = { all, med: median(all.map(c => c.views)), er: all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 };
+      return `<div class="panel"><h3 class="ph">${a.name}<span class="tag right">${all.length} คลิป · ${MONTHS[repMonth]} 2026</span></h3><div class="vs">${clipCard(a, s[0], 'top', ctx)}${clipCard(a, s[s.length - 1], 'low', ctx)}</div></div>`;
+    }).join('');
+    const m = anyClipMonth('tt-eloop');
+    const rest = without.length ? `<div class="panel"><h3 class="ph" style="margin-bottom:6px">ยังไม่มีรายคลิปของเดือน ${MONTHS[repMonth]}</h3><p class="empty-note">${without.map(a => a.name).join(', ')} · ระบบจริงดึงรายคลิปของ Facebook และ YouTube ให้อัตโนมัติ ส่วน TikTok ใช้ไฟล์วิดีโอที่อัปโหลด${!withClips.length && m != null && m !== repMonth && brandOk(accById('tt-eloop')) ? ` · <button class="linkbtn" type="button" data-repmonth="${m}">ดูตัวอย่างจาก TikTok Eloop เดือน ${MONTHS[m]}</button>` : ''}</p></div>` : '';
+    $('#rep-va').innerHTML = cards + rest;
+  }
+
+  function renderYt() {
+    $('#rep-yt').innerHTML = ACCOUNTS.filter(a => a.platform === 'YouTube' && brandOk(a)).map(a => {
+      const d = k => a.metrics.find(m => m.key === k).data;
+      const v = d('views'), l = d('likes'), n = d('nf');
+      const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth];
+      const head = `<h3 class="ph">${a.name}${x ? `<span class="right">${SAMPLE} <span class="pill">ผู้ติดตาม <b>${fmt(x.subs)}</b></span></span>` : ''}</h3>`;
+      if (v[repMonth] == null) return `<div class="panel">${head}<p class="empty-note">ยังไม่มีข้อมูลเดือน ${MONTHS[repMonth]} · ข้อมูล YouTube ล่าสุดถึง ${MONTHS[lastIdx(v)]} · รอเชื่อม YouTube API (ระบบจริงดึงให้ทุกเช้า)</p></div>`;
+      const row = (lbl, val, unit, mo) => `<div class="yt-num"><span>${lbl}</span><b>${val}</b><span>${unit} ${momEl(mo)}</span></div>`;
+      const top = x ? `<p class="src" style="margin:0 0 6px">${SAMPLE}</p><ol class="top-list">${x.top.map((t, i) => `<li><span class="n">${i + 1}</span><span class="t" title="${esc(t[0])}">${esc(t[0])} <small>${t[1]}</small></span><span class="val">${fmt(t[2])}</span></li>`).join('')}</ol>` : '<p class="empty-note">รอเชื่อม YouTube API (ระบบจริงดึง 3 อันดับให้อัตโนมัติ)</p>';
+      return `<div class="panel">${head}
+        ${row('ยอดการดู (Views)', fmt(v[repMonth]), 'ครั้ง', momOf(v[repMonth], v[repMonth - 1]))}
+        ${row('ยอดกดชอบ (Likes)', fmt(l[repMonth]), 'ครั้ง', momOf(l[repMonth], l[repMonth - 1]))}
+        ${row('เวลาเข้าชม (Watch time)', x ? x.wth.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '<span class="em" style="font-weight:400;font-size:13px">รอเชื่อม API</span>', x ? 'ชม. ' + SAMPLE : '', x ? x.wthMom : null)}
+        ${row('ผู้ติดตามใหม่', '+' + fmt(n[repMonth]), 'คน', momOf(n[repMonth], n[repMonth - 1]))}
+        <h3 class="mini">วิดีโอเด่น 3 อันดับ</h3>${top}
+        <div class="ins" style="margin-top:14px"><h3>วิเคราะห์และข้อแนะนำ</h3>${ta(`yt-${a.id}-ins`, 'หัวข้อที่คนสนใจ คีย์เวิร์ด แหล่งที่มาของคนดู')}</div>
+        <div class="ins"><h3>โอกาสต่อยอดคอนเทนต์</h3>${ta(`yt-${a.id}-next`, 'คอนเทนต์ที่ควรทำต่อ', 2)}</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderYpp() {
+    $('#ypp-asof').innerHTML = `ข้อมูล ณ ${YPP.asOf} ${SAMPLE}`;
+    const bar = (lbl, have, need, unit) => {
+      const p = Math.min(100, have / need * 100), met = have >= need;
+      return `<div class="kpi kr"><span class="k">${lbl}</span><span class="v" style="font-size:15px">${fmtC(have)} <small>/ ${fmtC(need)}</small></span>
+        <div class="track"><div class="fill ${met ? 'good' : 'prog'}" style="width:${Math.max(p, 0.8)}%"></div></div>
+        <div class="meta"><span>${met ? 'ครบแล้ว ✓' : `ขาดอีก ${fmtC(need - have)} ${unit}`}</span><span>${pct(p, p < 1 ? 1 : 0)}</span></div></div>`;
+    };
+    $('#rep-ypp').innerHTML = ACCOUNTS.filter(a => a.platform === 'YouTube' && brandOk(a)).map(a => {
+      const y = YPP[a.id];
+      const ph = y.hours / 4000 * 100, ps = y.shorts / 1e7 * 100;
+      const best = ph >= ps ? `คลิปยาว ทำได้แล้ว ${pct(ph, 1)} ของ 4,000 ชม. ขาดอีก ${fmt(4000 - y.hours)} ชม. ขณะที่ Shorts ยังไม่ถึง ${Math.ceil(ps)}% ของ 10 ล้านวิว` : `Shorts ทำได้แล้ว ${pct(ps, 1)} ของ 10 ล้านวิว`;
+      return `<div class="panel"><h3 class="ph">${a.name}<span class="tag right">ยังไม่ผ่านเกณฑ์</span></h3>
+        ${bar('ผู้ติดตาม', y.subs, 1000, 'คน')}
+        <div class="ypp-tier"><h3>ระดับ 1 · รับเงินสนับสนุน (สมาชิก, Supers)</h3>
+          ${bar('ชั่วโมงดูคลิปยาว (365 วัน)', y.hours, 3000, 'ชม.')}<p class="or">หรือ</p>${bar('ยอดดู Shorts (90 วัน)', y.shorts, 3e6, 'ครั้ง')}</div>
+        <div class="ypp-tier"><h3>ระดับ 2 · รายได้จากโฆษณา</h3>
+          ${bar('ชั่วโมงดูคลิปยาว (365 วัน)', y.hours, 4000, 'ชม.')}<p class="or">หรือ</p>${bar('ยอดดู Shorts (90 วัน)', y.shorts, 1e7, 'ครั้ง')}</div>
+        <div class="rec"><b>ทางที่ใกล้กว่า:</b> ${best} · เน้นคลิปแก้ปัญหา เปรียบเทียบสินค้า และสอนใช้งาน</div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderReport() {
+    const latest = latestMonth(ACCOUNTS);
+    if (repMonth == null || repMonth > latest) repMonth = latest;
+    $('#rep-month').innerHTML = MONTHS.slice(0, latest + 1).map((m, i) => `<option value="${i}">${m} 2026</option>`).reverse().join('');
+    $('#rep-month').value = String(repMonth);
+    $('#rep-title').textContent = `สรุปประจำเดือน ${MONTH_FULL[repMonth]} 2026${partial() ? ` (ถึง ${AS_OF.getDate() - 1} ${MONTHS[repMonth]} · เดือนยังไม่จบ ไม่เทียบเดือนก่อน)` : ''}`;
+    $('#rep-sub').textContent = `ตัวเลขในหน้านี้ดึงจากข้อมูลของระบบชุดเดียวกับหน้าภาพรวม อัปโหลดไฟล์หรือแก้เป้าแล้วหน้านี้เปลี่ยนตาม ทีมเขียนแค่บทวิเคราะห์ แล้วกดสร้างสไลด์ได้เลย`;
+    const SRC = { TikTok: 'ไฟล์อัปโหลด', Facebook: 'Facebook API', YouTube: 'YouTube API' };
+    $('#rep-fresh').innerHTML = ['TikTok', 'Facebook', 'YouTube'].map(p => {
+      const li = latestMonth(ACCOUNTS.filter(a => a.platform === p));
+      const ok = li >= repMonth;
+      return `<span class="st ${ok ? 'good' : 'warn'}">${p} · ${li < 0 ? 'ยังไม่มีข้อมูล' : 'ข้อมูลถึง ' + MONTHS[li]} (${SRC[p]})</span>`;
+    }).join('');
+    document.querySelectorAll('#rep-brand button').forEach(x => x.setAttribute('aria-pressed', x.dataset.rbrand === repBrand));
+    renderShort(); renderOkr(); renderVa(); renderYt(); renderYpp();
+  }
+  $('#rep-month').addEventListener('change', e => { repMonth = +e.target.value; renderReport(); });
+  $('#rep-print').addEventListener('click', () => window.print());
+
+  /* ---------- upload view ---------- */
+  const drop = $('#drop'), file = $('#file');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => { if (e.dataTransfer.files.length) handleFiles([...e.dataTransfer.files]); });
+  file.addEventListener('change', () => { if (file.files.length) handleFiles([...file.files]); });
+
+  function parseCSV(text) {
+    const rows = []; let row = [], f = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { f += '"'; i++; } else q = false; } else f += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(f); f = ''; }
+      else if (c === '\n' || c === '\r') {
+        if (c === '\r' && text[i + 1] === '\n') i++;
+        row.push(f); if (row.some(x => x !== '')) rows.push(row); row = []; f = '';
+      } else f += c;
+    }
+    row.push(f); if (row.some(x => x !== '')) rows.push(row);
+    return rows;
+  }
+  const num = v => +String(v).replace(/,/g, '') || 0;
+  const KINDS = [
+    { k: 'overview', name: 'ภาพรวมรายวัน', test: h => h.includes('Video Views') && h.includes('Profile Views') },
+    { k: 'overview', name: 'ภาพรวมรายวัน (บัญชีธุรกิจ)', test: h => h.includes('ยอดเข้าชมวิดีโอ') && h.includes('การเติบโตสุทธิ') },
+    { k: 'videos', name: 'รายคลิป (วิดีโอ)', test: h => h.includes('ลิงก์วิดีโอ') || h.includes('Video link') },
+    { k: 'fhistory', name: 'ผู้ติดตามรายวัน', test: h => h.includes('Followers') && h.some(x => /Difference/i.test(x)) },
+    { k: 'factivity', name: 'เวลาที่ผู้ติดตามออนไลน์', test: h => h.includes('Active followers') },
+    { k: 'fgender', name: 'เพศผู้ติดตาม', test: h => h.includes('Gender') },
+    { k: 'fterr', name: 'ประเทศผู้ติดตาม', test: h => h.includes('Top territories') },
+  ];
+  function describe(kind, rows) {
+    const body = rows.slice(1);
+    if (!body.length) return { info: 'ไม่มีข้อมูลในไฟล์', warn: '' };
+    if (kind.k === 'overview') {
+      const zero = body.filter(r => r.slice(1).every(v => num(v) === 0)).length;
+      const views = body.reduce((s, r) => s + num(r[1]), 0);
+      return { info: `${body.length} วัน · วิวรวม ${fmt(views)}`, warn: zero ? `ขาดข้อมูล ${zero} วัน (เป็น 0 ทั้งแถว) ระบบจะเติมจากไฟล์อื่นที่มีวันนั้น` : '' };
+    }
+    if (kind.k === 'videos') return { info: `${body.length} คลิป · วิวรวม ${fmt(body.reduce((s, r) => s + num(r[3]), 0))}`, warn: '' };
+    if (kind.k === 'fhistory') {
+      const first = num(body[0][1]), last = num(body[body.length - 1][1]), net = last - first + num(body[0][2]);
+      return { info: `${body.length} วัน · ผู้ติดตาม ${fmt(first)} → ${fmt(last)} · Net ${net >= 0 ? '+' : ''}${fmt(net)}`, warn: '' };
+    }
+    if (kind.k === 'factivity') {
+      const zh = body.filter(r => num(r[2]) === 0).length;
+      return { info: `${new Set(body.map(r => r[0])).size} วัน รายชั่วโมง`, warn: zh ? `${zh} ชั่วโมงยังไม่มีข้อมูล (export ระหว่างวัน) ระบบจะตัดออก` : '' };
+    }
+    if (kind.k === 'fgender') return { info: body.map(r => `${r[0]} ${Math.round(num(r[1]) * 100)}%`).join(' · '), warn: '' };
+    if (kind.k === 'fterr') return { info: body.slice(0, 3).map(r => `${r[0]} ${+(num(r[1]) * 100).toFixed(1)}%`).join(' · '), warn: '' };
+    return { info: '', warn: '' };
+  }
+  async function handleFiles(files) {
+    const results = [];
+    let guess = null;
+    for (const f of files) {
+      if (/moov/i.test(f.name)) guess = 'tt-moov'; else if (/eloop/i.test(f.name) && !guess) guess = 'tt-eloop';
+      if (!/\.csv$/i.test(f.name)) { results.push({ f, kind: null, d: { info: '', warn: 'รองรับเฉพาะไฟล์ .csv' } }); continue; }
+      let text = '';
+      try { text = (await f.text()).replace(/^﻿/, ''); } catch (err) { results.push({ f, kind: null, d: { info: '', warn: 'อ่านไฟล์นี้ไม่ได้' } }); continue; }
+      const rows = parseCSV(text);
+      const head = (rows[0] || []).map(h => h.trim());
+      const kind = KINDS.find(k => k.test(head)) || null;
+      if (kind && kind.k === 'videos') { if (/@moov/i.test(text)) guess = 'tt-moov'; else if (/@eloopth/i.test(text) && !guess) guess = 'tt-eloop'; }
+      results.push({ f, kind, rows, d: kind ? describe(kind, rows) : { info: '', warn: 'ไม่รู้จักรูปแบบไฟล์นี้ ตรวจว่า export มาจาก TikTok Studio' } });
+    }
+    if (guess) $('#up-acc').value = guess;
+    const ok = results.filter(r => r.kind).length;
+    $('#preview').innerHTML = `<p style="margin:0 0 8px">อ่าน ${files.length} ไฟล์ · รู้จัก ${ok} ไฟล์ · บัญชี <b>${accById($('#up-acc').value).name}</b>${guess ? ' (เดาจากชื่อไฟล์หรือลิงก์คลิป)' : ''}</p>
+      <div class="tbl"><table><thead><tr><th>ไฟล์</th><th style="text-align:left">ระบบอ่านว่าเป็น</th><th style="text-align:left">ข้อมูลในไฟล์</th></tr></thead><tbody>
+      ${results.map(r => `<tr><td>${esc(r.f.name)}</td><td style="text-align:left">${r.kind ? `<span class="st good">${r.kind.name}</span>` : '<span class="st crit">ไม่รู้จัก</span>'}</td><td class="wrap">${esc(r.d.info)}${r.d.warn ? `${r.d.info ? '<br>' : ''}<span class="warn-t">⚠ ${esc(r.d.warn)}</span>` : ''}</td></tr>`).join('')}
+      </tbody></table></div>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" type="button" id="save-up" ${ok ? '' : 'disabled'}>บันทึกข้อมูล</button><button class="btn" type="button" id="cancel-up">ยกเลิก</button></div><div id="up-msg"></div>`;
+    $('#save-up').onclick = () => {
+      const accId = $('#up-acc').value, ym = $('#up-month').value;
+      const res = applyUpload(accId, ym, results);
+      $('#up-msg').innerHTML = res.err ? `<div class="msg">${res.err}</div>` : `<div class="msg">บันทึกเข้า <b>${accById(accId).name}</b> แล้ว: ${res.done.join(' · ')}<br>ภาพรวม หน้าบัญชี คลิปและอันดับ และหน้าสรุปรายเดือนอัปเดตตามแล้ว · <a href="#report" data-repmonth="${res.mi}">ดูสรุปเดือน ${MONTHS[res.mi]}</a><br><small>หน้าตัวอย่างเก็บไว้ชั่วคราว รีเฟรชแล้วหาย ระบบจริงบันทึกลงชีตเบื้องหลัง</small></div>`;
+      renderCoverage();
+    };
+    $('#cancel-up').onclick = () => { $('#preview').innerHTML = ''; file.value = ''; };
+  }
+
+  const guessType = t => /live|ไลฟ์/i.test(t) ? 'โปรโมตไลฟ์' : /ผู้โชคดี|ลุ้น|กิจกรรม|แจกฟรี/.test(t) ? 'กิจกรรม' : /แกะกล่อง|unbox/i.test(t) ? 'แกะกล่อง' : /sale|payday|คูปอง|ลด\s?\d|\d+\.\d+ /i.test(t) ? 'แคมเปญ' : /รีวิว|review|สรุป|ฟีเจอร์/i.test(t) ? 'รีวิว' : 'สินค้า';
+  const colOf = (head, names) => head.findIndex(h => names.includes(h.trim().toLowerCase()));
+  function setVal(a, key, mi, v) { const m = a.metrics.find(x => x.key === key); if (!m) return; while (m.data.length <= mi) m.data.push(N); m.data[mi] = v; }
+  const inMonth = (acc, mi) => CLIPS.filter(c => c.acc === acc && c.posted.getFullYear() === 2026 && c.posted.getMonth() === mi);
+  function applyUpload(accId, ym, results) {
+    const [yy, mm] = ym.split('-').map(Number), mi = mm - 1, a = accById(accId), done = [];
+    if (yy !== 2026) return { err: 'หน้าตัวอย่างรับเฉพาะข้อมูลปี 2026' };
+    results.filter(r => r.kind).forEach(r => {
+      const head = r.rows[0].map(h => h.trim().toLowerCase()), body = r.rows.slice(1);
+      if (r.kind.k === 'videos') {
+        const clips = body.map(x => {
+          const url = String(x[1] || '').trim(), id = (url.match(/(\d{10,})/) || [])[1] || url;
+          const t = String(x[0] || '').trim();
+          return mkClip(accId, [t, id, x[2], num(x[3]), num(x[4]), num(x[5]), num(x[6]), num(x[7]), guessType(t), ''], url || undefined);
+        }).filter(c => !isNaN(c.posted));
+        const ids = new Set(clips.map(c => c.id));
+        for (let i = CLIPS.length - 1; i >= 0; i--) if (CLIPS[i].acc === accId && ids.has(CLIPS[i].id)) CLIPS.splice(i, 1);
+        CLIPS.push(...clips);
+        new Set(clips.filter(c => c.posted.getFullYear() === 2026).map(c => c.posted.getMonth())).forEach(m2 => setVal(a, 'output', m2, inMonth(accId, m2).length));
+        done.push(`รายคลิป ${clips.length} คลิป (นับจำนวนคลิปของเดือนให้ด้วย)`);
+      }
+      if (r.kind.k === 'overview') {
+        const sumCol = names => { const i = colOf(head, names); return i < 0 ? null : body.reduce((t, x) => t + num(x[i]), 0); };
+        const v = sumCol(['video views', 'ยอดเข้าชมวิดีโอ']), lk = sumCol(['likes', 'ถูกใจ']), cm = sumCol(['comments', 'ความคิดเห็น']), sh = sumCol(['shares', 'แชร์']);
+        const pv = sumCol(['profile views', 'ยอดเข้าชมโปรไฟล์']), net = sumCol(['การเติบโตสุทธิ']);
+        if (v != null) setVal(a, 'views', mi, v);
+        if (lk != null) setVal(a, 'likes', mi, lk);
+        if (cm != null) setVal(a, 'comments', mi, cm);
+        if (sh != null) setVal(a, 'shares', mi, sh);
+        if (pv != null) setVal(a, 'pv', mi, pv);
+        if (net != null) setVal(a, 'nf', mi, net);
+        if (v) setVal(a, 'er', mi, +(((lk || 0) + (cm || 0) + (sh || 0)) / v * 100).toFixed(2));
+        done.push(`ภาพรวม วิว ${fmt(v)} · ER คำนวณใหม่`);
+      }
+      if (r.kind.k === 'fhistory' && body.length) {
+        const first = num(body[0][1]), last = num(body[body.length - 1][1]);
+        setVal(a, 'nf', mi, last - first + num(body[0][2]));
+        done.push(`ผู้ติดตาม Net ${fmt(last - first + num(body[0][2]))}`);
+      }
+    });
+    return { mi, done };
+  }
+  function renderCoverage() {
+    const [yy, mm] = $('#up-month').value.split('-').map(Number), mi = mm - 1;
+    $('#coverage').innerHTML = ACCOUNTS.filter(a => a.platform === 'TikTok').map(a => {
+      const hasOv = yy === 2026 && a.metrics.find(m => m.key === 'views').data[mi] != null;
+      const nClip = yy === 2026 ? inMonth(a.id, mi).length : 0;
+      const parts = [hasOv ? 'ภาพรวม ✓' : 'ภาพรวม –', nClip ? `วิดีโอ ✓ (${nClip} คลิป)` : 'วิดีโอ –'];
+      const full = hasOv && nClip;
+      return `<div class="cov"><span><b>${a.name} · ${MONTHS[mi]} ${yy}</b><br><small>${parts.join(' · ')}</small></span><span class="st ${full ? 'good' : 'warn'}">${full ? 'ครบ' : hasOv || nClip ? 'ขาดบางไฟล์' : 'รอไฟล์'}</span></div>`;
+    }).join('');
+  }
+  $('#up-month').addEventListener('change', renderCoverage);
+
+  /* ---------- targets (setup) ---------- */
+  function renderTargets() {
+    $('#tgt-body').innerHTML = ACCOUNTS.flatMap(a => a.metrics.filter(m => m.target != null || m.base != null || m.pending).map(m => `<tr>
+      <td style="text-align:left">${a.name}</td><td style="text-align:left">${m.label}${m.unit ? ` (${m.unit})` : ''}</td>
+      <td><input type="number" step="any" min="0" data-tgt="${a.id}|${m.key}|target" value="${m.target ?? ''}" aria-label="เป้า ${a.name} ${m.label}" placeholder="${m.pending ? 'รอยืนยัน' : '–'}"></td>
+      <td><input type="number" step="any" min="0" data-tgt="${a.id}|${m.key}|base" value="${m.base ?? ''}" aria-label="ค่าปีก่อน ${a.name} ${m.label}" placeholder="–"></td></tr>`)).join('');
+  }
+  document.addEventListener('change', e => {
+    const t = e.target.closest('[data-tgt]');
+    if (!t) return;
+    const [id, key, field] = t.dataset.tgt.split('|');
+    const m = accById(id).metrics.find(x => x.key === key);
+    m[field] = t.value === '' ? N : +t.value;
+    $('#tgt-msg').innerHTML = `<div class="msg">บันทึก${field === 'target' ? 'เป้า' : 'ค่าปีก่อน'} ${accById(id).name} ${m.label} แล้ว ทุกหน้าใช้ค่าใหม่ทันที (หน้าตัวอย่าง รีเฟรชแล้วกลับค่าเดิม)</div>`;
+  });
+
+  /* ---------- slides drawer ---------- */
+  const drawer = $('#drawer');
+  function insight() {
+    if (repMonth == null) repMonth = latestMonth(ACCOUNTS);
+    const o = ['TikTok', 'Facebook', 'YouTube'].flatMap(p => autoObs(p).slice(0, 1));
+    return o.length ? 'เช่น ' + o.map(x => `"${x}"`).join(' และ ') : 'ทุกตัวชี้วัดตามแผน';
+  }
+  $('#btn-slides').addEventListener('click', () => { $('#dr-title').textContent = `สร้างสไลด์สรุป ${MONTHS[repMonth]} 2026`; $('#dr-insight').textContent = insight(); $('#dr-msg').innerHTML = ''; drawer.hidden = false; $('#dr-close').focus(); });
+  $('#dr-close').addEventListener('click', () => { drawer.hidden = true; });
+  drawer.addEventListener('click', e => { if (e.target === drawer) drawer.hidden = true; });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
+  $('#dr-go').addEventListener('click', () => { $('#dr-msg').innerHTML = `<div class="msg" style="margin:0 0 12px">หน้าตัวอย่าง: ในระบบจริงจะได้ลิงก์ Google Slides ไฟล์ใหม่ "Content OKR ${MONTHS[repMonth]} 2026" ในโฟลเดอร์ของทีม</div>`; });
+
+  /* ---------- routing & events ---------- */
+  const VIEWS = ['overview', 'report', 'account', 'content', 'upload', 'setup'];
+  function route() {
+    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
+    document.querySelectorAll('[data-v]').forEach(s => { s.hidden = s.dataset.v !== v; });
+    document.querySelectorAll('#nav a').forEach(a => { const on = a.dataset.view === v; a.classList.toggle('is-active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (v === 'overview') renderOverview();
+    if (v === 'account') renderAccount();
+    if (v === 'content') renderContent();
+    if (v === 'report') renderReport();
+    if (v === 'upload') renderCoverage();
+    if (v === 'setup') renderTargets();
+  }
+  window.addEventListener('hashchange', route);
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-brand]');
+    if (b) { brandFilter = b.dataset.brand; document.querySelectorAll('#brand-seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderOverview(); }
+    const o = e.target.closest('[data-open]');
+    if (o) { curAcc = o.dataset.open; curMetric = 'views'; if (location.hash === '#account') renderAccount(); else location.hash = 'account'; }
+    const c = e.target.closest('[data-acc]');
+    if (c) { curAcc = c.dataset.acc; renderAccount(); }
+    const so = e.target.closest('[data-sort]');
+    if (so) { sortKey = so.dataset.sort; document.querySelectorAll('#sort-seg button').forEach(x => x.setAttribute('aria-pressed', x === so)); renderContent(); }
+    const rb = e.target.closest('[data-rbrand]');
+    if (rb) { repBrand = rb.dataset.rbrand; renderReport(); }
+    const rm = e.target.closest('[data-repmonth]');
+    if (rm) { repMonth = +rm.dataset.repmonth; renderReport(); }
+    const jp = e.target.closest('[data-jump]');
+    if (jp) document.getElementById(jp.dataset.jump).scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const mm = e.target.closest('[data-metric]');
+    if (mm) { curMetric = mm.dataset.metric; renderAccount(); }
+  });
+  ['f-acc', 'f-month', 'f-type'].forEach(id => $('#' + id).addEventListener('change', renderContent));
+  let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { document.querySelectorAll('.tip').forEach(t => t.hidden = true); }, 100); });
+  $('#btn-theme').addEventListener('click', () => {
+    const r = document.documentElement, dark = r.getAttribute('data-theme') === 'dark' || (!r.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    r.setAttribute('data-theme', dark ? 'light' : 'dark'); r.classList.toggle('dark', !dark); route();
+  });
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change', route);
+  route();
+})();
+</script>
+</body>
+</html>
