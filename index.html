@@ -1705,7 +1705,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', route);
   /* ---------- live data from the Apps Script web app ---------- */
   // Paste the web app URL (ends with /exec) here after deploying the Apps Script. Empty = sample data only.
-  const DATA_URL = '';
+  const DATA_URL = 'https://script.google.com/macros/s/AKfycbwALcxZomJBg-PfQoKRHji1H0Kym-k08ogeTJnBDyGnb-d7AovKmQnPET2P8OQGrNQC/exec';
   const GENDER_TH = { Female: 'หญิง', Male: 'ชาย', Other: 'อื่นๆ' };
   const TERR_TH = { TH: 'ไทย', LA: 'ลาว', KR: 'เกาหลีใต้', MM: 'เมียนมา', KH: 'กัมพูชา', VN: 'เวียดนาม', MY: 'มาเลเซีย', SG: 'สิงคโปร์', JP: 'ญี่ปุ่น', CN: 'จีน', US: 'สหรัฐฯ', TW: 'ไต้หวัน', ID: 'อินโดนีเซีย', PH: 'ฟิลิปปินส์', Others: 'อื่นๆ' };
   const thDate = s => { const [y, m, d] = String(s).slice(0, 10).split('-'); return y && m ? `${+d} ${MONTHS[+m - 1]} ${y}` : s; };
@@ -1753,8 +1753,11 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       + ['fb-eloop', 'fb-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ยังไม่ได้เชื่อม</span><span class="det">รอข้อมูล token ของ Facebook · ตัวเลขในแดชบอร์ดยังเป็นตัวอย่าง</span></div>`).join('')
       + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ไฟล์ใน Google Drive</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span></div>`).join('');
     const b = $('#data-banner');
-    b.className = 'ox-alert ox-alert--info proto-alert';
-    b.innerHTML = `<span><b>ข้อมูลจากระบบ</b>TikTok และ YouTube ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · Facebook ยังเป็นตัวอย่างจากชีตเดิม · เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`;
+    const liveP = ['TikTok', 'YouTube'].filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length));
+    b.className = 'ox-alert proto-alert ' + (liveP.length ? 'ox-alert--info' : 'ox-alert--warning');
+    b.innerHTML = liveP.length
+      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.join(' และ ')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${liveP.length < 2 ? (liveP[0] === 'TikTok' ? 'YouTube' : 'TikTok') + ' และ ' : ''}Facebook ยังเป็นตัวอย่างจากชีตเดิม · เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
+      : `<span><b>ระบบเชื่อมแล้ว รอข้อมูลเข้า</b>ยังไม่มีไฟล์ TikTok และยังไม่ได้เชื่อม YouTube ตัวเลขทั้งหมดในหน้านี้ยังเป็นตัวอย่างจากชีต Data OKR 2026</span>`;
     $('#upload-live').hidden = false;
   }
 
