@@ -15,19 +15,39 @@ var SHORTS_MAX_SECONDS = 180; // YouTube Shorts can be up to 3 minutes
 function connectYtEloop() { ytConnectDialog_('yt-eloop'); }
 function connectYtMoov() { ytConnectDialog_('yt-moov'); }
 
-function ytConnectDialog_(acc) {
+function disconnectYtEloop() { ytDisconnect_('yt-eloop'); }
+function disconnectYtMoov() { ytDisconnect_('yt-moov'); }
+
+function ytDisconnect_(acc) {
   var ui = SpreadsheetApp.getUi();
+  var title = PROPS.getProperty('YT_TITLE_' + acc) || 'ยังไม่ได้เชื่อม';
+  if (ui.alert('ยกเลิกการเชื่อม ' + YT_NAMES[acc], 'ตอนนี้เชื่อมกับช่อง: ' + title + '\nยกเลิกแล้วจะเชื่อมช่องใหม่ได้ ข้อมูลที่ดึงมาแล้วยังอยู่ในชีต', ui.ButtonSet.OK_CANCEL) !== ui.Button.OK) return;
+  ['YT_RT_', 'YT_CHANNEL_', 'YT_TITLE_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
+  CacheService.getScriptCache().remove('yt_at_' + acc);
+  log_('youtube-connect', acc, 'ok', 'ยกเลิกการเชื่อม (เดิม: ' + title + ')');
+}
+
+/** Google login URL for one channel. Throws if OAuth is not set up yet. */
+function ytAuthUrl_(acc) {
+  if (!YT_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
   var cid = PROPS.getProperty('OAUTH_CLIENT_ID'), redirect = PROPS.getProperty('WEBAPP_URL');
-  if (!cid || !PROPS.getProperty('OAUTH_CLIENT_SECRET') || !redirect) {
-    ui.alert('ยังตั้งค่าไม่ครบ', 'เปิดเมนู CT OKR → 2) ตั้งค่า OAuth และลิงก์เว็บแอป ใส่ลิงก์เว็บแอป, Client ID และ Client secret ก่อน', ui.ButtonSet.OK);
-    return;
-  }
+  if (!cid || !PROPS.getProperty('OAUTH_CLIENT_SECRET') || !redirect) throw new Error('ยังตั้งค่าไม่ครบ: เปิดชีต เมนู CT OKR → 2) ตั้งค่า OAuth และลิงก์เว็บแอป');
   var state = Utilities.getUuid();
   CacheService.getScriptCache().put('oauth_' + state, acc, 3600);
-  var url = 'https://accounts.google.com/o/oauth2/v2/auth?' + qs_({
+  return 'https://accounts.google.com/o/oauth2/v2/auth?' + qs_({
     client_id: cid, redirect_uri: redirect, response_type: 'code', scope: YT_SCOPES.join(' '),
     access_type: 'offline', prompt: 'consent select_account', include_granted_scopes: 'false', state: state,
   });
+}
+
+/** Called by the dashboard's "Connect" button: ?api=connect&acc=yt-eloop */
+function ytStartConnect_(acc) {
+  try { return { ok: true, url: ytAuthUrl_(acc) }; } catch (e) { return { ok: false, error: e.message }; }
+}
+
+function ytConnectDialog_(acc) {
+  var ui = SpreadsheetApp.getUi(), url;
+  try { url = ytAuthUrl_(acc); } catch (e) { ui.alert('ยังตั้งค่าไม่ครบ', e.message, ui.ButtonSet.OK); return; }
   var html = HtmlService.createHtmlOutput(
     '<style>body{font:14px/1.6 "IBM Plex Sans Thai",Arial,sans-serif;margin:0;padding:4px 8px}ol{padding-left:1.2em}' +
     'a.b{display:inline-block;margin-top:10px;padding:9px 16px;border-radius:8px;background:#5b5bd6;color:#fff;text-decoration:none;font-weight:600}' +
@@ -46,7 +66,8 @@ function ytConnectDialog_(acc) {
 function ytHandleCallback_(p) {
   var page = function (ok, msg) {
     return HtmlService.createHtmlOutput('<div style="font:16px/1.6 \'IBM Plex Sans Thai\',Arial,sans-serif;max-width:520px;margin:48px auto;padding:0 16px">' +
-      '<h2 style="margin:0 0 8px">' + (ok ? 'เชื่อมสำเร็จ' : 'เชื่อมไม่สำเร็จ') + '</h2><p>' + msg + '</p></div>').setTitle('เชื่อม YouTube');
+      '<h2 style="margin:0 0 8px">' + (ok ? 'เชื่อมสำเร็จ' : 'เชื่อมไม่สำเร็จ') + '</h2><p>' + msg + '</p>' +
+      '<p><a href="' + SITE_URL + '" target="_top" style="display:inline-block;padding:9px 16px;border-radius:8px;background:#5b5bd6;color:#fff;text-decoration:none;font-weight:600">กลับไปหน้าแดชบอร์ด</a></p></div>').setTitle('เชื่อม YouTube');
   };
   var cache = CacheService.getScriptCache(), acc = cache.get('oauth_' + p.state);
   if (!acc) return page(false, 'ลิงก์หมดอายุหรือใช้ไปแล้ว กลับไปที่ชีต แล้วกดเมนูเชื่อม YouTube ใหม่อีกครั้ง');
@@ -66,6 +87,9 @@ function ytHandleCallback_(p) {
     headers: { Authorization: 'Bearer ' + tok.access_token }, muteHttpExceptions: true }).getContentText() || '{}');
   var item = ch.items && ch.items[0];
   if (!item) return page(false, 'บัญชี Gmail นี้ไม่มีช่อง YouTube ลองเชื่อมใหม่แล้วเลือก Gmail ที่เป็นเจ้าของช่อง');
+  // The connect button is on a public page, so a slot only accepts the channel it was first connected to.
+  var locked = PROPS.getProperty('YT_CHANNEL_' + acc);
+  if (locked && locked !== item.id) return page(false, 'Gmail นี้เป็นของช่อง "' + esc_(item.snippet.title) + '" แต่ ' + YT_NAMES[acc] + ' เชื่อมไว้กับช่อง "' + esc_(PROPS.getProperty('YT_TITLE_' + acc) || '') + '" ถ้าต้องการเปลี่ยนช่อง ให้เจ้าของระบบกดเมนู CT OKR → ยกเลิกการเชื่อม ในชีตก่อน');
   var other = acc === 'yt-eloop' ? 'yt-moov' : 'yt-eloop';
   if (PROPS.getProperty('YT_CHANNEL_' + other) === item.id) return page(false, 'ช่อง "' + esc_(item.snippet.title) + '" เชื่อมไว้เป็น ' + YT_NAMES[other] + ' แล้ว ลองใหม่แล้วเลือก Gmail ของ ' + YT_NAMES[acc]);
 

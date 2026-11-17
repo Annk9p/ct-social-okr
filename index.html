@@ -475,6 +475,7 @@ select, input[type="text"], input[type="month"], input[type="number"] { font: in
 .conn:last-child { border-bottom: 0; }
 .conn .name { font-weight: 600; }
 .conn .det { grid-column: 1 / -1; color: var(--ink-2); font-size: 13px; }
+.conn .conn-act { grid-column: 1 / -1; }
 
 /* slides drawer */
 .drawer { position: fixed; inset: 0; z-index: 20; background: rgba(10,14,12,.45); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
@@ -1748,10 +1749,17 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
         activity: Object.keys(days).sort().map(d => [String(+d.slice(8)), days[d]]) };
     });
     const st = j.status || {};
-    const ytRow = id => { const x = st[id] || {}; return `<div class="conn"><span class="name">${accById(id).name}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || '–')}${x.error ? ' · ' + esc(x.error) : ''}` : 'เจ้าของช่องล็อกอิน Gmail ของช่องจากเมนู CT OKR ในชีต ครั้งเดียว'}</span></div>`; };
+    const ytRow = id => {
+      const x = st[id] || {}, need = !x.connected || x.error;
+      return `<div class="conn"><span class="name">${accById(id).name}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}`
+        + `<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}` : 'กดปุ่มแล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่อง ครั้งเดียว ระบบได้สิทธิ์อ่านสถิติอย่างเดียว'}</span>`
+        + (need ? `<span class="conn-act"><button class="btn${x.connected ? '' : ' primary'}" type="button" data-ytconnect="${id}">${x.connected ? 'เชื่อมใหม่' : 'เชื่อมด้วย Gmail ของช่อง'}</button></span>` : '')
+        + `</div>`;
+    };
     $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
       + ['fb-eloop', 'fb-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ยังไม่ได้เชื่อม</span><span class="det">รอข้อมูล token ของ Facebook · ตัวเลขในแดชบอร์ดยังเป็นตัวอย่าง</span></div>`).join('')
-      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ไฟล์ใน Google Drive</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span></div>`).join('');
+      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ไฟล์ใน Google Drive</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span></div>`).join('')
+      + '<div id="yt-msg"></div>';
     const b = $('#data-banner');
     const liveP = ['TikTok', 'YouTube'].filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length));
     b.className = 'ox-alert proto-alert ' + (liveP.length ? 'ox-alert--info' : 'ox-alert--warning');
@@ -1760,6 +1768,22 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       : `<span><b>ระบบเชื่อมแล้ว รอข้อมูลเข้า</b>ยังไม่มีไฟล์ TikTok และยังไม่ได้เชื่อม YouTube ตัวเลขทั้งหมดในหน้านี้ยังเป็นตัวอย่างจากชีต Data OKR 2026</span>`;
     $('#upload-live').hidden = false;
   }
+
+  document.addEventListener('click', async e => {
+    const b = e.target.closest('[data-ytconnect]');
+    if (!b || !DATA_URL) return;
+    const label = b.textContent;
+    b.disabled = true; b.textContent = 'กำลังเปิดหน้าล็อกอิน…';
+    try {
+      const j = await (await fetch(`${DATA_URL}?api=connect&acc=${encodeURIComponent(b.dataset.ytconnect)}`, { cache: 'no-store' })).json();
+      if (!j.ok) throw new Error(j.error || 'ระบบตอบกลับไม่ถูกต้อง');
+      if (!j.url) throw new Error('โค้ด Apps Script ยังเป็นเวอร์ชันเก่า ต้องวางโค้ดใหม่แล้ว Deploy เวอร์ชันใหม่ก่อน');
+      location.href = j.url;
+    } catch (err) {
+      b.disabled = false; b.textContent = label;
+      $('#yt-msg').innerHTML = `<div class="ox-alert ox-alert--danger" style="margin-top:var(--omnix-space-3)">เปิดหน้าล็อกอินไม่ได้: ${esc(err.message)}</div>`;
+    }
+  });
 
   async function boot() {
     if (!DATA_URL) { route(); return; }

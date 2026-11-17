@@ -34,6 +34,7 @@ var TARGETS_2026 = [
 ];
 
 var PROPS = PropertiesService.getScriptProperties();
+var SITE_URL = 'https://annk9p.github.io/ct-social-okr/#setup'; // where the "connected" page links back to
 var TZ = 'Asia/Bangkok';
 
 /* ------------------------------------------------------------------ menu */
@@ -45,6 +46,8 @@ function onOpen() {
     .addSeparator()
     .addItem('เชื่อม YouTube Eloop', 'connectYtEloop')
     .addItem('เชื่อม YouTube Moov', 'connectYtMoov')
+    .addItem('ยกเลิกการเชื่อม YouTube Eloop', 'disconnectYtEloop')
+    .addItem('ยกเลิกการเชื่อม YouTube Moov', 'disconnectYtMoov')
     .addSeparator()
     .addItem('ดึงข้อมูล YouTube ตอนนี้', 'syncYouTubeNow')
     .addItem('นำเข้าไฟล์ TikTok ตอนนี้', 'importTikTokNow')
@@ -124,10 +127,13 @@ function saveSettings(url, clientId, secret) {
 function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.state && (p.code || p.error)) return ytHandleCallback_(p);
+  if (p.api === 'connect') return json_(ytStartConnect_(p.acc));
   var data;
   try { data = buildData_(); } catch (err) { data = { ok: false, error: String(err && err.message || err) }; }
-  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+  return json_(data);
 }
+
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 /** Everything the dashboard needs, in one JSON object. */
 function buildData_() {
