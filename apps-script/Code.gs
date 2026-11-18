@@ -275,7 +275,7 @@ function buildData_() {
     (t[r.month] = t[r.month] || []).push({ rank: +r.rank, title: r.title, format: r.format, views: +r.views, id: r.video_id });
   });
   var ytChannel = {};
-  readTable_('yt_channel').forEach(function (r) { ytChannel[r.account] = { asOf: r.as_of, title: r.channel_title, subscribers: +r.subscribers, longHours365: +r.long_hours_365, shortsViews90: +r.shorts_views_90 }; });
+  readTable_('yt_channel').forEach(function (r) { ytChannel[r.account] = { asOf: r.as_of, title: r.channel_title, subscribers: +r.subscribers, longHours365: r.long_hours_365 === '' ? null : +r.long_hours_365, shortsViews90: r.shorts_views_90 === '' ? null : +r.shorts_views_90 }; });
   var audience = {};
   readTable_('audience').forEach(function (r) {
     var a = audience[r.account] = audience[r.account] || { asOf: r.as_of, gender: [], territory: [], activity: [] };
@@ -292,6 +292,9 @@ function buildData_() {
   });
   ['tt-eloop', 'tt-moov'].forEach(function (id) { status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null }; });
   status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null };
+  status.log = readTable_('sync_log').filter(function (r) { return r.status !== 'ok'; }).slice(-8).reverse().map(function (r) {
+    return { time: r.time, job: r.job, account: r.account, status: r.status, message: String(r.message).slice(0, 200) };
+  });
   status.files = readTable_('files').sort(function (a, b) { return a.imported_at < b.imported_at ? 1 : -1; }).slice(0, 12).map(function (r) {
     return { name: r.name, account: r.account, kind: r.kind, rows: +r.rows || 0, at: r.imported_at, status: r.status, message: r.message };
   });

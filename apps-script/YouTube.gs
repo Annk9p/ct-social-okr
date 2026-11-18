@@ -214,13 +214,16 @@ function syncYouTube_(acc, full) {
     writeTable_('yt_top', top);
 
     // 4) YPP progress (approximation: long-form watch hours over 365 days, Shorts views over 90 days)
-    var hours365 = '', shorts90 = '';
-    try {
-      var y1 = ytReport_(acc, { startDate: ymd_(new Date(today.getTime() - 365 * 86400000)), endDate: ymd_(end), metrics: 'estimatedMinutesWatched,views', dimensions: 'creatorContentType' });
-      y1.forEach(function (r) { if (r.creatorContentType === 'VIDEO_ON_DEMAND') hours365 = Math.round(r.estimatedMinutesWatched / 60 * 10) / 10; });
-      var d90 = ytReport_(acc, { startDate: ymd_(new Date(today.getTime() - 90 * 86400000)), endDate: ymd_(end), metrics: 'views', dimensions: 'creatorContentType' });
-      d90.forEach(function (r) { if (r.creatorContentType === 'SHORTS') shorts90 = r.views; });
-    } catch (e) { log_('youtube', acc, 'warn', 'คำนวณ YPP ไม่ได้: ' + e.message); }
+    var ypp = { hours: '', shorts: '' };
+    try { ypp = yppByType_(acc, today, end); } catch (e) { log_('youtube', acc, 'warn', 'YPP แบบแยกประเภท: ' + e.message); }
+    if (ypp.hours === '' || ypp.shorts === '') {
+      try {
+        var byVid = yppByVideo_(acc, today, end);
+        if (ypp.hours === '') ypp.hours = byVid.hours;
+        if (ypp.shorts === '') ypp.shorts = byVid.shorts;
+      } catch (e) { log_('youtube', acc, 'warn', 'YPP แบบรายคลิป: ' + e.message); }
+    }
+    var hours365 = ypp.hours, shorts90 = ypp.shorts;
     var chRows = readTable_('yt_channel').filter(function (r) { return r.account !== acc; });
     chRows.push({ account: acc, as_of: ymd_(end), channel_title: ch.snippet.title, channel_id: ch.id, subscribers: +ch.statistics.subscriberCount || 0, long_hours_365: hours365, shorts_views_90: shorts90 });
     writeTable_('yt_channel', chRows);
@@ -256,6 +259,31 @@ function syncYouTube_(acc, full) {
 }
 
 /** Videos published this year: id, published (yyyy-mm-dd), seconds. */
+/** YPP numbers from the creatorContentType dimension. Returns '' for a number it could not find. */
+function yppByType_(acc, today, end) {
+  var norm = function (t) { return String(t || '').toUpperCase().replace(/[^A-Z]/g, ''); };
+  var out = { hours: '', shorts: '' };
+  ytReport_(acc, { startDate: ymd_(new Date(today.getTime() - 365 * 86400000)), endDate: ymd_(end), metrics: 'estimatedMinutesWatched', dimensions: 'creatorContentType' })
+    .forEach(function (r) { if (norm(r.creatorContentType) === 'VIDEOONDEMAND') out.hours = Math.round(r.estimatedMinutesWatched / 60 * 10) / 10; });
+  ytReport_(acc, { startDate: ymd_(new Date(today.getTime() - 90 * 86400000)), endDate: ymd_(end), metrics: 'views', dimensions: 'creatorContentType' })
+    .forEach(function (r) { if (norm(r.creatorContentType) === 'SHORTS') out.shorts = +r.views; });
+  return out;
+}
+
+/** Fallback: add up per-video numbers (top 200 videos) and split long videos and Shorts by length. */
+function yppByVideo_(acc, today, end) {
+  var y1 = ytReport_(acc, { startDate: ymd_(new Date(today.getTime() - 365 * 86400000)), endDate: ymd_(end), metrics: 'estimatedMinutesWatched', dimensions: 'video', sort: '-estimatedMinutesWatched', maxResults: 200 });
+  var d90 = ytReport_(acc, { startDate: ymd_(new Date(today.getTime() - 90 * 86400000)), endDate: ymd_(end), metrics: 'views', dimensions: 'video', sort: '-views', maxResults: 200 });
+  var ids = {};
+  y1.concat(d90).forEach(function (r) { ids[r.video] = true; });
+  var info = ytVideoInfo_(acc, Object.keys(ids));
+  var isShort = function (id) { return info[id] && info[id].seconds <= SHORTS_MAX_SECONDS; };
+  var mins = 0, views = 0;
+  y1.forEach(function (r) { if (info[r.video] && !isShort(r.video)) mins += +r.estimatedMinutesWatched || 0; });
+  d90.forEach(function (r) { if (isShort(r.video)) views += +r.views || 0; });
+  return { hours: Math.round(mins / 60 * 10) / 10, shorts: views };
+}
+
 function ytUploads_(acc, playlistId, year) {
   var ids = [], token = '', stop = false;
   do {

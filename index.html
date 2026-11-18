@@ -1937,6 +1937,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
           <button class="btn primary" type="submit">บันทึกกุญแจ</button></form></div>
       <div class="step"><h3>3. เชื่อม YouTube ${ok(ytAll)}</h3><p>กด <b>เชื่อมด้วย Gmail ของช่อง</b> ในกล่องการเชื่อมต่อ ทีละช่อง แล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่องนั้น</p></div>
       <div class="step"><h3>4. ไฟล์ TikTok</h3><p>ทุกต้นเดือน export จาก TikTok Studio แล้ว${link('#upload', 'อัปโหลดในหน้านี้').replace(' target="_blank" rel="noopener"', '')}</p></div>
+      ${(SYS.log || []).length ? `<div class="step"><h3>ปัญหาล่าสุดในระบบ</h3><ul class="kinds">${SYS.log.map(l => `<li><b>${esc(l.time)}</b> ${esc(l.account ? accById(l.account)?.name || l.account : l.job)}: ${esc(l.message)}</li>`).join('')}</ul></div>` : ''}
       <div id="sys-msg"></div>`;
   }
 
