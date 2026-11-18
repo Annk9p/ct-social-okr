@@ -130,6 +130,7 @@ function doGet(e) {
   var p = (e && e.parameter) || {};
   if (p.state && (p.code || p.error)) return CacheService.getScriptCache().get('oauth_' + p.state) === 'fb' ? fbHandleCallback_(p) : ytHandleCallback_(p);
   if (p.api === 'connect') return json_(ytStartConnect_(p.acc));
+  if (p.api === 'fbprobe') { try { return json_(fbProbe_(p.acc || 'fb-eloop', p.m)); } catch (e) { return json_({ ok: false, error: e.message }); } }
   var data;
   try { data = buildData_(); } catch (err) { data = { ok: false, error: String(err && err.message || err) }; }
   return json_(data);
@@ -941,4 +942,54 @@ function syncFacebook_(acc, full) {
     log_('facebook', acc, 'error', msg);
     throw new Error(msg);
   }
+}
+
+/* ------------------------------------------------------------------ temporary: compare Meta metrics for one month (numbers only)
+ * GET ?api=fbprobe&acc=fb-eloop&m=2026-01 → monthly sums of candidate metrics. At most once every 2 minutes. Remove when settled. */
+function fbProbe_(acc, ym) {
+  var cache = CacheService.getScriptCache();
+  if (cache.get('fbprobe')) return { ok: false, error: 'ลองใหม่ใน 2 นาที' };
+  cache.put('fbprobe', '1', 120);
+  var pt = PROPS.getProperty('FB_PT_' + acc), pid = PROPS.getProperty('FB_PAGE_' + acc);
+  if (!pt) return { ok: false, error: 'not connected' };
+  ym = /^\d{4}-\d{2}$/.test(ym || '') ? ym : '2026-01';
+  var start = new Date(+ym.slice(0, 4), +ym.slice(5, 7) - 1, 1), end = new Date(+ym.slice(0, 4), +ym.slice(5, 7), 0);
+  var out = { page: {}, videos: {}, posts: {} };
+  var since = ymd_(start), until = ymd_(new Date(end.getTime() + 86400000));
+  [['page_video_view_time', 'is_from_ads'], ['page_video_view_time', 'is_from_followers'], ['page_video_views', ''], ['page_video_views', 'is_from_ads'], ['page_video_views_organic', ''],
+   ['page_post_engagements', 'is_from_ads'], ['page_actions_post_reactions_total', ''], ['page_total_actions', ''], ['page_media_view', 'is_from_followers'],
+   ['page_video_view_time_organic', ''], ['page_video_complete_views_30s_organic', ''], ['page_engaged_users', '']].forEach(function (c) {
+    var key = c[0] + (c[1] ? '|' + c[1] : '');
+    try {
+      var q = { metric: c[0], period: 'day', since: since, until: until }; if (c[1]) q.breakdown = c[1];
+      var r = fbGraph_(pid + '/insights', q, pt), sums = {};
+      ((r.data || [])[0] || {}).values.forEach(function (v) { var k = c[1] && v[c[1]] != null ? c[1] + '=' + v[c[1]] : 'all'; sums[k] = (sums[k] || 0) + fbNum_(v.value); });
+      out.page[key] = sums;
+    } catch (e) { out.page[key] = 'ERR ' + e.message.slice(0, 120); }
+  });
+  // videos posted in the month: lifetime organic/total watch time and views
+  try {
+    var vids = fbGraph_(pid + '/videos', { fields: 'id,created_time', since: Math.floor(start.getTime() / 1000), until: Math.floor(end.getTime() / 1000) + 86400, limit: 100 }, pt).data || [];
+    out.videos.count = vids.length;
+    ['total_video_view_total_time_organic', 'total_video_view_total_time', 'total_video_views_organic', 'total_video_views', 'post_video_view_time', 'blue_reels_play_count'].forEach(function (m) {
+      try {
+        var got = fbGraph_('', { ids: vids.slice(0, 50).map(function (v) { return v.id; }).join(','), fields: 'video_insights.metric(' + m + '){values}' }, pt), sum = 0;
+        Object.keys(got).forEach(function (id) { var d = got[id].video_insights && got[id].video_insights.data; if (d && d[0] && d[0].values && d[0].values[0]) sum += fbNum_(d[0].values[0].value); });
+        out.videos[m] = sum;
+      } catch (e) { out.videos[m] = 'ERR ' + e.message.slice(0, 120); }
+    });
+  } catch (e) { out.videos = 'ERR ' + e.message.slice(0, 120); }
+  // posts published in the month: interaction fields
+  try {
+    var posts = fbGraph_(pid + '/posts', { fields: 'id,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares', since: Math.floor(start.getTime() / 1000), until: Math.floor(end.getTime() / 1000) + 86400, limit: 100 }, pt).data || [];
+    out.posts.count = posts.length;
+    ['post_engaged_users', 'post_clicks', 'post_reactions_by_type_total', 'post_activity_by_action_type'].forEach(function (m) {
+      try {
+        var got = fbGraph_('', { ids: posts.slice(0, 50).map(function (p) { return p.id; }).join(','), fields: 'insights.metric(' + m + '){values}' }, pt), sum = 0;
+        Object.keys(got).forEach(function (id) { var d = got[id].insights && got[id].insights.data; if (d && d[0] && d[0].values && d[0].values[0]) sum += fbNum_(d[0].values[0].value); });
+        out.posts[m] = sum;
+      } catch (e) { out.posts[m] = 'ERR ' + e.message.slice(0, 120); }
+    });
+  } catch (e) { out.posts = 'ERR ' + e.message.slice(0, 120); }
+  return { ok: true, acc: acc, month: ym, probe: out };
 }
