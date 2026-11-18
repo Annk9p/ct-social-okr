@@ -475,7 +475,19 @@ select, input[type="text"], input[type="month"], input[type="number"] { font: in
 .conn:last-child { border-bottom: 0; }
 .conn .name { font-weight: 600; }
 .conn .det { grid-column: 1 / -1; color: var(--ink-2); font-size: 13px; }
-.conn .conn-act { grid-column: 1 / -1; }
+.conn .conn-act { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px; }
+.step { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.step:last-child { border-bottom: 0; }
+.step h3 { margin: 0 0 4px; font-size: 14.5px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.step p, .step li { color: var(--ink-2); font-size: 13.5px; }
+.step p { margin: 0 0 8px; }
+.step ol { margin: 6px 0 10px; padding-left: 1.3em; display: grid; gap: 6px; }
+.step details summary { cursor: pointer; color: var(--accent); font-size: 13.5px; margin-bottom: 4px; }
+.fld { display: grid; gap: 4px; font-size: 13px; color: var(--ink-2); margin: 8px 0; }
+.fld input { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; width: 100%; box-sizing: border-box; }
+.chk { display: flex; gap: 6px; align-items: center; font-size: 13px; color: var(--ink-2); margin-top: 6px; }
+.copy { display: flex; gap: 6px; align-items: center; }
+.copy code { flex: 1; min-width: 0; overflow-x: auto; white-space: nowrap; font-size: 12px; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px; }
 
 /* slides drawer */
 .drawer { position: fixed; inset: 0; z-index: 20; background: rgba(10,14,12,.45); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
@@ -786,13 +798,13 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   </section>
 
   <section id="v-upload" data-v="upload" hidden>
-    <div class="ox-alert ox-alert--info" id="upload-live" hidden style="margin-bottom:var(--omnix-space-5)"><span><b>ขึ้นข้อมูลจริง:</b> ลากไฟล์ที่ export จาก TikTok Studio ไปวางในโฟลเดอร์ Google Drive <b>CT Social OKR · ไฟล์ TikTok</b> (โฟลเดอร์ TikTok Eloop หรือ TikTok Moov) ระบบนำเข้าให้ทุกชั่วโมง ส่วนหน้านี้ใช้ตรวจไฟล์ก่อนวางเท่านั้น ไม่ได้บันทึก</span></div>
+    <div class="ox-alert ox-alert--info" id="upload-live" hidden style="margin-bottom:var(--omnix-space-5)"><span><b>ส่งเข้าระบบจริง:</b> ลากไฟล์มาวาง ตรวจผล แล้วกด <b>บันทึกเข้าระบบ</b> ตัวเลขทุกหน้าอัปเดตทันที (ใช้รหัสทีม)</span></div>
     <div class="view-head"><div><h1>อัปโหลดข้อมูล TikTok</h1><p>Export ไฟล์จาก TikTok Studio แล้วลากมาวางพร้อมกันทั้งหมด ระบบแยกให้เองว่าไฟล์ไหนเป็นข้อมูลอะไร</p></div></div>
     <div class="grid2">
       <div class="panel">
-        <h2>อัปโหลดไฟล์</h2><p class="desc">รองรับไฟล์ .csv จาก TikTok Studio: ภาพรวม (Overview), ผู้ติดตาม (4 ไฟล์) และวิดีโอ</p>
+        <h2>อัปโหลดไฟล์</h2><p class="desc">รองรับไฟล์ .csv หรือ .zip ที่ดาวน์โหลดจาก TikTok Studio: ภาพรวม (Overview), ผู้ติดตาม และวิดีโอ</p>
         <label class="drop" id="drop" for="file"><strong>ลากไฟล์ทั้งหมดของเดือนมาวาง หรือคลิกเพื่อเลือกไฟล์</strong><span>เลือกได้หลายไฟล์พร้อมกัน ระบบเดาบัญชีจากชื่อไฟล์และลิงก์คลิป</span></label>
-        <input type="file" id="file" accept=".csv" multiple hidden>
+        <input type="file" id="file" accept=".csv,.zip" multiple hidden>
         <div class="form-row">
           <label for="up-acc">บัญชี<select id="up-acc"><option value="tt-eloop">TikTok Eloop</option><option value="tt-moov">TikTok Moov</option></select></label>
           <label for="up-month">เดือนของข้อมูล<input type="month" id="up-month" value="2026-10"></label>
@@ -802,6 +814,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       <div class="panel">
         <h2>ข้อมูลของแต่ละบัญชี</h2><p class="desc">ระบบส่งอีเมลเตือนทุกวันที่ 3 ถ้ายังไม่มีไฟล์ของเดือนก่อน</p>
         <div class="coverage" id="coverage"></div>
+        <div id="files-log"></div>
         <h3 class="mini">ไฟล์ที่ระบบรู้จัก</h3>
         <ul class="kinds">
           <li><b>ภาพรวม (Overview)</b> วิว, Profile Views, ไลก์, คอมเมนต์, แชร์ รายวัน</li>
@@ -814,20 +827,15 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   </section>
 
   <section id="v-setup" data-v="setup" hidden>
-    <div class="view-head"><div><h1>ตั้งค่า</h1><p>สถานะการเชื่อมต่อ ผู้รับแจ้งเตือน และสิทธิ์การเข้าถึง (สถานะในหน้านี้เป็นตัวอย่าง)</p></div></div>
+    <div class="view-head"><div><h1>ตั้งค่า</h1><p>เชื่อมต่อทุกบัญชีและตั้งค่าระบบได้จากหน้านี้ ไม่ต้องเปิดชีตหรือ Apps Script</p></div></div>
     <div class="grid2">
       <div class="panel"><h2>การเชื่อมต่อ</h2><p class="desc">ดึงข้อมูลอัตโนมัติทุกวันเวลา 06:00 น.</p>
         <div id="conn-list"><div class="conn"><span class="name">YouTube Eloop</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
         <div class="conn"><span class="name">YouTube Moov</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
-        <div class="conn"><span class="name">Facebook Eloop</span><span class="st crit">เชื่อมต่อไม่สำเร็จ</span><span class="det">Token ใช้ไม่ได้แล้ว เพราะแอดมินที่ตั้งค่าเปลี่ยนรหัสผ่าน · <button class="btn" type="button" style="padding:2px 10px;font-size:12.5px">เชื่อมต่อใหม่</button></span></div>
-        <div class="conn"><span class="name">Facebook Moov</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:03 · ข้อมูลถึง 4 พ.ย.</span></div>
         <div class="conn"><span class="name">TikTok Eloop, TikTok Moov</span><span class="st none">อัปโหลดไฟล์</span><span class="det">ไม่ต้องเชื่อมต่อ ดูสถานะได้ที่หน้าอัปโหลด TikTok</span></div></div>
       </div>
-      <div class="panel"><h2>แจ้งเตือนและสิทธิ์</h2><p class="desc">ใครเห็นอะไร และใครได้อีเมลเมื่อระบบมีปัญหา</p>
-        <div class="conn"><span class="name">ผู้รับอีเมลแจ้งเตือน</span><span class="tag">2 คน</span><span class="det">เจ้าของระบบ และผู้แก้ไขสำรอง</span></div>
-        <div class="conn"><span class="name">ผู้แก้ไข</span><span class="tag">3 คน</span><span class="det">อัปโหลดไฟล์ แก้เป้า เขียนโน้ต และสร้างสไลด์ได้</span></div>
-        <div class="conn"><span class="name">ผู้ดู</span><span class="tag">ทีม CT</span><span class="det">ดูแดชบอร์ดได้อย่างเดียว</span></div>
-        <div class="conn"><span class="name">เป้าหมายปี 2027</span><span class="st none">ยังไม่ตั้ง</span><span class="det">ตั้งเป้าปีหน้าได้ก่อนขึ้นปีใหม่</span></div>
+      <div class="panel"><h2>ตั้งค่าระบบ</h2><p class="desc">ทำครั้งเดียว ใช้รหัสทีมป้องกันไม่ให้คนนอกแก้ข้อมูล</p>
+        <div id="sys-setup"><p class="desc">กำลังโหลดสถานะจากระบบ…</p></div>
       </div>
     </div>
     <div class="panel" style="margin-top:16px"><h2>เป้าหมายและค่าปีก่อน · ปี 2026</h2>
@@ -838,6 +846,18 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   </section>
 </div></main>
 </div>
+</div>
+
+<div class="drawer" id="pass-dlg" hidden role="dialog" aria-modal="true" aria-labelledby="pass-title">
+  <form class="box" id="pass-form" style="max-width:420px">
+    <h2 id="pass-title">ใส่รหัสทีม</h2>
+    <p id="pass-desc" style="margin:0 0 12px;color:var(--ink-2)">ต้องใช้รหัสทีมก่อนแก้ข้อมูลในระบบ</p>
+    <label class="fld">รหัสทีม<input type="password" id="pass-in" autocomplete="current-password" required minlength="6"></label>
+    <label class="fld" id="pass2-wrap" hidden>ใส่รหัสอีกครั้ง<input type="password" id="pass-in2" autocomplete="new-password" minlength="6"></label>
+    <label class="chk"><input type="checkbox" id="pass-keep" checked> จำรหัสไว้ในเครื่องนี้</label>
+    <div id="pass-msg"></div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap"><button class="btn primary" type="submit" id="pass-ok">ตกลง</button><button class="btn" type="button" id="pass-cancel">ยกเลิก</button></div>
+  </form>
 </div>
 
 <div class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dr-title">
@@ -1276,6 +1296,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   Object.entries(BASE).forEach(([id, o]) => Object.entries(o).forEach(([k, v]) => { const m = accById(id).metrics.find(x => x.key === k); if (m) m.base = v; }));
   // YouTube-only fields (channel total, watch hours, top videos, YPP) need the YouTube API. Until it is connected these are copied from the team's deck and shown with a "sample" badge.
   const SAMPLE = '<span class="sample" title="ยังไม่ได้เชื่อม YouTube API ตัวเลขนี้คัดลอกจากสไลด์ของทีม">ตัวอย่างจากสไลด์</span>';
+  let SYS = null; // connection + setup status from the system
   const LIVE = { on: false, yt: {}, months: {}, ypp: false, at: null };
   const smp = id => LIVE.yt[id] ? '' : SAMPLE;
   const YT_EXTRA = {
@@ -1557,7 +1578,8 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     let guess = null;
     for (const f of files) {
       if (/moov/i.test(f.name)) guess = 'tt-moov'; else if (/eloop/i.test(f.name) && !guess) guess = 'tt-eloop';
-      if (!/\.csv$/i.test(f.name)) { results.push({ f, kind: null, d: { info: '', warn: 'รองรับเฉพาะไฟล์ .csv' } }); continue; }
+      if (/\.zip$/i.test(f.name)) { results.push({ f, kind: LIVE.on ? { k: 'zip', name: 'ไฟล์ zip' } : null, d: LIVE.on ? { info: 'ระบบจะแตกไฟล์และอ่านทุกไฟล์ข้างในให้ตอนบันทึก', warn: '' } : { info: '', warn: 'ไฟล์ zip ส่งเข้าระบบได้เมื่อเว็บเชื่อมกับระบบแล้ว' } }); continue; }
+      if (!/\.csv$/i.test(f.name)) { results.push({ f, kind: null, d: { info: '', warn: 'รองรับเฉพาะไฟล์ .csv หรือ .zip' } }); continue; }
       let text = '';
       try { text = (await f.text()).replace(/^﻿/, ''); } catch (err) { results.push({ f, kind: null, d: { info: '', warn: 'อ่านไฟล์นี้ไม่ได้' } }); continue; }
       const rows = parseCSV(text);
@@ -1572,9 +1594,23 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       <div class="tbl"><table><thead><tr><th>ไฟล์</th><th style="text-align:left">ระบบอ่านว่าเป็น</th><th style="text-align:left">ข้อมูลในไฟล์</th></tr></thead><tbody>
       ${results.map(r => `<tr><td>${esc(r.f.name)}</td><td style="text-align:left">${r.kind ? `<span class="st good">${r.kind.name}</span>` : '<span class="st crit">ไม่รู้จัก</span>'}</td><td class="wrap">${esc(r.d.info)}${r.d.warn ? `${r.d.info ? '<br>' : ''}<span class="warn-t">⚠ ${esc(r.d.warn)}</span>` : ''}</td></tr>`).join('')}
       </tbody></table></div>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" type="button" id="save-up" ${ok ? '' : 'disabled'}>บันทึกข้อมูล</button><button class="btn" type="button" id="cancel-up">ยกเลิก</button></div><div id="up-msg"></div>`;
-    $('#save-up').onclick = () => {
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap"><button class="btn primary" type="button" id="save-up" ${ok ? '' : 'disabled'}>${LIVE.on ? 'บันทึกเข้าระบบ' : 'บันทึกข้อมูล'}</button><button class="btn" type="button" id="cancel-up">ยกเลิก</button></div><div id="up-msg"></div>`;
+    $('#save-up').onclick = async () => {
       const accId = $('#up-acc').value, ym = $('#up-month').value;
+      if (LIVE.on) {
+        const btn = $('#save-up'), send = results.filter(r => r.kind).map(r => r.f);
+        btn.disabled = true; btn.textContent = 'กำลังส่งเข้าระบบ…';
+        try {
+          const rep = await sendUpload(send, accId);
+          await refreshLive();
+          $('#up-msg').innerHTML = `<div class="msg">ส่ง ${send.length} ไฟล์เข้า <b>${accById(accId).name}</b> แล้ว ตัวเลขทุกหน้าอัปเดตแล้ว${rep.length ? `<br><small>${rep.map(esc).join('<br>')}</small>` : ''}</div>`;
+          btn.textContent = 'บันทึกแล้ว';
+        } catch (err) {
+          btn.disabled = false; btn.textContent = 'บันทึกเข้าระบบ';
+          if (!err.cancel) $('#up-msg').innerHTML = `<div class="ox-alert ox-alert--danger" style="margin-top:12px">ส่งไม่สำเร็จ: ${esc(err.message)}</div>`;
+        }
+        return;
+      }
       const res = applyUpload(accId, ym, results);
       $('#up-msg').innerHTML = res.err ? `<div class="msg">${res.err}</div>` : `<div class="msg">บันทึกเข้า <b>${accById(accId).name}</b> แล้ว: ${res.done.join(' · ')}<br>ภาพรวม หน้าบัญชี คลิปและอันดับ และหน้าสรุปรายเดือนอัปเดตตามแล้ว · <a href="#report" data-repmonth="${res.mi}">ดูสรุปเดือน ${MONTHS[res.mi]}</a><br><small>หน้าตัวอย่างเก็บไว้ชั่วคราว รีเฟรชแล้วหาย ระบบจริงบันทึกลงชีตเบื้องหลัง</small></div>`;
       renderCoverage();
@@ -1633,6 +1669,8 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       const full = hasOv && nClip;
       return `<div class="cov"><span><b>${a.name} · ${MONTHS[mi]} ${yy}</b><br><small>${parts.join(' · ')}</small></span><span class="st ${full ? 'good' : 'warn'}">${full ? 'ครบ' : hasOv || nClip ? 'ขาดบางไฟล์' : 'รอไฟล์'}</span></div>`;
     }).join('');
+    const fl = (SYS && SYS.files) || [];
+    $('#files-log').innerHTML = fl.length ? `<h3 class="mini">ไฟล์ที่ระบบนำเข้าล่าสุด</h3><div class="tbl"><table><thead><tr><th>ไฟล์</th><th style="text-align:left">ผล</th><th>เวลา</th></tr></thead><tbody>${fl.map(f => `<tr><td>${esc(f.name)}</td><td class="wrap"><span class="st ${f.status === 'ok' ? 'good' : f.status === 'error' ? 'crit' : 'none'}">${f.status === 'ok' ? `${f.rows} แถว` : f.status === 'error' ? 'อ่านไม่ได้' : 'ข้าม'}</span>${f.message ? ` <small>${esc(f.message)}</small>` : ''}</td><td>${esc(f.at || '')}</td></tr>`).join('')}</tbody></table></div>` : '';
   }
   $('#up-month').addEventListener('change', renderCoverage);
 
@@ -1648,8 +1686,14 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     if (!t) return;
     const [id, key, field] = t.dataset.tgt.split('|');
     const m = accById(id).metrics.find(x => x.key === key);
+    const prev = m[field];
     m[field] = t.value === '' ? N : +t.value;
-    $('#tgt-msg').innerHTML = `<div class="msg">บันทึก${field === 'target' ? 'เป้า' : 'ค่าปีก่อน'} ${accById(id).name} ${m.label} แล้ว ทุกหน้าใช้ค่าใหม่ทันที (หน้าตัวอย่าง รีเฟรชแล้วกลับค่าเดิม)</div>`;
+    const what = `${field === 'target' ? 'เป้า' : 'ค่าปีก่อน'} ${accById(id).name} ${m.label}`;
+    if (!LIVE.on) { $('#tgt-msg').innerHTML = `<div class="msg">บันทึก${what} แล้ว ทุกหน้าใช้ค่าใหม่ทันที (หน้าตัวอย่าง รีเฟรชแล้วกลับค่าเดิม)</div>`; return; }
+    $('#tgt-msg').innerHTML = `<div class="msg">กำลังบันทึก${what}…</div>`;
+    admin({ api: 'target', account: id, key, field, value: t.value, label: m.label })
+      .then(() => { $('#tgt-msg').innerHTML = `<div class="msg">บันทึก${what} เข้าระบบแล้ว ทุกหน้าใช้ค่าใหม่</div>`; })
+      .catch(err => { m[field] = prev; t.value = prev ?? ''; $('#tgt-msg').innerHTML = err.cancel ? '' : `<div class="ox-alert ox-alert--danger" style="margin-top:12px">บันทึกไม่สำเร็จ: ${esc(err.message)}</div>`; });
   });
 
   /* ---------- slides drawer ---------- */
@@ -1748,18 +1792,8 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
         terr: (au.territory || []).slice(0, 4).map(t => [TERR_TH[t[0]] || t[0], Math.round(t[1] * 1000) / 10]),
         activity: Object.keys(days).sort().map(d => [String(+d.slice(8)), days[d]]) };
     });
-    const st = j.status || {};
-    const ytRow = id => {
-      const x = st[id] || {}, need = !x.connected || x.error;
-      return `<div class="conn"><span class="name">${accById(id).name}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}`
-        + `<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}` : 'กดปุ่มแล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่อง ครั้งเดียว ระบบได้สิทธิ์อ่านสถิติอย่างเดียว'}</span>`
-        + (need ? `<span class="conn-act"><button class="btn${x.connected ? '' : ' primary'}" type="button" data-ytconnect="${id}">${x.connected ? 'เชื่อมใหม่' : 'เชื่อมด้วย Gmail ของช่อง'}</button></span>` : '')
-        + `</div>`;
-    };
-    $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
-      + ['fb-eloop', 'fb-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ยังไม่ได้เชื่อม</span><span class="det">รอข้อมูล token ของ Facebook · ตัวเลขในแดชบอร์ดยังเป็นตัวอย่าง</span></div>`).join('')
-      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ไฟล์ใน Google Drive</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span></div>`).join('')
-      + '<div id="yt-msg"></div>';
+    SYS = j.status || {};
+    renderConn(); renderSystem();
     const b = $('#data-banner');
     const liveP = ['TikTok', 'YouTube'].filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length));
     b.className = 'ox-alert proto-alert ' + (liveP.length ? 'ox-alert--info' : 'ox-alert--warning');
@@ -1769,19 +1803,195 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     $('#upload-live').hidden = false;
   }
 
+  /* ---------- system settings & connections (everything from this page) ---------- */
+  const OLD_CODE = 'โค้ดในระบบ (Apps Script) ยังเป็นเวอร์ชันเก่า ต้องวางโค้ดใหม่และ Deploy เวอร์ชันใหม่ 1 ครั้ง';
+  const PASS_KEY = 'ct-okr-pass';
+  const passStore = {
+    get() { try { return sessionStorage.getItem(PASS_KEY) || localStorage.getItem(PASS_KEY) || ''; } catch (e) { return ''; } },
+    set(p, keep) { try { sessionStorage.setItem(PASS_KEY, p); if (keep) localStorage.setItem(PASS_KEY, p); else localStorage.removeItem(PASS_KEY); } catch (e) { /* storage blocked */ } },
+    clear() { try { sessionStorage.removeItem(PASS_KEY); localStorage.removeItem(PASS_KEY); } catch (e) { /* storage blocked */ } },
+  };
+  const cancelled = () => Object.assign(new Error('ยกเลิกแล้ว'), { cancel: true });
+
+  async function post(body) {
+    const r = await fetch(DATA_URL, { method: 'POST', body: JSON.stringify(body) });
+    try { return await r.json(); } catch (e) { throw new Error(OLD_CODE); }
+  }
+  async function refreshLive() {
+    const j = await (await fetch(DATA_URL, { cache: 'no-store' })).json();
+    if (j.ok) { applyLive(j); route(); }
+  }
+
+  function askPass(mode, msg) {
+    return new Promise(res => {
+      const d = $('#pass-dlg'), set = mode === 'set';
+      $('#pass-title').textContent = set ? 'ตั้งรหัสทีม' : 'ใส่รหัสทีม';
+      $('#pass-desc').textContent = set
+        ? 'ตั้งครั้งเดียว ใช้ทุกครั้งที่แก้ข้อมูลในระบบ (ตั้งค่า เชื่อม/ยกเลิกบัญชี อัปโหลดไฟล์ แก้เป้า) แจ้งรหัสให้คนในทีมที่ต้องแก้ข้อมูล อย่างน้อย 6 ตัวอักษร'
+        : 'ต้องใช้รหัสทีมก่อนแก้ข้อมูลในระบบ';
+      $('#pass2-wrap').hidden = !set; $('#pass-in2').required = set;
+      $('#pass-in').value = ''; $('#pass-in2').value = '';
+      $('#pass-in').setAttribute('autocomplete', set ? 'new-password' : 'current-password');
+      $('#pass-msg').innerHTML = msg ? `<div class="msg">${esc(msg)}</div>` : '';
+      d.hidden = false; $('#pass-in').focus();
+      const done = v => { d.hidden = true; $('#pass-form').onsubmit = null; $('#pass-cancel').onclick = null; res(v); };
+      $('#pass-form').onsubmit = e => {
+        e.preventDefault();
+        const p = $('#pass-in').value;
+        if (set && p !== $('#pass-in2').value) { $('#pass-msg').innerHTML = '<div class="msg">รหัสสองช่องไม่ตรงกัน</div>'; return; }
+        done({ pass: p, keep: $('#pass-keep').checked });
+      };
+      $('#pass-cancel').onclick = () => done(null);
+    });
+  }
+
+  async function setPass() {
+    const r = await askPass('set');
+    if (!r) throw cancelled();
+    let old = passStore.get();
+    if (SYS.setup.pass && !old) { const o = await askPass('enter', 'ใส่รหัสเดิมก่อนเปลี่ยน'); if (!o) throw cancelled(); old = o.pass; }
+    const j = await post({ api: 'setpass', newPass: r.pass, pass: old });
+    if (!j.ok) throw new Error(j.error || 'ตั้งรหัสไม่สำเร็จ');
+    passStore.set(r.pass, r.keep); SYS.setup.pass = true;
+  }
+
+  /** Run an action that changes data: asks for the team passcode when needed. */
+  async function admin(body) {
+    if (!SYS || !SYS.setup) throw new Error(OLD_CODE);
+    if (!SYS.setup.pass) { await setPass(); renderSystem(); }
+    let pass = passStore.get(), msg = '';
+    for (let i = 0; i < 5; i++) {
+      if (!pass) { const r = await askPass('enter', msg); if (!r) throw cancelled(); pass = r.pass; passStore.set(pass, r.keep); }
+      const j = await post({ ...body, pass });
+      if (j.ok) return j;
+      if (/รหัสทีมไม่ถูกต้อง/.test(j.error || '')) { passStore.clear(); pass = ''; msg = j.error; continue; }
+      throw new Error(j.error || 'ระบบตอบกลับไม่ถูกต้อง');
+    }
+    throw new Error('รหัสทีมไม่ถูกต้อง');
+  }
+
+  const fileB64 = f => new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(String(r.result).split(',')[1] || '');
+    r.onerror = () => rej(new Error('อ่านไฟล์ ' + f.name + ' ไม่ได้'));
+    r.readAsDataURL(f);
+  });
+  async function sendUpload(files, accId) {
+    const out = [];
+    for (let i = 0; i < files.length; i++) {
+      const j = await admin({ api: 'upload', acc: accId, name: files[i].name, data: await fileB64(files[i]), last: i === files.length - 1 });
+      out.push(...(j.report || []));
+    }
+    return out;
+  }
+
+  function renderConn() {
+    const st = SYS || {}, ready = !!st.setup;
+    const ytRow = id => {
+      const x = st[id] || {};
+      const act = !x.connected
+        ? `<button class="btn primary" type="button" data-ytconnect="${id}">เชื่อมด้วย Gmail ของช่อง</button>`
+        : (x.error ? `<button class="btn primary" type="button" data-ytconnect="${id}">เชื่อมใหม่</button>` : '')
+          + (ready ? `<button class="btn" type="button" data-sys="syncyt" data-sacc="${id}">ดึงข้อมูลตอนนี้</button><button class="btn" type="button" data-sys="disconnect" data-sacc="${id}">ยกเลิกการเชื่อม</button>` : '');
+      return `<div class="conn"><span class="name">${accById(id).name}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}`
+        + `<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}` : 'กดปุ่มแล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่อง ครั้งเดียว ระบบได้สิทธิ์อ่านสถิติอย่างเดียว'}</span>`
+        + `<span class="conn-act">${act}</span></div>`;
+    };
+    $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
+      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
+      + ['fb-eloop', 'fb-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ยังไม่เปิดใช้</span><span class="det">ปุ่มเชื่อม Facebook จะมาอยู่ตรงนี้ · ตัวเลข Facebook ในแดชบอร์ดยังเป็นตัวอย่าง</span></div>`).join('')
+      + '<div id="yt-msg"></div>';
+  }
+
+  function renderSystem() {
+    const box = $('#sys-setup'), s = SYS && SYS.setup;
+    if (!SYS) { box.innerHTML = '<div class="ox-alert ox-alert--danger">โหลดสถานะจากระบบไม่ได้ ลองโหลดหน้าใหม่</div>'; return; }
+    if (!s) {
+      box.innerHTML = `<div class="ox-alert ox-alert--warning"><span><b>ต้องอัปเดตโค้ดในระบบก่อน 1 ครั้ง</b> หลังจากนี้ทุกอย่างทำในหน้านี้ได้ทั้งหมด</span></div>
+        <ol class="kinds" style="margin-top:10px"><li>เปิดชีต <b>CT Social OKR · ข้อมูล</b> → ส่วนขยาย → Apps Script</li>
+        <li>วางโค้ดใหม่ทับไฟล์ <a href="https://raw.githubusercontent.com/Annk9p/ct-social-okr/main/apps-script/Code.gs" target="_blank" rel="noopener">Code</a> และ <a href="https://raw.githubusercontent.com/Annk9p/ct-social-okr/main/apps-script/YouTube.gs" target="_blank" rel="noopener">YouTube</a> แล้วกด Save</li>
+        <li>Deploy → Manage deployments → ✏️ Edit → Version: <b>New version</b> → Deploy</li><li>กลับมาโหลดหน้านี้ใหม่</li></ol>`;
+      return;
+    }
+    const ok = b => b ? '<span class="st good">เสร็จแล้ว</span>' : '<span class="st warn">ยังไม่ได้ทำ</span>';
+    const redirOk = s.redirect === DATA_URL, ytAll = ['yt-eloop', 'yt-moov'].every(id => (SYS[id] || {}).connected);
+    const link = (href, t) => `<a href="${href}" target="_blank" rel="noopener">${t}</a>`;
+    box.innerHTML = `
+      <div class="step"><h3>1. รหัสทีม ${ok(s.pass)}</h3>
+        <p>${s.pass ? 'ใช้ตอนตั้งค่า เชื่อม/ยกเลิกบัญชี อัปโหลดไฟล์ และแก้เป้า' : 'ตั้งรหัสสำหรับทีม กันคนนอกที่เห็นลิงก์เว็บแก้ข้อมูล'}</p>
+        <div class="conn-act" style="display:flex">${s.pass
+          ? `<button class="btn" type="button" data-sys="setpass">เปลี่ยนรหัส</button>${passStore.get() ? '<button class="btn" type="button" data-sys="forget">ไม่จำรหัสในเครื่องนี้</button>' : ''}`
+          : '<button class="btn primary" type="button" data-sys="setpass">ตั้งรหัสทีม</button>'}</div></div>
+      <div class="step"><h3>2. กุญแจ Google สำหรับ YouTube ${ok(s.oauth && redirOk)}</h3>
+        <p>Google ให้สร้างกุญแจในหน้า Google Cloud ของเจ้าของระบบเท่านั้น ทำครั้งเดียว ประมาณ 5 นาที แล้ววางค่าด้านล่าง${s.oauth && !redirOk ? '<br><span class="warn-t">⚠ ลิงก์เว็บแอปเปลี่ยนไป กด บันทึกกุญแจ อีกครั้ง และใส่ลิงก์ใหม่ใน Authorized redirect URIs</span>' : ''}</p>
+        <details ${s.oauth && redirOk ? '' : 'open'}><summary>วิธีสร้างกุญแจ (ใช้บัญชี Google เดียวกับที่สร้างชีต)</summary><ol>
+          <li>เปิด ${link('https://console.cloud.google.com/apis/library/youtubeanalytics.googleapis.com', 'YouTube Analytics API')} และ ${link('https://console.cloud.google.com/apis/library/youtube.googleapis.com', 'YouTube Data API v3')} กด <b>Enable</b> ทั้งสองหน้า (ถ้าขึ้น Manage แปลว่าเปิดแล้ว)</li>
+          <li>เปิด ${link('https://console.cloud.google.com/auth/overview', 'หน้าขออนุญาต')} ถ้ามีปุ่ม <b>Get started</b>: ชื่อ CT Social OKR · เลือก <b>External</b> · ใส่อีเมล · ติ๊กยอมรับ · Create</li>
+          <li>เปิด ${link('https://console.cloud.google.com/auth/audience', 'Audience')} กด <b>Publish app</b> ให้สถานะเป็น <b>In production</b> (ถ้าค้าง Testing สิทธิ์ YouTube หลุดทุก 7 วัน)</li>
+          <li>เปิด ${link('https://console.cloud.google.com/auth/clients', 'Clients')} → <b>Create client</b> → <b>Web application</b> → ที่ Authorized redirect URIs กด Add URI แล้ววางลิงก์นี้ → Create
+            <div class="copy" style="margin-top:6px"><code id="redir">${esc(DATA_URL)}</code><button class="btn" type="button" data-copy="redir">คัดลอก</button></div></li>
+          <li>คัดลอก <b>Client ID</b> และ <b>Client secret</b> มาวางด้านล่าง (secret โชว์ครั้งเดียว)</li></ol></details>
+        <form id="oauth-form" autocomplete="off">
+          <label class="fld">Client ID<input id="oa-id" placeholder="${s.oauth ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : 'ลงท้ายด้วย .apps.googleusercontent.com'}"></label>
+          <label class="fld">Client secret<input id="oa-sec" type="password" placeholder="${s.oauth ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : ''}" autocomplete="new-password"></label>
+          <button class="btn primary" type="submit">บันทึกกุญแจ</button></form></div>
+      <div class="step"><h3>3. เชื่อม YouTube ${ok(ytAll)}</h3><p>กด <b>เชื่อมด้วย Gmail ของช่อง</b> ในกล่องการเชื่อมต่อ ทีละช่อง แล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่องนั้น</p></div>
+      <div class="step"><h3>4. ไฟล์ TikTok</h3><p>ทุกต้นเดือน export จาก TikTok Studio แล้ว${link('#upload', 'อัปโหลดในหน้านี้').replace(' target="_blank" rel="noopener"', '')}</p></div>
+      <div id="sys-msg"></div>`;
+  }
+
+  const sysMsg = (sel, html, bad) => { const el = $(sel); if (el) el.innerHTML = html ? `<div class="${bad ? 'ox-alert ox-alert--danger' : 'msg'}" style="margin-top:12px">${html}</div>` : ''; };
+
   document.addEventListener('click', async e => {
-    const b = e.target.closest('[data-ytconnect]');
-    if (!b || !DATA_URL) return;
-    const label = b.textContent;
-    b.disabled = true; b.textContent = 'กำลังเปิดหน้าล็อกอิน…';
+    const cp = e.target.closest('[data-copy]');
+    if (cp) { const t = $('#' + cp.dataset.copy).textContent; try { await navigator.clipboard.writeText(t); cp.textContent = 'คัดลอกแล้ว'; } catch (err) { getSelection().selectAllChildren($('#' + cp.dataset.copy)); } return; }
+
+    const y = e.target.closest('[data-ytconnect]');
+    if (y && DATA_URL) {
+      const label = y.textContent;
+      y.disabled = true; y.textContent = 'กำลังเปิดหน้าล็อกอิน…';
+      try {
+        const j = await (await fetch(`${DATA_URL}?api=connect&acc=${encodeURIComponent(y.dataset.ytconnect)}`, { cache: 'no-store' })).json();
+        if (!j.ok) throw new Error(j.error || 'ระบบตอบกลับไม่ถูกต้อง');
+        if (!j.url) throw new Error(OLD_CODE + ' (ดูกล่อง ตั้งค่าระบบ)');
+        location.href = j.url;
+      } catch (err) {
+        y.disabled = false; y.textContent = label;
+        sysMsg('#yt-msg', 'เปิดหน้าล็อกอินไม่ได้: ' + esc(err.message), true);
+      }
+      return;
+    }
+
+    const b = e.target.closest('[data-sys]');
+    if (!b) return;
+    const act = b.dataset.sys, acc = b.dataset.sacc, label = b.textContent;
+    const where = acc ? '#yt-msg' : '#sys-msg';
     try {
-      const j = await (await fetch(`${DATA_URL}?api=connect&acc=${encodeURIComponent(b.dataset.ytconnect)}`, { cache: 'no-store' })).json();
-      if (!j.ok) throw new Error(j.error || 'ระบบตอบกลับไม่ถูกต้อง');
-      if (!j.url) throw new Error('โค้ด Apps Script ยังเป็นเวอร์ชันเก่า ต้องวางโค้ดใหม่แล้ว Deploy เวอร์ชันใหม่ก่อน');
-      location.href = j.url;
+      if (act === 'forget') { passStore.clear(); renderSystem(); return; }
+      if (act === 'disconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่ และเชื่อมช่องใหม่ได้`)) return;
+      b.disabled = true; b.textContent = act === 'syncyt' ? 'กำลังดึงข้อมูล… (ไม่เกิน 1 นาที)' : 'กำลังบันทึก…';
+      if (act === 'setpass') { await setPass(); renderSystem(); sysMsg('#sys-msg', 'ตั้งรหัสทีมแล้ว'); return; }
+      const j = await admin({ api: act, acc });
+      await refreshLive();
+      sysMsg(where, act === 'disconnect' ? `ยกเลิกการเชื่อม ${accById(acc).name} แล้ว` : esc((j.report || []).join(' · ') || 'เสร็จแล้ว'));
     } catch (err) {
       b.disabled = false; b.textContent = label;
-      $('#yt-msg').innerHTML = `<div class="ox-alert ox-alert--danger" style="margin-top:var(--omnix-space-3)">เปิดหน้าล็อกอินไม่ได้: ${esc(err.message)}</div>`;
+      if (!err.cancel) sysMsg(where, esc(err.message), true);
+    }
+  });
+
+  document.addEventListener('submit', async e => {
+    if (e.target.id !== 'oauth-form') return;
+    e.preventDefault();
+    const btn = e.target.querySelector('button'), cid = $('#oa-id').value.trim(), sec = $('#oa-sec').value.trim();
+    btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+    try {
+      await admin({ api: 'oauth', clientId: cid, secret: sec, redirect: DATA_URL });
+      await refreshLive();
+      sysMsg('#sys-msg', 'บันทึกกุญแจแล้ว ขั้นต่อไป กด เชื่อมด้วย Gmail ของช่อง ในกล่องการเชื่อมต่อ');
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'บันทึกกุญแจ';
+      if (!err.cancel) sysMsg('#sys-msg', 'บันทึกไม่สำเร็จ: ' + esc(err.message), true);
     }
   });
 
@@ -1797,6 +2007,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
       applyLive(j);
       box.hidden = true;
     } catch (e) {
+      renderSystem();
       box.className = 'ox-alert ox-alert--danger';
       box.innerHTML = `<span>โหลดข้อมูลจากระบบไม่สำเร็จ (${esc(e.message)}) ตอนนี้แสดงข้อมูลตัวอย่างแทน</span><span class="ox-topbar__spacer"></span><button class="ox-btn ox-btn--secondary ox-btn--sm" type="button" onclick="location.reload()">โหลดใหม่</button>`;
     }

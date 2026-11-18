@@ -22,6 +22,12 @@ function ytDisconnect_(acc) {
   var ui = SpreadsheetApp.getUi();
   var title = PROPS.getProperty('YT_TITLE_' + acc) || 'ยังไม่ได้เชื่อม';
   if (ui.alert('ยกเลิกการเชื่อม ' + YT_NAMES[acc], 'ตอนนี้เชื่อมกับช่อง: ' + title + '\nยกเลิกแล้วจะเชื่อมช่องใหม่ได้ ข้อมูลที่ดึงมาแล้วยังอยู่ในชีต', ui.ButtonSet.OK_CANCEL) !== ui.Button.OK) return;
+  ytDisconnectCore_(acc);
+}
+
+function ytDisconnectCore_(acc) {
+  if (!YT_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
+  var title = PROPS.getProperty('YT_TITLE_' + acc) || '';
   ['YT_RT_', 'YT_CHANNEL_', 'YT_TITLE_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
   CacheService.getScriptCache().remove('yt_at_' + acc);
   log_('youtube-connect', acc, 'ok', 'ยกเลิกการเชื่อม (เดิม: ' + title + ')');
@@ -31,7 +37,7 @@ function ytDisconnect_(acc) {
 function ytAuthUrl_(acc) {
   if (!YT_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
   var cid = PROPS.getProperty('OAUTH_CLIENT_ID'), redirect = PROPS.getProperty('WEBAPP_URL');
-  if (!cid || !PROPS.getProperty('OAUTH_CLIENT_SECRET') || !redirect) throw new Error('ยังตั้งค่าไม่ครบ: เปิดชีต เมนู CT OKR → 2) ตั้งค่า OAuth และลิงก์เว็บแอป');
+  if (!cid || !PROPS.getProperty('OAUTH_CLIENT_SECRET') || !redirect) throw new Error('ยังตั้งค่า Google OAuth ไม่ครบ: ทำ "ตั้งค่าระบบ ข้อ 2" ในหน้าตั้งค่าก่อน');
   var state = Utilities.getUuid();
   CacheService.getScriptCache().put('oauth_' + state, acc, 3600);
   return 'https://accounts.google.com/o/oauth2/v2/auth?' + qs_({
@@ -70,7 +76,7 @@ function ytHandleCallback_(p) {
       '<p><a href="' + SITE_URL + '" target="_top" style="display:inline-block;padding:9px 16px;border-radius:8px;background:#5b5bd6;color:#fff;text-decoration:none;font-weight:600">กลับไปหน้าแดชบอร์ด</a></p></div>').setTitle('เชื่อม YouTube');
   };
   var cache = CacheService.getScriptCache(), acc = cache.get('oauth_' + p.state);
-  if (!acc) return page(false, 'ลิงก์หมดอายุหรือใช้ไปแล้ว กลับไปที่ชีต แล้วกดเมนูเชื่อม YouTube ใหม่อีกครั้ง');
+  if (!acc) return page(false, 'ลิงก์หมดอายุหรือใช้ไปแล้ว กลับไปหน้าแดชบอร์ด แล้วกดปุ่มเชื่อมใหม่อีกครั้ง');
   cache.remove('oauth_' + p.state);
   if (p.error) return page(false, 'Google แจ้งว่า: ' + esc_(p.error) + ' (ถ้ากดปฏิเสธไป ให้เริ่มใหม่แล้วกดอนุญาต)');
 
@@ -89,7 +95,7 @@ function ytHandleCallback_(p) {
   if (!item) return page(false, 'บัญชี Gmail นี้ไม่มีช่อง YouTube ลองเชื่อมใหม่แล้วเลือก Gmail ที่เป็นเจ้าของช่อง');
   // The connect button is on a public page, so a slot only accepts the channel it was first connected to.
   var locked = PROPS.getProperty('YT_CHANNEL_' + acc);
-  if (locked && locked !== item.id) return page(false, 'Gmail นี้เป็นของช่อง "' + esc_(item.snippet.title) + '" แต่ ' + YT_NAMES[acc] + ' เชื่อมไว้กับช่อง "' + esc_(PROPS.getProperty('YT_TITLE_' + acc) || '') + '" ถ้าต้องการเปลี่ยนช่อง ให้เจ้าของระบบกดเมนู CT OKR → ยกเลิกการเชื่อม ในชีตก่อน');
+  if (locked && locked !== item.id) return page(false, 'Gmail นี้เป็นของช่อง "' + esc_(item.snippet.title) + '" แต่ ' + YT_NAMES[acc] + ' เชื่อมไว้กับช่อง "' + esc_(PROPS.getProperty('YT_TITLE_' + acc) || '') + '" ถ้าต้องการเปลี่ยนช่อง ให้กด ยกเลิกการเชื่อม ที่หน้าตั้งค่าในแดชบอร์ดก่อน');
   var other = acc === 'yt-eloop' ? 'yt-moov' : 'yt-eloop';
   if (PROPS.getProperty('YT_CHANNEL_' + other) === item.id) return page(false, 'ช่อง "' + esc_(item.snippet.title) + '" เชื่อมไว้เป็น ' + YT_NAMES[other] + ' แล้ว ลองใหม่แล้วเลือก Gmail ของ ' + YT_NAMES[acc]);
 

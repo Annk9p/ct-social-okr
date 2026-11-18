@@ -52,6 +52,8 @@ function onOpen() {
     .addItem('ดึงข้อมูล YouTube ตอนนี้', 'syncYouTubeNow')
     .addItem('นำเข้าไฟล์ TikTok ตอนนี้', 'importTikTokNow')
     .addItem('ดูสถานะ', 'showStatus')
+    .addSeparator()
+    .addItem('ล้างรหัสทีม (ลืมรหัส)', 'resetTeamPass')
     .addToUi();
 }
 
@@ -83,10 +85,10 @@ function setup() {
   ScriptApp.newTrigger('importTikTok').timeBased().everyHours(1).create();
 
   log_('setup', '', 'ok', 'ติดตั้งแล้ว');
-  SpreadsheetApp.getUi().alert('ติดตั้งเสร็จแล้ว',
+  try { SpreadsheetApp.getUi().alert('ติดตั้งเสร็จแล้ว',
     'สร้างแท็บข้อมูล โฟลเดอร์ TikTok ใน Google Drive และตั้งเวลาดึงข้อมูลทุกวัน 06:00 แล้ว\n\n' +
     'โฟลเดอร์สำหรับวางไฟล์ TikTok:\n' + root.getUrl() + '\n\n' +
-    'ขั้นต่อไป: Deploy เป็นเว็บแอป แล้วเปิดเมนู CT OKR → 2) ตั้งค่า OAuth และลิงก์เว็บแอป', SpreadsheetApp.getUi().ButtonSet.OK);
+    'ขั้นต่อไป: Deploy เป็นเว็บแอป แล้วตั้งค่าที่เหลือได้ที่หน้า ตั้งค่า บนเว็บแดชบอร์ด', SpreadsheetApp.getUi().ButtonSet.OK); } catch (e) { /* not opened from the sheet */ }
 }
 
 function folderProp_(prop, name, parent) {
@@ -133,6 +135,119 @@ function doGet(e) {
   return json_(data);
 }
 
+/* ------------------------------------------------------------------ web API (POST from the dashboard)
+ * Body: JSON sent as text/plain (no CORS preflight). Every action that changes something needs the team passcode,
+ * which is set once from the dashboard's setup page and stored only as a salted hash.
+ */
+function doPost(e) {
+  var b = {};
+  try { b = JSON.parse((e && e.postData && e.postData.contents) || '{}'); } catch (err) { return json_({ ok: false, error: 'คำขอไม่ถูกต้อง' }); }
+  try { return json_(webApi_(b)); } catch (err) { return json_({ ok: false, error: String(err && err.message || err) }); }
+}
+
+function webApi_(b) {
+  if (b.api === 'setpass') return setPass_(b);
+  checkPass_(b.pass);
+  switch (b.api) {
+    case 'check': return { ok: true };
+    case 'oauth': return saveOAuth_(b);
+    case 'disconnect': ytDisconnectCore_(b.acc); return { ok: true };
+    case 'syncyt': return syncYtWeb_(b.acc);
+    case 'upload': return uploadTikTok_(b);
+    case 'import': return { ok: true, report: withLock_(importTikTok) };
+    case 'target': return saveTarget_(b);
+    default: throw new Error('ไม่รู้จักคำสั่ง ' + b.api);
+  }
+}
+
+function hash_(salt, pass) {
+  return Utilities.base64Encode(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + '|' + pass, Utilities.Charset.UTF_8));
+}
+
+function setPass_(b) {
+  var np = String(b.newPass || '');
+  if (np.length < 6) throw new Error('รหัสทีมต้องยาวอย่างน้อย 6 ตัวอักษร');
+  if (PROPS.getProperty('ADMIN_HASH')) checkPass_(b.pass); // changing an existing passcode needs the old one
+  var salt = Utilities.getUuid();
+  PROPS.setProperties({ ADMIN_SALT: salt, ADMIN_HASH: hash_(salt, np) });
+  log_('passcode', '', 'ok', 'ตั้งรหัสทีมจากหน้าเว็บ');
+  return { ok: true };
+}
+
+function checkPass_(pass) {
+  var h = PROPS.getProperty('ADMIN_HASH');
+  if (!h) throw new Error('ยังไม่ได้ตั้งรหัสทีม ตั้งได้ที่หน้า ตั้งค่า');
+  var cache = CacheService.getScriptCache(), fails = +(cache.get('pass_fail') || 0);
+  if (fails >= 10) throw new Error('ใส่รหัสผิดหลายครั้ง ระบบล็อกไว้ 15 นาที');
+  if (!pass || hash_(PROPS.getProperty('ADMIN_SALT'), String(pass)) !== h) {
+    cache.put('pass_fail', String(fails + 1), 900);
+    var err = new Error('รหัสทีมไม่ถูกต้อง'); err.badPass = true; throw err;
+  }
+}
+
+/** Sheet menu: forgot the passcode. Only the sheet owner can run this. */
+function resetTeamPass() {
+  var ui = SpreadsheetApp.getUi();
+  if (ui.alert('ล้างรหัสทีม', 'ล้างแล้วตั้งรหัสใหม่ได้ที่หน้า ตั้งค่า บนเว็บแดชบอร์ด', ui.ButtonSet.OK_CANCEL) !== ui.Button.OK) return;
+  PROPS.deleteProperty('ADMIN_HASH'); PROPS.deleteProperty('ADMIN_SALT');
+  log_('passcode', '', 'ok', 'ล้างรหัสทีมจากชีต');
+}
+
+function saveOAuth_(b) {
+  var url = String(b.redirect || '').trim(), cid = String(b.clientId || '').trim(), sec = String(b.secret || '').trim();
+  if (!/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) throw new Error('ลิงก์เว็บแอปไม่ถูกต้อง');
+  if (cid && !/\.apps\.googleusercontent\.com$/.test(cid)) throw new Error('Client ID ต้องลงท้ายด้วย .apps.googleusercontent.com');
+  if (!cid && !PROPS.getProperty('OAUTH_CLIENT_ID')) throw new Error('ใส่ Client ID');
+  if (!sec && !PROPS.getProperty('OAUTH_CLIENT_SECRET')) throw new Error('ใส่ Client secret');
+  PROPS.setProperty('WEBAPP_URL', url);
+  if (cid) PROPS.setProperty('OAUTH_CLIENT_ID', cid);
+  if (sec) PROPS.setProperty('OAUTH_CLIENT_SECRET', sec);
+  log_('settings', '', 'ok', 'บันทึก Google OAuth จากหน้าเว็บ');
+  return { ok: true };
+}
+
+function syncYtWeb_(acc) {
+  var ids = acc ? [acc] : ['yt-eloop', 'yt-moov'], out = [];
+  ids.forEach(function (id) {
+    if (!YT_NAMES[id]) throw new Error('ไม่รู้จักบัญชี ' + id);
+    if (!PROPS.getProperty('YT_RT_' + id)) { out.push(YT_NAMES[id] + ': ยังไม่ได้เชื่อม'); return; }
+    try { syncYouTube_(id, !PROPS.getProperty('LAST_OK_' + id)); out.push(YT_NAMES[id] + ': ดึงสำเร็จ'); } catch (e) { out.push(YT_NAMES[id] + ': ' + e.message); }
+  });
+  return { ok: true, report: out };
+}
+
+/** Dashboard upload: save the file into the account's Drive folder, then import right away. */
+function uploadTikTok_(b) {
+  if (['tt-eloop', 'tt-moov'].indexOf(b.acc) < 0) throw new Error('เลือกบัญชี TikTok');
+  var name = String(b.name || 'tiktok.csv').replace(/[\\/]/g, '_').slice(0, 200);
+  if (!/\.(csv|zip)$/i.test(name)) throw new Error(name + ': รองรับเฉพาะไฟล์ .csv หรือ .zip');
+  var bytes = Utilities.base64Decode(String(b.data || ''));
+  if (!bytes.length) throw new Error(name + ': ไฟล์ว่าง');
+  if (bytes.length > 20 * 1024 * 1024) throw new Error(name + ': ไฟล์ใหญ่เกิน 20 MB');
+  var root = folderProp_('TT_FOLDER_ROOT', 'CT Social OKR · ไฟล์ TikTok', null);
+  var folder = folderProp_('TT_FOLDER_' + b.acc, b.acc === 'tt-eloop' ? 'TikTok Eloop' : 'TikTok Moov', root);
+  folder.createFile(Utilities.newBlob(bytes, /\.zip$/i.test(name) ? 'application/zip' : 'text/csv', name));
+  if (b.last === false) return { ok: true, report: [] }; // more files coming in this batch; import once at the end
+  return { ok: true, report: withLock_(importTikTok) };
+}
+
+function saveTarget_(b) {
+  var field = b.field === 'base' ? 'base' : 'target', year = PROPS.getProperty('YEAR') || String(new Date().getFullYear());
+  var v = b.value === '' || b.value == null ? '' : Number(b.value);
+  if (v !== '' && !isFinite(v)) throw new Error('ตัวเลขไม่ถูกต้อง');
+  var rows = readTable_('targets'), row = rows.filter(function (r) { return String(r.year) === year && r.account === b.account && r.key === b.key; })[0];
+  if (!row) { row = { year: year, account: String(b.account), key: String(b.key), label: String(b.label || b.key), target: '', base: '', note: '' }; rows.push(row); }
+  row[field] = v;
+  writeTable_('targets', rows);
+  return { ok: true };
+}
+
+function withLock_(fn) {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(60 * 1000)) throw new Error('ระบบกำลังนำเข้าข้อมูลอยู่ ลองใหม่อีกครั้งใน 1 นาที');
+  try { return fn(); } finally { lock.releaseLock(); }
+}
+
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
 /** Everything the dashboard needs, in one JSON object. */
@@ -176,6 +291,10 @@ function buildData_() {
     status[id] = { connected: !!PROPS.getProperty('YT_RT_' + id), channel: PROPS.getProperty('YT_TITLE_' + id) || null, lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
   });
   ['tt-eloop', 'tt-moov'].forEach(function (id) { status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null }; });
+  status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null };
+  status.files = readTable_('files').sort(function (a, b) { return a.imported_at < b.imported_at ? 1 : -1; }).slice(0, 12).map(function (r) {
+    return { name: r.name, account: r.account, kind: r.kind, rows: +r.rows || 0, at: r.imported_at, status: r.status, message: r.message };
+  });
   return { ok: true, year: +year, generatedAt: now_(), accounts: accounts, clips: clips, ytTop: ytTop, ytChannel: ytChannel, audience: audience, targets: targets, notes: notes, status: status };
 }
 
@@ -387,7 +506,7 @@ function log_(job, acc, status, msg) {
 
 function notify_(subject, body) {
   var to = PROPS.getProperty('ALERT_EMAILS') || Session.getEffectiveUser().getEmail();
-  if (to) MailApp.sendEmail(to, subject, body + '\n\nเปิดชีตแล้วดูเมนู CT OKR → ดูสถานะ');
+  if (to) MailApp.sendEmail(to, subject, body + '\n\nดูสถานะได้ที่หน้า ตั้งค่า: ' + SITE_URL);
 }
 
 function now_() { return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm'); }
