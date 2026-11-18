@@ -1750,7 +1750,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', route);
   /* ---------- live data from the Apps Script web app ---------- */
   // Paste the web app URL (ends with /exec) here after deploying the Apps Script. Empty = sample data only.
-  const DATA_URL = 'https://script.google.com/macros/s/AKfycbwALcxZomJBg-PfQoKRHji1H0Kym-k08ogeTJnBDyGnb-d7AovKmQnPET2P8OQGrNQC/exec';
+  const DATA_URL = 'https://script.google.com/macros/s/AKfycbzaMAIGGjBCqbmPfT5vk8oD7eYROxhC8vi_EPZQvp8j8G7e7IOUiNadTfgq0kCEllSZ/exec';
   const GENDER_TH = { Female: 'หญิง', Male: 'ชาย', Other: 'อื่นๆ' };
   const TERR_TH = { TH: 'ไทย', LA: 'ลาว', KR: 'เกาหลีใต้', MM: 'เมียนมา', KH: 'กัมพูชา', VN: 'เวียดนาม', MY: 'มาเลเซีย', SG: 'สิงคโปร์', JP: 'ญี่ปุ่น', CN: 'จีน', US: 'สหรัฐฯ', TW: 'ไต้หวัน', ID: 'อินโดนีเซีย', PH: 'ฟิลิปปินส์', Others: 'อื่นๆ' };
   const thDate = s => { const [y, m, d] = String(s).slice(0, 10).split('-'); return y && m ? `${+d} ${MONTHS[+m - 1]} ${y}` : s; };
