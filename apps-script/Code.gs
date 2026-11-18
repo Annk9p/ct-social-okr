@@ -230,11 +230,11 @@ function uploadTikTok_(b) {
   var bytes = Utilities.base64Decode(String(b.data || ''));
   if (!bytes.length) throw new Error(name + ': ไฟล์ว่าง');
   if (bytes.length > 20 * 1024 * 1024) throw new Error(name + ': ไฟล์ใหญ่เกิน 20 MB');
-  var root = folderProp_('TT_FOLDER_ROOT', 'CT Social OKR · ไฟล์ TikTok', null);
-  var folder = folderProp_('TT_FOLDER_' + b.acc, b.acc === 'tt-eloop' ? 'TikTok Eloop' : 'TikTok Moov', root);
-  folder.createFile(Utilities.newBlob(bytes, /\.zip$/i.test(name) ? 'application/zip' : 'text/csv', name));
-  if (b.last === false) return { ok: true, report: [] }; // more files coming in this batch; import once at the end
-  return { ok: true, report: withLock_(importTikTok) };
+  var file;
+  try { file = ttFolder_(b.acc).createFile(Utilities.newBlob(bytes, /\.zip$/i.test(name) ? 'application/zip' : 'text/csv', name)); }
+  catch (e) { throw new Error('บันทึกไฟล์ลง Google Drive ไม่ได้: ' + e.message); }
+  // import this file right away (other files in the folders are picked up by the hourly job)
+  return { ok: true, report: withLock_(function () { return importTikTok([{ f: file, acc: b.acc, upd: file.getLastUpdated().toISOString() }]); }) };
 }
 
 function saveTarget_(b) {
@@ -344,20 +344,25 @@ function importTikTokNow() {
   SpreadsheetApp.getUi().alert(r.length ? r.join('\n') : 'ไม่มีไฟล์ใหม่ในโฟลเดอร์ TikTok');
 }
 
-/** Read new or changed files in the TikTok folders, upsert rows, recompute monthly totals. */
-function importTikTok() {
+function ttFolder_(acc) {
+  var root = folderProp_('TT_FOLDER_ROOT', 'CT Social OKR · ไฟล์ TikTok', null);
+  return folderProp_('TT_FOLDER_' + acc, acc === 'tt-eloop' ? 'TikTok Eloop' : 'TikTok Moov', root);
+}
+
+/** Read new or changed files in the TikTok folders (or just `only`), upsert rows, recompute monthly totals. */
+function importTikTok(only) {
   var known = {};
   readTable_('files').forEach(function (r) { known[r.file_id] = r; });
-  var queue = [];
-  ['tt-eloop', 'tt-moov'].forEach(function (acc) {
-    var id = PROPS.getProperty('TT_FOLDER_' + acc);
-    if (!id) return;
-    var it = DriveApp.getFolderById(id).getFiles();
-    while (it.hasNext()) {
-      var f = it.next(), upd = f.getLastUpdated().toISOString();
-      if (known[f.getId()] && known[f.getId()].file_updated === upd) continue;
-      queue.push({ f: f, acc: acc, upd: upd });
-    }
+  var queue = Array.isArray(only) ? only : [];
+  if (!Array.isArray(only)) ['tt-eloop', 'tt-moov'].forEach(function (acc) {
+    try {
+      var it = ttFolder_(acc).getFiles();
+      while (it.hasNext()) {
+        var f = it.next(), upd = f.getLastUpdated().toISOString();
+        if (known[f.getId()] && known[f.getId()].file_updated === upd) continue;
+        queue.push({ f: f, acc: acc, upd: upd });
+      }
+    } catch (e) { log_('tiktok', acc, 'warn', 'เปิดโฟลเดอร์ TikTok ใน Drive ไม่ได้: ' + e.message); }
   });
   if (!queue.length) return [];
   queue.sort(function (a, b) { return a.upd < b.upd ? -1 : 1; }); // newest file wins
@@ -467,8 +472,8 @@ function showStatus() {
       (PROPS.getProperty('LAST_ERR_' + id) ? ' · ผิดพลาด: ' + PROPS.getProperty('LAST_ERR_' + id) : ''));
   });
   ['tt-eloop', 'tt-moov'].forEach(function (id) {
-    var f = PROPS.getProperty('TT_FOLDER_' + id);
-    lines.push((id === 'tt-eloop' ? 'TikTok Eloop' : 'TikTok Moov') + ': นำเข้าล่าสุด ' + (PROPS.getProperty('LAST_OK_' + id) || '–') + (f ? '\n  โฟลเดอร์ ' + DriveApp.getFolderById(f).getUrl() : ''));
+    var url = ''; try { url = ttFolder_(id).getUrl(); } catch (e) { url = 'เปิดไม่ได้: ' + e.message; }
+    lines.push((id === 'tt-eloop' ? 'TikTok Eloop' : 'TikTok Moov') + ': นำเข้าล่าสุด ' + (PROPS.getProperty('LAST_OK_' + id) || '–') + '\n  โฟลเดอร์ ' + url);
   });
   SpreadsheetApp.getUi().alert('สถานะ CT Social OKR', lines.join('\n\n'), SpreadsheetApp.getUi().ButtonSet.OK);
 }
