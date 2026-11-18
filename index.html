@@ -853,6 +853,12 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 .ico-tt { border-radius: 25%; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) .ico-tt { box-shadow: 0 0 0 1px rgb(255 255 255 / .4); } }
 :root[data-theme="dark"] .ico-tt, :root.dark .ico-tt { box-shadow: 0 0 0 1px rgb(255 255 255 / .4); }
+
+/* Video Analysis type filter */
+.va-types { margin: 0 0 4px; }
+.chip .n { font-size: 11.5px; font-weight: 600; min-width: 20px; height: 18px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; background: var(--omnix-surface-2); color: var(--omnix-fg-muted); }
+.chip[aria-pressed="true"] .n { background: var(--omnix-surface); color: var(--omnix-accent); }
+.chip:disabled { opacity: .45; cursor: default; }
 </style>
 </head>
 <body>
@@ -981,7 +987,8 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 
     <div class="rep-sec" id="sec-va">
       <h2>Video Analysis <small>คลิปวิวสูงสุดและต่ำสุดของแต่ละบัญชี</small></h2>
-      <p class="desc">ระบบเลือกคลิปและสรุปตัวเลขให้ ทีมใส่ชื่อ Creator และเขียนบทวิเคราะห์ 4 ด้านเหมือนในสไลด์</p>
+      <p class="desc">ระบบเลือกคลิปและสรุปตัวเลขให้ ทีมใส่ชื่อ Creator และเขียนบทวิเคราะห์ 4 ด้านเหมือนในสไลด์ · กรองประเภทคลิปได้หลายประเภทพร้อมกัน</p>
+      <div class="chips va-types" id="va-types" role="group" aria-label="กรองประเภทคลิป"></div>
       <div class="rep-stack" id="rep-va"></div>
     </div>
 
@@ -1641,7 +1648,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   }
 
   function clipCard(a, c, kind, ctx) {
-    const k = `va-${a.id}-${kind}`;
+    const k = ctx.filtered ? `va-${a.id}-${kind}-${c.id}` : `va-${a.id}-${kind}`;
     const typeRows = ctx.all.filter(x => x.type === c.type);
     const typeAvg = typeRows.reduce((s, x) => s + x.views, 0) / typeRows.length;
     const facts = [
@@ -1651,7 +1658,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       `โพสต์ ${fmtDate(c.posted)} · วิวเฉลี่ย ${fmt(c.vpd)} ต่อวัน`,
     ];
     return `<div class="clipcard">
-      <div class="hd"><span class="badge ${kind}">${kind === 'top' ? ARR_UP + 'วิวสูงสุด' : ARR_DN + 'วิวต่ำสุด'}</span><label>Creator <input type="text" data-note="${k}-creator" value="${esc(noteVal(k + '-creator'))}" placeholder="ชื่อ"></label></div>
+      <div class="hd"><span class="badge ${kind}">${kind === 'top' ? ARR_UP + 'วิวสูงสุด' : ARR_DN + 'วิวต่ำสุด'}${ctx.filtered ? ' ในประเภทที่เลือก' : ''}</span><label>Creator <input type="text" data-note="${k}-creator" value="${esc(noteVal(k + '-creator'))}" placeholder="ชื่อ"></label></div>
       <a class="clip title" href="${clipUrl(c)}" target="_blank" rel="noopener" title="${esc(c.title)}">${esc(c.title)}</a>
       <div class="nums"><div><b>${fmtC(c.views)}</b>วิว</div><div><b>${fmt(c.likes)}</b>ไลก์</div><div><b>${fmt(c.comments)}</b>คอมเมนต์</div><div><b>${fmt(c.shares)}</b>แชร์</div><div><b>${fmt(c.saves)}</b>เซฟ</div></div>
       <ul class="facts">${facts.map(f => `<li>${f}</li>`).join('')}</ul>
@@ -1662,17 +1669,37 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
         <label>สิ่งที่ควรปรับปรุง${ta(k + '-fix', 'ครั้งหน้าจะแก้อะไร', 2)}</label>
       </div></div>`;
   }
+  // Video Analysis: filter by clip type (several at once; none selected = all types)
+  const vaTypes = new Set();
+  document.addEventListener('click', e => {
+    const t = e.target.closest('[data-vatype]');
+    if (!t) return;
+    const v = t.dataset.vatype;
+    if (v === '*') vaTypes.clear(); else if (vaTypes.has(v)) vaTypes.delete(v); else vaTypes.add(v);
+    renderVa();
+  });
   function renderVa() {
     const accs = ACCOUNTS.filter(brandOk);
+    const monthClips = accs.flatMap(a => clipsFor(a.id, repMonth));
+    const types = [...new Set([...CLIP_TYPES, ...monthClips.map(c => c.type).filter(Boolean)])];
+    [...vaTypes].forEach(t => { if (!types.includes(t)) vaTypes.delete(t); });
+    const cnt = t => monthClips.filter(c => c.type === t).length;
+    $('#va-types').innerHTML = monthClips.length ? `<button class="chip" type="button" data-vatype="*" aria-pressed="${!vaTypes.size}">ทุกประเภท <span class="n">${monthClips.length}</span></button>`
+      + types.map(t => `<button class="chip" type="button" data-vatype="${esc(t)}" aria-pressed="${vaTypes.has(t)}"${cnt(t) ? '' : ' disabled'}>${esc(t)} <span class="n">${cnt(t)}</span></button>`).join('') : '';
+    const pick = c => !vaTypes.size || vaTypes.has(c.type);
     const withClips = accs.filter(a => clipsFor(a.id, repMonth).length);
     const without = accs.filter(a => !clipsFor(a.id, repMonth).length);
     const median = arr => { const s = [...arr].sort((p, q) => p - q), h = s.length >> 1; return s.length % 2 ? s[h] : (s[h - 1] + s[h]) / 2; };
     const cards = withClips.map(a => {
-      const all = clipsFor(a.id, repMonth);
-      const s = [...all].sort((p, q) => q.views - p.views);
+      const all = clipsFor(a.id, repMonth), pool = all.filter(pick);
+      const s = [...pool].sort((p, q) => q.views - p.views);
       const tv = all.reduce((x, c) => x + c.views, 0);
-      const ctx = { all, med: median(all.map(c => c.views)), er: all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 };
-      return `<div class="panel"><h3 class="ph">${accName(a)}<span class="tag right">${all.length} คลิป · ${MONTHS[repMonth]} 2026</span></h3><div class="vs">${clipCard(a, s[0], 'top', ctx)}${clipCard(a, s[s.length - 1], 'low', ctx)}</div></div>`;
+      // comparisons stay against the whole month, so "x times the median" keeps its meaning while filtering
+      const ctx = { all, filtered: vaTypes.size > 0, med: median(all.map(c => c.views)), er: all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 };
+      const tag = ctx.filtered ? `${pool.length} จาก ${all.length} คลิป · ${MONTHS[repMonth]} 2026` : `${all.length} คลิป · ${MONTHS[repMonth]} 2026`;
+      const body = !s.length ? `<p class="empty-note">ไม่มีคลิปประเภท ${esc([...vaTypes].join(', '))} ในเดือนนี้</p>`
+        : `<div class="vs">${clipCard(a, s[0], 'top', ctx)}${s.length > 1 ? clipCard(a, s[s.length - 1], 'low', ctx) : ''}</div>`;
+      return `<div class="panel"><h3 class="ph">${accName(a)}<span class="tag right">${tag}</span></h3>${body}</div>`;
     }).join('');
     const m = anyClipMonth('tt-eloop');
     const rest = without.length ? `<div class="panel"><h3 class="ph" style="margin-bottom:6px">ยังไม่มีรายคลิปของเดือน ${MONTHS[repMonth]}</h3><p class="empty-note">${without.map(a => a.name).join(', ')} · ระบบจริงดึงรายคลิปของ Facebook และ YouTube ให้อัตโนมัติ ส่วน TikTok ใช้ไฟล์วิดีโอที่อัปโหลด${!withClips.length && m != null && m !== repMonth && brandOk(accById('tt-eloop')) ? ` · <button class="linkbtn" type="button" data-repmonth="${m}">ดูตัวอย่างจาก TikTok Eloop เดือน ${MONTHS[m]}</button>` : ''}</p></div>` : '';
