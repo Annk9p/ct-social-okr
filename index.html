@@ -661,28 +661,203 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   .note-ta { border: 0; background: none; resize: none; padding: 0; min-height: 0; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* =====================================================================
+   Airy theme — page-level layer on top of OMNIX (the OMNIX block above is unchanged)
+   Light: off-white app, white cards, soft shadows, indigo accent, emerald / rose / amber states.
+   Dark mode keeps the OMNIX dark tokens; only shape and spacing change there.
+   ===================================================================== */
+:root {
+  --omnix-bg: #f4f7fa;
+  --omnix-surface: #ffffff;
+  --omnix-surface-2: #f1f5f9;
+  --omnix-border: #e8edf3;
+  --omnix-fg: #1e293b;
+  --omnix-fg-muted: #64748b;
+  --omnix-accent: #6366f1;
+  --omnix-accent-soft: #eef0ff;
+  --omnix-success-fg: #059669; --omnix-success-bg: #e7f8f1;
+  --omnix-warning-fg: #d97706; --omnix-warning-bg: #fef6e7;
+  --omnix-danger-fg: #e11d48;  --omnix-danger-bg: #fff0f3;
+  --omnix-chart-1: #6366f1;
+  --omnix-chart-2: #10b981;
+  --omnix-chart-grid: #eef2f6;
+  --omnix-chart-axis: #94a3b8;
+  --muted: #64748b;
+  --shadow-card: 0 1px 2px rgb(15 23 42 / .04), 0 6px 20px rgb(15 23 42 / .05);
+  --r-card: 20px;
+  --gap: 24px;
+  --side-w: 248px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) { --shadow-card: none; --muted: var(--omnix-fg-muted); }
+}
+:root[data-theme="dark"], :root.dark { --shadow-card: none; --muted: var(--omnix-fg-muted); }
+
+body { background: var(--omnix-bg); color: var(--omnix-fg); }
+
+/* ---- layout: sidebar | (header + content) ---- */
+.ox-shell { display: flex; min-height: 100vh; align-items: stretch; }
+.main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ox-main__inner { max-width: 1280px; padding: 8px 32px 48px; gap: var(--gap); }
+
+.ox-sidebar {
+  width: var(--side-w); position: sticky; top: 0; height: 100vh; align-self: flex-start;
+  background: var(--omnix-surface); border-right: 0; box-shadow: 1px 0 0 var(--omnix-border);
+  padding: 22px 16px 16px; gap: 2px; overflow-y: auto;
+}
+.side-brand { display: flex; align-items: center; gap: 10px; padding: 0 8px 18px; font-weight: 700; font-size: 15px; color: var(--omnix-fg); }
+.side-brand .ox-brand__mark { width: 36px; height: 36px; border-radius: 12px; font-size: 13px; }
+.side-brand small { display: block; font-weight: 500; font-size: 12px; color: var(--muted); }
+.ox-nav-group__label { padding: 14px 12px 6px; color: var(--muted); font-size: 11px; letter-spacing: .06em; }
+.ox-nav-item { gap: 12px; height: 42px; padding: 0 12px; border-radius: 12px; color: var(--omnix-fg-muted); font-weight: 500; }
+.ox-nav-item:hover { background: var(--omnix-surface-2); color: var(--omnix-fg); }
+.ox-nav-item.is-active { background: var(--omnix-accent-soft); color: var(--omnix-accent); font-weight: 600; }
+.ox-nav-item svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.side-cta { margin-top: auto; padding: 18px 16px 16px; border-radius: 18px; background: var(--omnix-accent-soft); display: grid; gap: 6px; justify-items: start; }
+.side-cta .ic { margin-bottom: 4px; background: var(--omnix-surface); }
+.side-cta b { font-size: 14px; color: var(--omnix-fg); }
+.side-cta > span:not(.ic) { font-size: 12.5px; color: var(--omnix-fg-muted); line-height: 1.45; }
+.side-cta .ox-btn { margin-top: 6px; width: 100%; justify-content: center; border-radius: 12px; height: 38px; }
+
+/* ---- header ---- */
+.ox-topbar { position: sticky; top: 0; z-index: 10; height: 72px; padding: 0 32px; gap: 12px; background: color-mix(in srgb, var(--omnix-bg) 88%, transparent); backdrop-filter: blur(8px); border-bottom: 0; }
+.search-pill { display: flex; align-items: center; gap: 8px; width: min(380px, 100%); flex: 0 1 auto; min-width: 0; height: 42px; padding: 0 16px; border-radius: 999px; background: var(--omnix-surface); box-shadow: var(--shadow-card); color: var(--muted); }
+.search-pill:focus-within { box-shadow: 0 0 0 2px var(--omnix-accent); }
+.search-pill input { flex: 1; min-width: 0; height: 100%; border: 0; background: transparent; font: inherit; color: var(--omnix-fg); outline: none; padding: 0; }
+.search-pill svg { width: 16px; height: 16px; flex: 0 0 auto; }
+.icon-btn, .avatar { flex: 0 0 auto; }
+.icon-btn { display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--omnix-surface); box-shadow: var(--shadow-card); color: var(--omnix-fg-muted); cursor: pointer; }
+.icon-btn:hover { color: var(--omnix-accent); text-decoration: none; }
+.icon-btn svg { width: 18px; height: 18px; }
+.profile { display: flex; align-items: center; gap: 10px; padding-left: 6px; }
+.avatar { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; font-weight: 700; font-size: 13px; }
+.profile .who { display: grid; line-height: 1.25; font-weight: 600; font-size: 13.5px; color: var(--omnix-fg); }
+.profile .who small { font-weight: 500; font-size: 12px; color: var(--muted); }
+
+/* ---- headings ---- */
+.view-head { margin-bottom: 0; align-items: center; }
+.view-head h1 { font-size: 26px; font-weight: 700; color: var(--omnix-fg); letter-spacing: -.01em; }
+.view-head p, .panel .desc, .rep-sec > .desc { color: var(--muted); }
+.panel h2, .rep-sec > h2 { color: var(--omnix-fg); }
+section[data-v] { display: flex; flex-direction: column; gap: var(--gap); }
+section[data-v][hidden] { display: none; }
+section[data-v] > * { margin-top: 0; margin-bottom: 0; }
+
+/* ---- cards: white, round, soft shadow, no borders ---- */
+.panel, .card, .stat, .cov, .clipcard, .tbl, .drawer .box, .ox-alert { border: 0; border-radius: var(--r-card); box-shadow: var(--shadow-card); }
+.panel, .card { padding: 24px; background: var(--omnix-surface); }
+.cov, .clipcard { box-shadow: none; background: var(--omnix-surface-2); border-radius: 14px; }
+.tbl { box-shadow: none; border: 1px solid var(--omnix-border); border-radius: 14px; }
+.ox-alert { border-radius: 16px; box-shadow: none; }
+.card-foot { border-top-color: var(--omnix-border); }
+
+/* ---- summary metrics: 4 columns, icon in a tinted circle ---- */
+.summary { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); margin: 0; }
+.stat { padding: 22px 24px; background: var(--omnix-surface); gap: 2px; }
+.stat:has(> .ic) { flex-direction: row; align-items: center; gap: 16px; }
+.stat .txt { display: grid; gap: 2px; min-width: 0; }
+.stat .lbl { font-size: 13px; color: var(--muted); }
+.stat .val { font-size: 28px; font-weight: 700; color: var(--omnix-fg); }
+.stat .sub { font-size: 12px; color: var(--muted); }
+.ic { display: inline-grid; place-items: center; flex: 0 0 auto; width: 48px; height: 48px; border-radius: 50%; background: var(--omnix-accent-soft); color: var(--omnix-accent); }
+.ic svg { width: 22px; height: 22px; }
+.ic.good { background: var(--omnix-success-bg); color: var(--omnix-success-fg); }
+.ic.warn { background: var(--omnix-warning-bg); color: var(--omnix-warning-fg); }
+.ic.crit { background: var(--omnix-danger-bg); color: var(--omnix-danger-fg); }
+
+/* ---- grids: 3 columns; the first block of a split takes 2 ---- */
+.cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+.grid2 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin: 0; }
+.grid2 > :first-child { grid-column: span 2; }
+.rep-grid, .rep-grid3, .rep-stack, .vs { gap: var(--gap); }
+.rep-sec { margin-top: 8px; }
+
+/* ---- pills & badges ---- */
+.st { padding: 3px 10px 3px 8px; font-size: 12px; }
+.st.none { background: var(--omnix-surface-2); }
+.plat, .tag { border: 0; background: var(--omnix-accent-soft); color: var(--omnix-accent); padding: 3px 10px; font-weight: 600; }
+.chip { border: 0; background: var(--omnix-surface); box-shadow: var(--shadow-card); height: 34px; padding: 0 14px; color: var(--omnix-fg-muted); }
+.chip[aria-pressed="true"] { background: var(--omnix-accent-soft); color: var(--omnix-accent); box-shadow: none; }
+.seg { background: var(--omnix-surface); box-shadow: var(--shadow-card); border-radius: 999px; padding: 4px; }
+.seg button { border-radius: 999px; height: 32px; padding: 0 16px; }
+.seg button[aria-pressed="true"] { background: var(--omnix-accent-soft); color: var(--omnix-accent); box-shadow: none; }
+.kpi .track { background: var(--omnix-surface-2); height: 8px; border-radius: 99px; }
+.kpi .fill { border-radius: 99px; }
+
+/* ---- controls ---- */
+.btn, .ox-btn { border-radius: 12px; }
+.btn { border: 0; background: var(--omnix-surface-2); }
+.btn:hover { background: var(--omnix-border); }
+.btn.primary, .ox-btn--primary { background: var(--omnix-accent); color: #fff; box-shadow: 0 4px 12px rgb(99 102 241 / .25); }
+select, input[type="text"], input[type="month"], input[type="number"], .fld input { border-radius: 12px; border: 1px solid var(--omnix-border); background-color: var(--omnix-surface); }
+.drop { border-radius: 16px; border: 2px dashed var(--omnix-border); background: var(--omnix-surface-2); }
+
+/* ---- responsive ---- */
+@media (max-width: 1180px) {
+  .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .grid2 { grid-template-columns: minmax(0, 1fr); }
+  .grid2 > :first-child { grid-column: auto; }
+  .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 767px) {
+  .ox-shell { flex-direction: column; min-height: 0; }
+  .ox-sidebar { width: auto; height: auto; position: static; flex-direction: row; flex-wrap: wrap; align-items: center; padding: 12px 16px; gap: 4px; box-shadow: 0 1px 0 var(--omnix-border); }
+  .side-brand { width: 100%; padding: 0 4px 8px; }
+  .ox-nav-group__label { display: none; }
+  .ox-nav-item { height: 36px; padding: 0 12px; }
+  .ox-nav-item svg { display: none; }
+  .side-cta { margin: 8px 0 0; width: 100%; padding: 0; background: none; }
+  .side-cta > :not(.ox-btn) { display: none; }
+  .side-cta .ox-btn { margin: 0; }
+  .ox-topbar { height: 64px; padding: 0 16px; position: static; }
+  .profile .who, .ox-topbar a.icon-btn { display: none; }
+  .search-pill { flex: 1 1 auto; }
+  .ox-main__inner { padding: 4px 16px 40px; gap: 16px; }
+  .cards { grid-template-columns: minmax(0, 1fr); }
+  .summary { gap: 12px; }
+  .stat { padding: 16px; gap: 12px; }
+  .stat .ic { width: 40px; height: 40px; }
+  .stat .val { font-size: 22px; }
+  .panel, .card { padding: 18px; }
+  :root { --gap: 16px; }
+}
+@media (max-width: 420px) { .summary { grid-template-columns: minmax(0, 1fr); } }
+@media print {
+  .ox-topbar, .ox-sidebar { display: none !important; }
+  .panel, .card, .stat { box-shadow: none; border: 1px solid #e2e8f0; }
+}
 </style>
 </head>
 <body>
 
 <div class="ox-app">
-<header class="ox-topbar">
-  <div class="ox-brand"><span class="ox-brand__mark">CT</span>CT Social OKR <small>ปี 2026</small></div>
-  <span class="ox-topbar__spacer"></span>
-  <button class="ox-btn ox-btn--ghost" id="btn-theme" type="button">สลับธีม</button>
-  <button class="ox-btn ox-btn--primary" id="btn-slides" type="button">สร้างสไลด์<span class="hide-sm">เดือนนี้</span></button>
-</header>
 <div class="ox-shell">
 <nav class="ox-sidebar" id="nav" aria-label="เมนูหลัก">
+  <div class="side-brand"><span class="ox-brand__mark">CT</span><div>CT Social OKR<small>ปี 2026</small></div></div>
   <div class="ox-label-caps ox-nav-group__label">แดชบอร์ด</div>
-  <a class="ox-nav-item" href="#overview" data-view="overview">ภาพรวม</a>
-  <a class="ox-nav-item" href="#report" data-view="report">สรุปรายเดือน</a>
-  <a class="ox-nav-item" href="#account" data-view="account">รายบัญชี</a>
-  <a class="ox-nav-item" href="#content" data-view="content">คอนเทนต์</a>
+  <a class="ox-nav-item" href="#overview" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>ภาพรวม</a>
+  <a class="ox-nav-item" href="#report" data-view="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>สรุปรายเดือน</a>
+  <a class="ox-nav-item" href="#account" data-view="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>รายบัญชี</a>
+  <a class="ox-nav-item" href="#content" data-view="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>คอนเทนต์</a>
   <div class="ox-label-caps ox-nav-group__label">ข้อมูล</div>
-  <a class="ox-nav-item" href="#upload" data-view="upload">อัปโหลด TikTok</a>
-  <a class="ox-nav-item" href="#setup" data-view="setup">ตั้งค่า</a>
+  <a class="ox-nav-item" href="#upload" data-view="upload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>อัปโหลด TikTok</a>
+  <a class="ox-nav-item" href="#setup" data-view="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>ตั้งค่า</a>
+  <div class="side-cta">
+    <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M12 16v4M8 20h8"/></svg></span>
+    <b>สไลด์สรุปประจำเดือน</b>
+    <span>ดึงตัวเลขจากหน้าสรุปรายเดือนไปทำสไลด์ให้</span>
+    <button class="ox-btn ox-btn--primary" id="btn-slides" type="button">สร้างสไลด์<span class="hide-sm">เดือนนี้</span></button>
+  </div>
 </nav>
+<div class="main-col">
+<header class="ox-topbar">
+  <label class="search-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="ค้นหาคลิปจากชื่อ…" aria-label="ค้นหาคลิปจากชื่อ" autocomplete="off"></label>
+  <span class="ox-topbar__spacer"></span>
+  <button class="icon-btn" id="btn-theme" type="button" aria-label="สลับธีมสว่าง/มืด" title="สลับธีม"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  <a class="icon-btn" href="#setup" aria-label="ตั้งค่า" title="ตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></a>
+  <div class="profile"><span class="avatar" aria-hidden="true">CT</span><span class="who">ทีม CT<small>Eloop · Moov</small></span></div>
+</header>
 <main class="ox-main"><div class="ox-main__inner">
   <div class="ox-alert ox-alert--info" id="live-state" hidden></div>
   <div class="ox-alert ox-alert--warning proto-alert" id="data-banner"><span><b>หน้าตัวอย่าง</b>TikTok Eloop เดือน ต.ค. ใช้ไฟล์ export จริงจาก TikTok Studio (ภาพรวม, ผู้ติดตาม, วิดีโอ) ตัวเลขเดือนอื่นเป็นตัวอย่างจากชีตเดิม ระบบจริงจะดึงจากแพลตฟอร์มโดยตรง สถานะการเชื่อมต่อเป็นข้อมูลสมมติ และปุ่มต่างๆ ยังไม่บันทึกข้อมูลจริง</span></div>
@@ -845,6 +1020,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     </div>
   </section>
 </div></main>
+</div>
 </div>
 </div>
 
@@ -1065,16 +1241,23 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
 
   /* ---------- overview ---------- */
   let brandFilter = 'all';
+  const svgI = d => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+  const ICO = {
+    target: svgI('<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/>'),
+    check: svgI('<path d="m5 12 4 4 10-10"/>'),
+    alert: svgI('<path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>'),
+    down: svgI('<path d="m3 7 6 6 4-4 8 8"/><path d="M21 11v6h-6"/>'),
+  };
   function renderOverview() {
     const accs = ACCOUNTS.filter(a => brandFilter === 'all' || a.brand === brandFilter);
     const counts = { good: 0, warn: 0, crit: 0 };
     accs.forEach(a => a.metrics.forEach(m => { const e = evalMetric(m); if (counts[e.status] != null) counts[e.status]++; }));
     const total = counts.good + counts.warn + counts.crit;
     $('#summary').innerHTML = `
-      <div class="stat"><div class="lbl">ตัวชี้วัดที่มีเป้า</div><div class="val">${total}</div><div class="sub">${accs.length} บัญชี</div></div>
-      <div class="stat"><div class="lbl"><span class="sw good"></span>ตามแผน</div><div class="val">${counts.good}</div><div class="sub">Pace 80% ขึ้นไป</div></div>
-      <div class="stat"><div class="lbl"><span class="sw warn"></span>เสี่ยง</div><div class="val">${counts.warn}</div><div class="sub">Pace 60–79%</div></div>
-      <div class="stat"><div class="lbl"><span class="sw crit"></span>ช้ากว่าแผน</div><div class="val">${counts.crit}</div><div class="sub">Pace ต่ำกว่า 60%</div></div>`;
+      <div class="stat"><span class="ic">${ICO.target}</span><div class="txt"><div class="lbl">ตัวชี้วัดที่มีเป้า</div><div class="val">${total}</div><div class="sub">${accs.length} บัญชี</div></div></div>
+      <div class="stat"><span class="ic good">${ICO.check}</span><div class="txt"><div class="lbl">ตามแผน</div><div class="val">${counts.good}</div><div class="sub">Pace 80% ขึ้นไป</div></div></div>
+      <div class="stat"><span class="ic warn">${ICO.alert}</span><div class="txt"><div class="lbl">เสี่ยง</div><div class="val">${counts.warn}</div><div class="sub">Pace 60–79%</div></div></div>
+      <div class="stat"><span class="ic crit">${ICO.down}</span><div class="txt"><div class="lbl">ช้ากว่าแผน</div><div class="val">${counts.crit}</div><div class="sub">Pace ต่ำกว่า 60%</div></div></div>`;
 
     $('#cards').innerHTML = accs.map(a => {
       const evals = a.metrics.map(m => ({ m, e: evalMetric(m) }));
@@ -1223,6 +1406,11 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   $('#f-acc').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
   $('#f-type').insertAdjacentHTML('beforeend', CLIP_TYPES.map(t => `<option>${t}</option>`).join(''));
   const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
+  let clipQuery = '';
+  $('#q').addEventListener('input', e => {
+    clipQuery = e.target.value.trim().toLowerCase();
+    if (location.hash !== '#content' && clipQuery) location.hash = 'content'; else renderContent();
+  });
   function renderContent() {
     const acc = $('#f-acc').value, ft = $('#f-type').value;
     const months = [...new Set(CLIPS.filter(c => c.acc === acc).map(c => c.posted.getFullYear() + '-' + String(c.posted.getMonth() + 1).padStart(2, '0')))].sort().reverse();
@@ -1235,7 +1423,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     $('#content-empty').hidden = !!all.length;
     $('#content-src').textContent = all.length ? (LIVE.on ? 'ข้อมูลจริงจากระบบ · ไฟล์วิดีโอ TikTok Studio' : 'ข้อมูลจริง · ไฟล์วิดีโอจาก TikTok Studio') : 'ยังไม่มีข้อมูล';
     if (!all.length) return;
-    const rows = all.filter(c => ft === 'all' || c.type === ft).sort((p, q) => q[sortKey] - p[sortKey]);
+    const rows = all.filter(c => (ft === 'all' || c.type === ft) && (!clipQuery || String(c.title).toLowerCase().includes(clipQuery))).sort((p, q) => q[sortKey] - p[sortKey]);
     const tv = all.reduce((s, c) => s + c.views, 0);
     const rv = rows.reduce((s, c) => s + c.views, 0);
     const er = rv ? rows.reduce((s, c) => s + c.likes + c.comments + c.shares + c.saves, 0) / rv * 100 : 0;
