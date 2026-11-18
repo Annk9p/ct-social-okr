@@ -827,6 +827,32 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
   .ox-topbar, .ox-sidebar { display: none !important; }
   .panel, .card, .stat { box-shadow: none; border: 1px solid #e2e8f0; }
 }
+
+/* ---- platform colors & app icons ---- */
+:root { --p-tt: #111827; --p-tt-bg: #eef1f5; --p-fb: #1877f2; --p-fb-bg: #e8f1fe; --p-yt: #d61f1f; --p-yt-bg: #fdecec; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not(.light) { --p-tt: #f1f5f9; --p-tt-bg: #232b38; --p-fb: #6aa6ff; --p-fb-bg: rgb(24 119 242 / .18); --p-yt: #ff6b6b; --p-yt-bg: rgb(255 0 0 / .15); }
+}
+:root[data-theme="dark"], :root.dark { --p-tt: #f1f5f9; --p-tt-bg: #232b38; --p-fb: #6aa6ff; --p-fb-bg: rgb(24 119 242 / .18); --p-yt: #ff6b6b; --p-yt-bg: rgb(255 0 0 / .15); }
+.plat { gap: 6px; padding: 3px 10px 3px 4px; }
+.plat svg { width: 18px; height: 18px; flex: 0 0 auto; }
+.plat.p-tt { color: var(--p-tt); background: var(--p-tt-bg); }
+.plat.p-fb { color: var(--p-fb); background: var(--p-fb-bg); }
+.plat.p-yt { color: var(--p-yt); background: var(--p-yt-bg); }
+.pico { display: inline-flex; vertical-align: -0.2em; margin-right: 6px; }
+.pico svg { width: 1.15em; height: 1.15em; }
+h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; vertical-align: -4px; }
+.st .pico { margin: 0 2px 0 0; }
+.card.p-tt { box-shadow: inset 0 4px 0 var(--p-tt), var(--shadow-card); }
+.card.p-fb { box-shadow: inset 0 4px 0 var(--p-fb), var(--shadow-card); }
+.card.p-yt { box-shadow: inset 0 4px 0 var(--p-yt), var(--shadow-card); }
+.card.p-tt .card-foot svg { color: var(--p-tt); }
+.card.p-fb .card-foot svg { color: var(--p-fb); }
+.card.p-yt .card-foot svg { color: var(--p-yt); }
+.chip .pico { margin-right: 0; }
+.ico-tt { border-radius: 25%; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) .ico-tt { box-shadow: 0 0 0 1px rgb(255 255 255 / .4); } }
+:root[data-theme="dark"] .ico-tt, :root.dark .ico-tt { box-shadow: 0 0 0 1px rgb(255 255 255 / .4); }
 </style>
 </head>
 <body>
@@ -1248,6 +1274,15 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
     alert: svgI('<path d="M10.3 3.9 2.4 18a2 2 0 0 0 1.7 3h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/>'),
     down: svgI('<path d="m3 7 6 6 4-4 8 8"/><path d="M21 11v6h-6"/>'),
   };
+  // Platform marks (simplified app icons) + color class
+  const PLAT = {
+    TikTok: { c: 'tt', svg: '<svg class="ico-tt" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#000"/><g transform="translate(3.4 3.2) scale(.72)"><path fill="#25F4EE" transform="translate(-.9 -.9)" d="M16.6 5.8a3.9 3.9 0 0 1-.9-2.3h-2.8v11.3a2.4 2.4 0 1 1-1.7-2.3V9.7a5.2 5.2 0 1 0 4.5 5.1V9.1a6.6 6.6 0 0 0 3.9 1.2V7.5a3.9 3.9 0 0 1-3-1.7z"/><path fill="#FE2C55" transform="translate(.9 .9)" d="M16.6 5.8a3.9 3.9 0 0 1-.9-2.3h-2.8v11.3a2.4 2.4 0 1 1-1.7-2.3V9.7a5.2 5.2 0 1 0 4.5 5.1V9.1a6.6 6.6 0 0 0 3.9 1.2V7.5a3.9 3.9 0 0 1-3-1.7z"/><path fill="#fff" d="M16.6 5.8a3.9 3.9 0 0 1-.9-2.3h-2.8v11.3a2.4 2.4 0 1 1-1.7-2.3V9.7a5.2 5.2 0 1 0 4.5 5.1V9.1a6.6 6.6 0 0 0 3.9 1.2V7.5a3.9 3.9 0 0 1-3-1.7z"/></g></svg>' },
+    Facebook: { c: 'fb', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M15.1 12.6l.4-2.7h-2.6V8.2c0-.7.4-1.5 1.5-1.5h1.2V4.4s-1.1-.2-2.1-.2c-2.2 0-3.6 1.3-3.6 3.7v2H7.5v2.7h2.4V24h3v-11.4z"/></svg>' },
+    YouTube: { c: 'yt', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="4.5" width="22" height="15" rx="4.5" fill="#FF0000"/><path fill="#fff" d="m10 8.6 5.6 3.4-5.6 3.4z"/></svg>' },
+  };
+  const pIco = p => PLAT[p] ? `<span class="pico">${PLAT[p].svg}</span>` : '';
+  const pPill = (p, label) => `<span class="plat p-${PLAT[p].c}">${PLAT[p].svg}${label || p}</span>`;
+  const accName = a => `${pIco(a.platform)}${a.name}`;
   function renderOverview() {
     const accs = ACCOUNTS.filter(a => brandFilter === 'all' || a.brand === brandFilter);
     const counts = { good: 0, warn: 0, crit: 0 };
@@ -1276,8 +1311,8 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
         return `<div class="kpi"><span class="k">${m.label} <small>(เฉลี่ยรายเดือน)</small></span><span class="v">${pct(e.avg, 2)} <small>/ ${pct(m.target, m.target < 10 ? 2 : 0)}</small></span>
           <div class="meta"><span>ได้ ${pct(e.ratio)} ของเป้า</span><span class="st ${e.status}">${ST_LABEL[e.status]}</span></div></div>`;
       }).join('');
-      return `<article class="card">
-        <div class="card-head"><span class="plat">${a.platform}</span><h3>${a.brand}</h3>${worst ? `<span class="st ${worst.e.status}">${ST_LABEL[worst.e.status]}</span>` : ''}</div>
+      return `<article class="card p-${PLAT[a.platform].c}">
+        <div class="card-head">${pPill(a.platform)}<h3>${a.brand}</h3>${worst ? `<span class="st ${worst.e.status}">${ST_LABEL[worst.e.status]}</span>` : ''}</div>
         <div class="kpis">${kpis}</div>
         <div class="card-foot"><span>วิวรายเดือน</span>${sparkline(views.data)}<span>ถึง ${MONTHS[li]}</span><button class="link" type="button" data-open="${a.id}">ดูรายละเอียด</button></div>
       </article>`;
@@ -1289,11 +1324,11 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
   function renderAccount() {
     const a = accById(curAcc);
     if (!a.metrics.find(m => m.key === curMetric && m.kind === 'sum')) curMetric = 'views';
-    $('#acc-title').textContent = a.name;
+    $('#acc-title').innerHTML = accName(a);
     const lastV = lastIdx(a.metrics[0].data);
     const lm = LIVE.months[a.id] || [];
     $('#acc-sub').textContent = `ข้อมูลถึงเดือน ${MONTHS[lastV]} 2026 · ` + (lm.length ? (lm.length >= lastV + 1 ? 'ที่มา: ระบบ (ดึงอัตโนมัติ)' : `ที่มา: ระบบ เดือน ${lm.map(i => MONTHS[i]).join(', ')} · เดือนอื่นจากชีต Data OKR 2026`) : 'ที่มา: ชีต Data OKR 2026 (ตัวอย่าง)');
-    $('#acc-chips').innerHTML = ACCOUNTS.map(x => `<button class="chip" type="button" data-acc="${x.id}" aria-pressed="${x.id === curAcc}">${x.name}</button>`).join('');
+    $('#acc-chips').innerHTML = ACCOUNTS.map(x => `<button class="chip" type="button" data-acc="${x.id}" aria-pressed="${x.id === curAcc}">${accName(x)}</button>`).join('');
     const sumMetrics = a.metrics.filter(m => m.kind === 'sum');
     $('#metric-chips').innerHTML = sumMetrics.map(m => `<button class="chip" type="button" data-metric="${m.key}" aria-pressed="${m.key === curMetric}">${m.label}</button>`).join('');
 
@@ -1540,14 +1575,14 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
       const rows = plats.map(a => {
         const out = a.metrics.find(m => m.key === 'output').data;
         const n = out[repMonth], uv = uploadViews(a.id, repMonth);
-        return `<div class="sv"><span class="plat">${a.platform === 'Facebook' ? 'FB Reels' : 'TikTok'}</span>
+        return `<div class="sv">${pPill(a.platform, a.platform === 'Facebook' ? 'Reels' : 'TikTok')}
           <div><div class="k">คลิปที่ลง</div><div class="v">${n == null ? '<span class="em">รอข้อมูล</span>' : fmt(n) + ' ' + momEl(momOf(n, out[repMonth - 1]))}</div></div>
           <div><div class="k">วิวรวมของคลิปที่ลง</div><div class="v">${uv ? fmt(uv.v) + ' ' + momEl(uv.mom) : `<span class="em">${a.platform === 'TikTok' ? 'รอไฟล์วิดีโอ' : 'รอเชื่อม API'}</span>`}</div></div></div>`;
       }).join('');
       const tops = plats.map(a => {
         const cl = clipsFor(a.id, repMonth).sort((p, q) => q.views - p.views).slice(0, 5);
         const body = cl.length ? `<ol class="top-list">${cl.map((c, i) => `<li><span class="n">${i + 1}</span><a class="clip t" href="${clipUrl(c)}" target="_blank" rel="noopener" title="${esc(c.title)}">${esc(shortT(c.title, 60))}</a><span class="val">${fmtC(c.views)}</span></li>`).join('')}</ol>` : noClips(a);
-        return `<div><h3 class="mini" style="margin-top:14px">${a.platform === 'Facebook' ? 'Facebook Reels' : 'TikTok'} Top 5</h3>${body}</div>`;
+        return `<div><h3 class="mini" style="margin-top:14px">${pIco(a.platform)}${a.platform === 'Facebook' ? 'Facebook Reels' : 'TikTok'} Top 5</h3>${body}</div>`;
       }).join('');
       return `<div class="panel"><h3 class="ph">${b}<span class="tag right">${MONTHS[repMonth]} 2026</span></h3>${rows}<div class="top2">${tops}</div>
         <p class="foot">วิวเป็นยอดสะสมถึงวันที่ดึงข้อมูล · TikTok รวมคลิปแคมเปญและแอด ไม่รวม Highlight Live · Facebook นับแบบ organic</p></div>`;
@@ -1595,7 +1630,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
       const rows = accs.flatMap(a => a.metrics.filter(m => m.target).map(m => krRow(a, m))).join('');
       const obs = autoObs(p);
       const extra = p === 'YouTube' ? accs.map(a => { const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth]; return x ? `<li>${a.name} ลงวิดีโอยาว ${x.long || '–'} คลิป · Shorts ${x.shorts} คลิป ${smp(a.id)}</li>` : ''; }).join('') : '';
-      return `<div class="panel"><h3 class="ph">${p}</h3><div class="okr-split">
+      return `<div class="panel"><h3 class="ph">${pIco(p)}${p}</h3><div class="okr-split">
         <div>${rows || '<p class="empty-note">ไม่มีเป้าหมายของแพลตฟอร์มนี้</p>'}</div>
         <div>
           <div class="ins"><h3>ข้อสังเกตจากระบบ</h3>${obs.length || extra ? `<ul class="facts">${obs.map(o => `<li>${esc(o)}</li>`).join('')}${extra}</ul>` : '<p class="empty-note">ทุกตัวชี้วัดตามแผน</p>'}</div>
@@ -1637,7 +1672,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
       const s = [...all].sort((p, q) => q.views - p.views);
       const tv = all.reduce((x, c) => x + c.views, 0);
       const ctx = { all, med: median(all.map(c => c.views)), er: all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 };
-      return `<div class="panel"><h3 class="ph">${a.name}<span class="tag right">${all.length} คลิป · ${MONTHS[repMonth]} 2026</span></h3><div class="vs">${clipCard(a, s[0], 'top', ctx)}${clipCard(a, s[s.length - 1], 'low', ctx)}</div></div>`;
+      return `<div class="panel"><h3 class="ph">${accName(a)}<span class="tag right">${all.length} คลิป · ${MONTHS[repMonth]} 2026</span></h3><div class="vs">${clipCard(a, s[0], 'top', ctx)}${clipCard(a, s[s.length - 1], 'low', ctx)}</div></div>`;
     }).join('');
     const m = anyClipMonth('tt-eloop');
     const rest = without.length ? `<div class="panel"><h3 class="ph" style="margin-bottom:6px">ยังไม่มีรายคลิปของเดือน ${MONTHS[repMonth]}</h3><p class="empty-note">${without.map(a => a.name).join(', ')} · ระบบจริงดึงรายคลิปของ Facebook และ YouTube ให้อัตโนมัติ ส่วน TikTok ใช้ไฟล์วิดีโอที่อัปโหลด${!withClips.length && m != null && m !== repMonth && brandOk(accById('tt-eloop')) ? ` · <button class="linkbtn" type="button" data-repmonth="${m}">ดูตัวอย่างจาก TikTok Eloop เดือน ${MONTHS[m]}</button>` : ''}</p></div>` : '';
@@ -1649,7 +1684,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
       const d = k => a.metrics.find(m => m.key === k).data;
       const v = d('views'), l = d('likes'), n = d('nf');
       const x = YT_EXTRA[a.id] && YT_EXTRA[a.id][repMonth];
-      const head = `<h3 class="ph">${a.name}${x ? `<span class="right">${smp(a.id)} <span class="pill">ผู้ติดตาม <b>${fmt(x.subs)}</b></span></span>` : ''}</h3>`;
+      const head = `<h3 class="ph">${accName(a)}${x ? `<span class="right">${smp(a.id)} <span class="pill">ผู้ติดตาม <b>${fmt(x.subs)}</b></span></span>` : ''}</h3>`;
       if (v[repMonth] == null) return `<div class="panel">${head}<p class="empty-note">ยังไม่มีข้อมูลเดือน ${MONTHS[repMonth]} · ข้อมูล YouTube ล่าสุดถึง ${MONTHS[lastIdx(v)]} · รอเชื่อม YouTube API (ระบบจริงดึงให้ทุกเช้า)</p></div>`;
       const row = (lbl, val, unit, mo) => `<div class="yt-num"><span>${lbl}</span><b>${val}</b><span>${unit} ${momEl(mo)}</span></div>`;
       const top = x ? `${smp(a.id) ? `<p class="src" style="margin:0 0 6px">${SAMPLE}</p>` : ''}<ol class="top-list">${x.top.map((t, i) => `<li><span class="n">${i + 1}</span><span class="t" title="${esc(t[0])}">${esc(t[0])} <small>${t[1]}</small></span><span class="val">${fmt(t[2])}</span></li>`).join('')}</ol>` : '<p class="empty-note">รอเชื่อม YouTube API (ระบบจริงดึง 3 อันดับให้อัตโนมัติ)</p>';
@@ -1677,7 +1712,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
       const y = YPP[a.id];
       const ph = y.hours / 4000 * 100, ps = y.shorts / 1e7 * 100;
       const best = ph >= ps ? `คลิปยาว ทำได้แล้ว ${pct(ph, 1)} ของ 4,000 ชม. ขาดอีก ${fmt(4000 - y.hours)} ชม. ขณะที่ Shorts ยังไม่ถึง ${Math.ceil(ps)}% ของ 10 ล้านวิว` : `Shorts ทำได้แล้ว ${pct(ps, 1)} ของ 10 ล้านวิว`;
-      return `<div class="panel"><h3 class="ph">${a.name}<span class="tag right">ยังไม่ผ่านเกณฑ์</span></h3>
+      return `<div class="panel"><h3 class="ph">${accName(a)}<span class="tag right">ยังไม่ผ่านเกณฑ์</span></h3>
         ${bar('ผู้ติดตาม', y.subs, 1000, 'คน')}
         <div class="ypp-tier"><h3>ระดับ 1 · รับเงินสนับสนุน (สมาชิก, Supers)</h3>
           ${bar('ชั่วโมงดูคลิปยาว (365 วัน)', y.hours, 3000, 'ชม.')}<p class="or">หรือ</p>${bar('ยอดดู Shorts (90 วัน)', y.shorts, 3e6, 'ครั้ง')}</div>
@@ -1699,7 +1734,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
     $('#rep-fresh').innerHTML = ['TikTok', 'Facebook', 'YouTube'].map(p => {
       const li = latestMonth(ACCOUNTS.filter(a => a.platform === p));
       const ok = li >= repMonth;
-      return `<span class="st ${ok ? 'good' : 'warn'}">${p} · ${li < 0 ? 'ยังไม่มีข้อมูล' : 'ข้อมูลถึง ' + MONTHS[li]} (${SRC[p]})</span>`;
+      return `<span class="st ${ok ? 'good' : 'warn'}">${pIco(p)}${p} · ${li < 0 ? 'ยังไม่มีข้อมูล' : 'ข้อมูลถึง ' + MONTHS[li]} (${SRC[p]})</span>`;
     }).join('');
     document.querySelectorAll('#rep-brand button').forEach(x => x.setAttribute('aria-pressed', x.dataset.rbrand === repBrand));
     renderShort(); renderOkr(); renderVa(); renderYt(); renderYpp();
@@ -1856,7 +1891,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
       const nClip = yy === 2026 ? inMonth(a.id, mi).length : 0;
       const parts = [hasOv ? 'ภาพรวม ✓' : 'ภาพรวม –', nClip ? `วิดีโอ ✓ (${nClip} คลิป)` : 'วิดีโอ –'];
       const full = hasOv && nClip;
-      return `<div class="cov"><span><b>${a.name} · ${MONTHS[mi]} ${yy}</b><br><small>${parts.join(' · ')}</small></span><span class="st ${full ? 'good' : 'warn'}">${full ? 'ครบ' : hasOv || nClip ? 'ขาดบางไฟล์' : 'รอไฟล์'}</span></div>`;
+      return `<div class="cov"><span><b>${accName(a)} · ${MONTHS[mi]} ${yy}</b><br><small>${parts.join(' · ')}</small></span><span class="st ${full ? 'good' : 'warn'}">${full ? 'ครบ' : hasOv || nClip ? 'ขาดบางไฟล์' : 'รอไฟล์'}</span></div>`;
     }).join('');
     const fl = (SYS && SYS.files) || [];
     $('#files-log').innerHTML = fl.length ? `<h3 class="mini">ไฟล์ที่ระบบนำเข้าล่าสุด</h3><div class="tbl"><table><thead><tr><th>ไฟล์</th><th style="text-align:left">ผล</th><th>เวลา</th></tr></thead><tbody>${fl.map(f => `<tr><td>${esc(f.name)}</td><td class="wrap"><span class="st ${f.status === 'ok' ? 'good' : f.status === 'error' ? 'crit' : 'none'}">${f.status === 'ok' ? `${f.rows} แถว` : f.status === 'error' ? 'อ่านไม่ได้' : 'ข้าม'}</span>${f.message ? ` <small>${esc(f.message)}</small>` : ''}</td><td>${esc(f.at || '')}</td></tr>`).join('')}</tbody></table></div>` : '';
@@ -2093,7 +2128,7 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
           + `<button class="btn" type="button" data-sys="syncfb" data-sacc="${id}">ดึงข้อมูลตอนนี้</button><button class="btn" type="button" data-sys="fbdisconnect" data-sacc="${id}">ยกเลิกการเชื่อม</button>`
           + (pages.length > 1 ? `<details style="flex-basis:100%"><summary>เปลี่ยนเพจ</summary><div class="conn-act" style="margin-top:6px">${pick}</div></details>` : '');
       }
-      return `<div class="conn"><span class="name">${accById(id).name}</span>${st2}<span class="det">${det}</span>${act ? `<span class="conn-act">${act}</span>` : ''}</div>`;
+      return `<div class="conn"><span class="name">${accName(accById(id))}</span>${st2}<span class="det">${det}</span>${act ? `<span class="conn-act">${act}</span>` : ''}</div>`;
     };
     const ytRow = id => {
       const x = st[id] || {};
@@ -2101,12 +2136,12 @@ select, input[type="text"], input[type="month"], input[type="number"], .fld inpu
         ? `<button class="btn primary" type="button" data-ytconnect="${id}">เชื่อมด้วย Gmail ของช่อง</button>`
         : (x.error ? `<button class="btn primary" type="button" data-ytconnect="${id}">เชื่อมใหม่</button>` : '')
           + (ready ? `<button class="btn" type="button" data-sys="syncyt" data-sacc="${id}">ดึงข้อมูลตอนนี้</button><button class="btn" type="button" data-sys="disconnect" data-sacc="${id}">ยกเลิกการเชื่อม</button>` : '');
-      return `<div class="conn"><span class="name">${accById(id).name}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}`
+      return `<div class="conn"><span class="name">${accName(accById(id))}</span>${x.connected ? (x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>') : '<span class="st warn">ยังไม่ได้เชื่อม</span>'}`
         + `<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}` : 'กดปุ่มแล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่อง ครั้งเดียว ระบบได้สิทธิ์อ่านสถิติอย่างเดียว'}</span>`
         + `<span class="conn-act">${act}</span></div>`;
     };
     $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
-      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
+      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accName(accById(id))}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
       + ['fb-eloop', 'fb-moov'].map(fbRow).join('')
       + '<div id="yt-msg"></div>';
   }
