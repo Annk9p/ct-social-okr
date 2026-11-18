@@ -195,6 +195,7 @@ function syncYouTube_(acc, full) {
     // 2) channel info + uploads this year (for long/Shorts counts)
     var ch = ytGet_(acc, 'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&mine=true').items[0];
     var uploads = ytUploads_(acc, ch.contentDetails.relatedPlaylists.uploads, year);
+    try { ytSaveClips_(acc, uploads, year, end); } catch (e) { log_('youtube', acc, 'warn', 'บันทึกรายคลิปไม่ได้: ' + e.message); }
 
     // 3) per month: avg view %, top 3 videos, upload counts
     var months = [], extra = [], top = readTable_('yt_top').filter(function (r) { return r.account !== acc || String(r.month) < ymd_(start).slice(0, 7); });
@@ -284,6 +285,28 @@ function yppByVideo_(acc, today, end) {
   return { hours: Math.round(mins / 60 * 10) / 10, shorts: views };
 }
 
+/** Every video posted this year → clips table (Video Analysis and Top Ranking). Views/likes/comments are lifetime to date. */
+function ytSaveClips_(acc, uploads, year, end) {
+  var shares = {};
+  try {
+    ytReport_(acc, { startDate: year + '-01-01', endDate: ymd_(end), metrics: 'shares', dimensions: 'video', sort: '-shares', maxResults: 200 })
+      .forEach(function (r) { shares[r.video] = +r.shares || 0; });
+  } catch (e) { log_('youtube', acc, 'warn', 'ดึงยอดแชร์รายคลิปไม่ได้: ' + e.message); }
+  var clips = readTable_('clips'), cIdx = index_(clips, ['account', 'id']), ts = now_();
+  uploads.forEach(function (u) {
+    var key = acc + '|' + u.id, row = cIdx[key];
+    if (!row) { row = { account: acc, id: u.id, type: '', product: '', boosted: false }; clips.push(row); cIdx[key] = row; }
+    var isShort = u.seconds <= SHORTS_MAX_SECONDS;
+    row.title = u.title;
+    row.url = isShort ? 'https://www.youtube.com/shorts/' + u.id : 'https://www.youtube.com/watch?v=' + u.id;
+    row.posted = u.postedAt; row.views = u.views; row.likes = u.likes; row.comments = u.comments;
+    row.shares = shares[u.id] || 0; row.saves = '';
+    if (!row.type) row.type = ttGuessType(u.title || ''); // keep the team's own label
+    row.source = 'youtube-api'; row.updated_at = ts;
+  });
+  writeTable_('clips', clips);
+}
+
 function ytUploads_(acc, playlistId, year) {
   var ids = [], token = '', stop = false;
   do {
@@ -297,15 +320,18 @@ function ytUploads_(acc, playlistId, year) {
     token = r.nextPageToken || '';
   } while (token && !stop);
   var info = ytVideoInfo_(acc, ids);
-  return ids.filter(function (id) { return info[id]; }).map(function (id) { return { id: id, published: info[id].published, seconds: info[id].seconds }; });
+  return ids.filter(function (id) { return info[id]; }).map(function (id) { var v = info[id]; v.id = id; return v; });
 }
 
 function ytVideoInfo_(acc, ids) {
   var out = {};
   for (var i = 0; i < ids.length; i += 50) {
-    var r = ytGet_(acc, 'https://www.googleapis.com/youtube/v3/videos?' + qs_({ part: 'snippet,contentDetails', id: ids.slice(i, i + 50).join(','), maxResults: 50 }));
+    var r = ytGet_(acc, 'https://www.googleapis.com/youtube/v3/videos?' + qs_({ part: 'snippet,contentDetails,statistics', id: ids.slice(i, i + 50).join(','), maxResults: 50 }));
     (r.items || []).forEach(function (v) {
-      out[v.id] = { title: v.snippet.title, published: Utilities.formatDate(new Date(v.snippet.publishedAt), TZ, 'yyyy-MM-dd'), seconds: isoSeconds_(v.contentDetails.duration) };
+      var st = v.statistics || {}, at = new Date(v.snippet.publishedAt);
+      out[v.id] = { title: v.snippet.title, published: Utilities.formatDate(at, TZ, 'yyyy-MM-dd'), postedAt: Utilities.formatDate(at, TZ, 'yyyy-MM-dd HH:mm'),
+        seconds: isoSeconds_(v.contentDetails.duration), views: +st.viewCount || 0,
+        likes: st.likeCount == null ? '' : +st.likeCount, comments: st.commentCount == null ? '' : +st.commentCount };
     });
   }
   return out;

@@ -273,8 +273,8 @@ function buildData_() {
     if (!accounts[r.account].lastDate || r.date > accounts[r.account].lastDate) accounts[r.account].lastDate = r.date;
   });
   var clips = readTable_('clips').filter(function (r) { return String(r.posted).slice(0, 4) === year; }).map(function (r) {
-    return { acc: r.account, id: String(r.id), title: r.title, url: r.url, posted: r.posted, views: +r.views, likes: +r.likes, comments: +r.comments,
-      shares: +r.shares, saves: +r.saves, type: r.type, product: r.product, boosted: r.boosted === true || r.boosted === 'TRUE' };
+    return { acc: r.account, id: String(r.id), title: r.title, url: r.url, posted: r.posted, views: +r.views, likes: r.likes === '' ? null : +r.likes, comments: r.comments === '' ? null : +r.comments,
+      shares: r.shares === '' ? null : +r.shares, saves: r.saves === '' ? null : +r.saves, type: r.type, product: r.product, boosted: r.boosted === true || r.boosted === 'TRUE' };
   });
   var ytTop = {};
   readTable_('yt_top').forEach(function (r) {
@@ -514,6 +514,7 @@ function writeTable_(name, objs) {
   if (last > 1) s.getRange(2, 1, last - 1, h.length).clearContent();
   if (!objs.length) return;
   if (s.getMaxRows() < objs.length + 1) s.insertRowsAfter(s.getMaxRows(), objs.length + 1 - s.getMaxRows());
+  h.forEach(function (k, i) { if (TEXT_COLS.indexOf(k) >= 0) s.getRange(2, i + 1, objs.length, 1).setNumberFormat('@'); });
   s.getRange(2, 1, objs.length, h.length).setValues(objs.map(function (o) {
     return h.map(function (k) { var v = o[k]; return v == null ? '' : (TEXT_COLS.indexOf(k) >= 0 ? String(v) : v); });
   }));
@@ -777,7 +778,7 @@ function fbNum_(v) {
 
 /** Reels posted from `start`, with play counts. */
 function fbReels_(pid, pt, start) {
-  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,description,created_time,permalink_url', limit: 100 }, pt);
+  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,description,created_time,permalink_url,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)', limit: 100 }, pt);
   for (var guard = 0; guard < 30; guard++) {
     var older = false;
     (r.data || []).forEach(function (v) { if (new Date(v.created_time) >= start) reels.push(v); else older = true; });
@@ -894,6 +895,9 @@ function syncFacebook_(acc, full) {
         row.url = v.permalink_url ? (/^https?:/.test(v.permalink_url) ? v.permalink_url : 'https://www.facebook.com' + v.permalink_url) : '';
         row.posted = Utilities.formatDate(new Date(v.created_time), TZ, 'yyyy-MM-dd HH:mm');
         if (v.views !== '' && v.views != null) row.views = v.views;
+        row.likes = v.likes && v.likes.summary ? v.likes.summary.total_count : '';
+        row.comments = v.comments && v.comments.summary ? v.comments.summary.total_count : '';
+        row.shares = ''; row.saves = '';
         row.source = 'facebook-api'; row.updated_at = ts;
       });
       writeTable_('clips', clips);

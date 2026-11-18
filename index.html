@@ -1463,7 +1463,8 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const all = CLIPS.filter(c => c.acc === acc && (!ym || (c.posted.getFullYear() === +ym.slice(0, 4) && c.posted.getMonth() === mi)));
     $('#content-body').hidden = !all.length;
     $('#content-empty').hidden = !!all.length;
-    $('#content-src').textContent = all.length ? (LIVE.on ? 'ข้อมูลจริงจากระบบ · ไฟล์วิดีโอ TikTok Studio' : 'ข้อมูลจริง · ไฟล์วิดีโอจาก TikTok Studio') : 'ยังไม่มีข้อมูล';
+    const plat = accById(acc).platform, srcName = plat === 'TikTok' ? 'ไฟล์วิดีโอ TikTok Studio' : plat + ' API';
+    $('#content-src').textContent = all.length ? (LIVE.on ? 'ข้อมูลจริงจากระบบ · ' + srcName : 'ข้อมูลจริง · ' + srcName) : 'ยังไม่มีข้อมูล';
     if (!all.length) return;
     const rows = all.filter(c => (ft === 'all' || c.type === ft) && (!clipQuery || String(c.title).toLowerCase().includes(clipQuery))).sort((p, q) => q[sortKey] - p[sortKey]);
     const tv = all.reduce((s, c) => s + c.views, 0);
