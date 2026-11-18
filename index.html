@@ -1211,7 +1211,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   /* ---------- content view ---------- */
   let AS_OF = new Date('2026-11-10T00:00:00+07:00');
   const CLIP_TYPES = ['แคมเปญ', 'โปรโมตไลฟ์', 'กิจกรรม', 'สินค้า', 'รีวิว', 'แกะกล่อง', 'เกาะกระแส'];
-  const parsePosted = t => new Date(String(t).trim().replace(/\//g, '-').replace(' ', 'T').slice(0, 16) + ':00+07:00');
+  const parsePosted = t => { const x = String(t).trim().replace(/\//g, '-'); return new Date((x.length <= 10 ? x + 'T00:00' : x.replace(' ', 'T').slice(0, 16)) + ':00+07:00'); };
   function mkClip(acc, r, url) {
     const posted = parsePosted(r[2]);
     const days = Math.max(1, (AS_OF - posted) / 864e5);
@@ -1795,11 +1795,12 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     SYS = j.status || {};
     renderConn(); renderSystem();
     const b = $('#data-banner');
-    const liveP = ['TikTok', 'YouTube'].filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length));
+    const PL = ['TikTok', 'Facebook', 'YouTube'];
+    const liveP = PL.filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length)), sampleP = PL.filter(p => !liveP.includes(p));
     b.className = 'ox-alert proto-alert ' + (liveP.length ? 'ox-alert--info' : 'ox-alert--warning');
     b.innerHTML = liveP.length
-      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.join(' และ ')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${liveP.length < 2 ? (liveP[0] === 'TikTok' ? 'YouTube' : 'TikTok') + ' และ ' : ''}Facebook ยังเป็นตัวอย่างจากชีตเดิม · เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
-      : `<span><b>ระบบเชื่อมแล้ว รอข้อมูลเข้า</b>ยังไม่มีไฟล์ TikTok และยังไม่ได้เชื่อม YouTube ตัวเลขทั้งหมดในหน้านี้ยังเป็นตัวอย่างจากชีต Data OKR 2026</span>`;
+      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.join(' และ ')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${sampleP.length ? sampleP.join(' และ ') + ' ยังเป็นตัวอย่างจากชีตเดิม · ' : ''}เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
+      : `<span><b>ระบบเชื่อมแล้ว รอข้อมูลเข้า</b>ยังไม่มีไฟล์ TikTok และยังไม่ได้เชื่อม YouTube หรือ Facebook ตัวเลขทั้งหมดในหน้านี้ยังเป็นตัวอย่างจากชีต Data OKR 2026</span>`;
     $('#upload-live').hidden = false;
   }
 
@@ -1887,6 +1888,24 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
 
   function renderConn() {
     const st = SYS || {}, ready = !!st.setup;
+    const fbRow = id => {
+      const x = st[id] || {}, s = st.setup || {}, pages = s.fbPages || [];
+      const pick = pages.length ? `<select id="fbsel-${id}" aria-label="เลือกเพจสำหรับ ${accById(id).name}">${pages.map(p => `<option value="${esc(p.id)}"${p.id === x.pageId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select><button class="btn" type="button" data-sys="fbpage" data-sacc="${id}">${x.connected ? 'เปลี่ยนเป็นเพจนี้' : 'ใช้เพจนี้'}</button>` : '';
+      let st2, det, act = '';
+      if (!ready || !s.fb) { st2 = '<span class="st none">ยังไม่ได้ตั้งค่า</span>'; det = 'ใส่กุญแจ Facebook ในกล่อง ตั้งค่าระบบ ข้อ 4 ก่อน · ตัวเลข Facebook ในแดชบอร์ดยังเป็นตัวอย่าง'; }
+      else if (!x.connected) {
+        st2 = '<span class="st warn">ยังไม่ได้เชื่อม</span>';
+        det = pages.length ? 'เลือกเพจของบัญชีนี้ หรือกดเชื่อมใหม่ด้วยบัญชี Facebook ที่เป็นแอดมินเพจ' : 'กดปุ่มแล้วล็อกอิน Facebook ที่เป็นแอดมินเพจ Eloop และ Moov ครั้งเดียวได้ทั้งสองเพจ ระบบได้สิทธิ์อ่านสถิติอย่างเดียว';
+        act = pick + `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อมด้วย Facebook</button>`;
+      } else {
+        st2 = x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>';
+        det = `เพจ ${esc(x.page || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}`;
+        act = (x.error ? `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อม Facebook ใหม่</button>` : '')
+          + `<button class="btn" type="button" data-sys="syncfb" data-sacc="${id}">ดึงข้อมูลตอนนี้</button><button class="btn" type="button" data-sys="fbdisconnect" data-sacc="${id}">ยกเลิกการเชื่อม</button>`
+          + (pages.length > 1 ? `<details style="flex-basis:100%"><summary>เปลี่ยนเพจ</summary><div class="conn-act" style="margin-top:6px">${pick}</div></details>` : '');
+      }
+      return `<div class="conn"><span class="name">${accById(id).name}</span>${st2}<span class="det">${det}</span>${act ? `<span class="conn-act">${act}</span>` : ''}</div>`;
+    };
     const ytRow = id => {
       const x = st[id] || {};
       const act = !x.connected
@@ -1899,7 +1918,7 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     };
     $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
       + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
-      + ['fb-eloop', 'fb-moov'].map(id => `<div class="conn"><span class="name">${accById(id).name}</span><span class="st none">ยังไม่เปิดใช้</span><span class="det">ปุ่มเชื่อม Facebook จะมาอยู่ตรงนี้ · ตัวเลข Facebook ในแดชบอร์ดยังเป็นตัวอย่าง</span></div>`).join('')
+      + ['fb-eloop', 'fb-moov'].map(fbRow).join('')
       + '<div id="yt-msg"></div>';
   }
 
@@ -1936,7 +1955,29 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
           <label class="fld">Client secret<input id="oa-sec" type="password" placeholder="${s.oauth ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : ''}" autocomplete="new-password"></label>
           <button class="btn primary" type="submit">บันทึกกุญแจ</button></form></div>
       <div class="step"><h3>3. เชื่อม YouTube ${ok(ytAll)}</h3><p>กด <b>เชื่อมด้วย Gmail ของช่อง</b> ในกล่องการเชื่อมต่อ ทีละช่อง แล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่องนั้น</p></div>
-      <div class="step"><h3>4. ไฟล์ TikTok</h3><p>ทุกต้นเดือน export จาก TikTok Studio แล้ว${link('#upload', 'อัปโหลดในหน้านี้').replace(' target="_blank" rel="noopener"', '')}</p></div>
+      <div class="step"><h3>4. กุญแจ Facebook ${ok(s.fb)}</h3>
+        <p>ใช้แอป Meta ที่ทีมใช้ดึงข้อมูลเพจอยู่แล้ว ทำครั้งเดียว ใช้บัญชี Facebook ที่เป็นแอดมินของแอปและของเพจ Eloop กับ Moov</p>
+        <details ${s.fb ? '' : 'open'}><summary>วิธีเอากุญแจจาก Meta</summary><ol>
+          <li>เปิด ${link('https://developers.facebook.com/apps/', 'Meta for Developers → My Apps')} แล้วเลือกแอปที่ใช้ดึงข้อมูลเพจ</li>
+          <li>เมนู <b>App settings → Basic</b> คัดลอก <b>App ID</b> และกด Show ที่ <b>App secret</b> (Facebook ถามรหัสผ่าน ให้พิมพ์ที่หน้าของ Facebook)</li>
+          <li>เมนู <b>Facebook Login</b> (หรือ Facebook Login for Business) → <b>Settings</b> ช่อง <b>Valid OAuth Redirect URIs</b> วางลิงก์นี้ → Save changes
+            <div class="copy" style="margin-top:6px"><code id="redir-fb">${esc(DATA_URL)}</code><button class="btn" type="button" data-copy="redir-fb">คัดลอก</button></div></li>
+          <li>ตรวจว่าแอปขอสิทธิ์ <code>pages_show_list</code> <code>pages_read_engagement</code> <code>read_insights</code> ได้ (เมนู Use cases → Customize หรือ App Review → Permissions) แอปโหมด Development ใช้ได้ ถ้าคนกดเชื่อมเป็นแอดมินของแอป</li>
+          <li>ถ้าหน้า Facebook Login for Business มีหัวข้อ <b>Configurations</b> ให้สร้าง configuration ที่มีสิทธิ์ 3 ตัวนี้ แล้ววาง Configuration ID ด้านล่าง ถ้าไม่มีหัวข้อนี้ เว้นว่าง</li></ol></details>
+        <form id="fbapp-form" autocomplete="off">
+          <label class="fld">App ID<input id="fb-id" inputmode="numeric" placeholder="${s.fb ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : 'ตัวเลข'}"></label>
+          <label class="fld">App secret<input id="fb-sec" type="password" placeholder="${s.fb ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : ''}" autocomplete="new-password"></label>
+          <label class="fld">Configuration ID (ถ้ามี)<input id="fb-cfg" inputmode="numeric" placeholder="${s.fbConfig ? 'บันทึกไว้แล้ว ลบให้ว่างแล้วบันทึกถ้าไม่ใช้' : 'เว้นว่างได้'}"></label>
+          <button class="btn primary" type="submit">บันทึกกุญแจ Facebook</button></form></div>
+      <div class="step"><h3>5. เชื่อม Facebook ${ok(['fb-eloop', 'fb-moov'].every(id => (SYS[id] || {}).connected))}</h3>
+        <p>กด <b>เชื่อมด้วย Facebook</b> ในกล่องการเชื่อมต่อ ล็อกอินบัญชีที่เป็นแอดมินเพจ แล้วติ๊กเลือกเพจ Eloop และ Moov ตอนอนุญาต ระบบจับคู่เพจให้เอง ถ้าจับไม่ได้จะให้เลือกจากรายการ</p>
+        <details><summary>ปุ่มเชื่อมใช้ไม่ได้? ใช้ token จาก Graph API Explorer แทน</summary><ol>
+          <li>เปิด ${link('https://developers.facebook.com/tools/explorer/', 'Graph API Explorer')} ช่อง Meta App เลือกแอปเดียวกับ App ID ข้างบน</li>
+          <li>ช่อง User or Page เลือก <b>User Token</b> แล้วเพิ่มสิทธิ์ <code>pages_show_list</code> <code>pages_read_engagement</code> <code>read_insights</code></li>
+          <li>กด <b>Generate Access Token</b> → อนุญาต และเลือกเพจ Eloop กับ Moov → คัดลอก token มาวางด้านล่าง</li></ol>
+          <form id="fbtoken-form" autocomplete="off"><label class="fld">Access token<input id="fb-tok" type="password" autocomplete="off"></label><button class="btn" type="submit">เชื่อมด้วย token นี้</button></form>
+          <p style="margin-top:6px">ระบบแลกเป็น token แบบไม่หมดอายุให้เอง ไม่ต้องทำซ้ำ</p></details></div>
+      <div class="step"><h3>6. ไฟล์ TikTok</h3><p>ทุกต้นเดือน export จาก TikTok Studio แล้ว${link('#upload', 'อัปโหลดในหน้านี้').replace(' target="_blank" rel="noopener"', '')}</p></div>
       ${(SYS.log || []).length ? `<div class="step"><h3>ปัญหาล่าสุดในระบบ</h3><ul class="kinds">${SYS.log.map(l => `<li><b>${esc(l.time)}</b> ${esc(l.account ? accById(l.account)?.name || l.account : l.job)}: ${esc(l.message)}</li>`).join('')}</ul></div>` : ''}
       <div id="sys-msg"></div>`;
   }
@@ -1969,12 +2010,16 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
     const where = acc ? '#yt-msg' : '#sys-msg';
     try {
       if (act === 'forget') { passStore.clear(); renderSystem(); return; }
+      if (act === 'fbdisconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่`)) return;
       if (act === 'disconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่ และเชื่อมช่องใหม่ได้`)) return;
-      b.disabled = true; b.textContent = act === 'syncyt' ? 'กำลังดึงข้อมูล… (ไม่เกิน 1 นาที)' : 'กำลังบันทึก…';
+      b.disabled = true; b.textContent = act === 'syncyt' || act === 'syncfb' ? 'กำลังดึงข้อมูล… (ไม่เกิน 2 นาที)' : 'กำลังบันทึก…';
       if (act === 'setpass') { await setPass(); renderSystem(); sysMsg('#sys-msg', 'ตั้งรหัสทีมแล้ว'); return; }
-      const j = await admin({ api: act, acc });
+      if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect' }); location.href = r.url; return; }
+      const body = { api: act, acc };
+      if (act === 'fbpage') body.pageId = $('#fbsel-' + acc).value;
+      const j = await admin(body);
       await refreshLive();
-      sysMsg(where, act === 'disconnect' ? `ยกเลิกการเชื่อม ${accById(acc).name} แล้ว` : esc((j.report || []).join(' · ') || 'เสร็จแล้ว'));
+      sysMsg(where, /disconnect/.test(act) ? `ยกเลิกการเชื่อม ${accById(acc).name} แล้ว` : act === 'fbpage' ? `เลือกเพจให้ ${accById(acc).name} แล้ว ระบบกำลังดึงข้อมูลย้อนหลัง ใช้เวลาไม่กี่นาที` : esc((j.report || []).join(' · ') || 'เสร็จแล้ว'));
     } catch (err) {
       b.disabled = false; b.textContent = label;
       if (!err.cancel) sysMsg(where, esc(err.message), true);
@@ -1982,6 +2027,21 @@ th, th:first-child { background: var(--omnix-surface-2); color: var(--omnix-fg-m
   });
 
   document.addEventListener('submit', async e => {
+    if (e.target.id === 'fbapp-form' || e.target.id === 'fbtoken-form') {
+      e.preventDefault();
+      const btn = e.target.querySelector('button'), label = btn.textContent, isTok = e.target.id === 'fbtoken-form';
+      btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+      try {
+        const j = isTok ? await admin({ api: 'fbtoken', token: $('#fb-tok').value.trim() })
+          : await admin({ api: 'fbapp', appId: $('#fb-id').value.trim(), secret: $('#fb-sec').value.trim(), configId: $('#fb-cfg').value.trim(), redirect: DATA_URL });
+        await refreshLive();
+        sysMsg('#sys-msg', isTok ? (j.message || 'เชื่อม Facebook แล้ว') : 'บันทึกกุญแจ Facebook แล้ว ขั้นต่อไป กด เชื่อมด้วย Facebook ในกล่องการเชื่อมต่อ');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = label;
+        if (!err.cancel) sysMsg('#sys-msg', 'บันทึกไม่สำเร็จ: ' + esc(err.message), true);
+      }
+      return;
+    }
     if (e.target.id !== 'oauth-form') return;
     e.preventDefault();
     const btn = e.target.querySelector('button'), cid = $('#oa-id').value.trim(), sec = $('#oa-sec').value.trim();

@@ -9,7 +9,7 @@
  */
 
 var TABS = {
-  daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at'],
+  daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions'],
   monthly: ['month', 'account', 'key', 'value', 'source', 'updated_at'],
   clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at'],
   yt_top: ['month', 'account', 'rank', 'video_id', 'title', 'format', 'views'],
@@ -128,7 +128,7 @@ function saveSettings(url, clientId, secret) {
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
-  if (p.state && (p.code || p.error)) return ytHandleCallback_(p);
+  if (p.state && (p.code || p.error)) return CacheService.getScriptCache().get('oauth_' + p.state) === 'fb' ? fbHandleCallback_(p) : ytHandleCallback_(p);
   if (p.api === 'connect') return json_(ytStartConnect_(p.acc));
   var data;
   try { data = buildData_(); } catch (err) { data = { ok: false, error: String(err && err.message || err) }; }
@@ -156,6 +156,12 @@ function webApi_(b) {
     case 'upload': return uploadTikTok_(b);
     case 'import': return { ok: true, report: withLock_(importTikTok) };
     case 'target': return saveTarget_(b);
+    case 'fbapp': return saveFbApp_(b);
+    case 'fbconnect': return fbStartConnect_();
+    case 'fbtoken': return fbAdoptUserToken_(String(b.token || '').trim());
+    case 'fbpage': return fbPickPage_(b);
+    case 'fbdisconnect': return fbDisconnect_(b.acc);
+    case 'syncfb': return syncFbWeb_(b.acc);
     default: throw new Error('ไม่รู้จักคำสั่ง ' + b.api);
   }
 }
@@ -291,7 +297,13 @@ function buildData_() {
     status[id] = { connected: !!PROPS.getProperty('YT_RT_' + id), channel: PROPS.getProperty('YT_TITLE_' + id) || null, lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
   });
   ['tt-eloop', 'tt-moov'].forEach(function (id) { status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null }; });
-  status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null };
+  status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null,
+    fb: !!(PROPS.getProperty('FB_APP_ID') && PROPS.getProperty('FB_APP_SECRET')), fbConfig: !!PROPS.getProperty('FB_CONFIG_ID'),
+    fbPages: PROPS.getProperty('FB_UT') ? JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]') : [] };
+  ['fb-eloop', 'fb-moov'].forEach(function (id) {
+    status[id] = { connected: !!PROPS.getProperty('FB_PT_' + id), page: PROPS.getProperty('FB_TITLE_' + id) || null, pageId: PROPS.getProperty('FB_PAGE_' + id) || null,
+      lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
+  });
   status.log = readTable_('sync_log').filter(function (r) { return r.status !== 'ok'; }).slice(-8).reverse().map(function (r) {
     return { time: r.time, job: r.job, account: r.account, status: r.status, message: String(r.message).slice(0, 200) };
   });
@@ -308,6 +320,10 @@ function dailySync() {
   ['yt-eloop', 'yt-moov'].forEach(function (id) {
     if (!PROPS.getProperty('YT_RT_' + id)) return;
     try { syncYouTube_(id, false); } catch (e) { errors.push(YT_NAMES[id] + ': ' + e.message); }
+  });
+  ['fb-eloop', 'fb-moov'].forEach(function (id) {
+    if (!PROPS.getProperty('FB_PT_' + id)) return;
+    try { syncFacebook_(id, false); } catch (e) { errors.push(FB_NAMES[id] + ': ' + e.message); }
   });
   try { importTikTok(); } catch (e) { errors.push('TikTok: ' + e.message); }
   if (errors.length) notify_('CT Social OKR: ดึงข้อมูลไม่สำเร็จ', errors.join('\n'));
@@ -487,6 +503,7 @@ function readTable_(name) {
 
 function writeTable_(name, objs) {
   var s = sh_(name), h = TABS[name], last = s.getLastRow();
+  s.getRange(1, 1, 1, h.length).setValues([h]);
   if (last > 1) s.getRange(2, 1, last - 1, h.length).clearContent();
   if (!objs.length) return;
   if (s.getMaxRows() < objs.length + 1) s.insertRowsAfter(s.getMaxRows(), objs.length + 1 - s.getMaxRows());
@@ -514,3 +531,302 @@ function notify_(subject, body) {
 
 function now_() { return Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd HH:mm'); }
 function esc_(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+/* ================================================================== Facebook Pages
+ * One Facebook login (a person who is admin of both the Meta app and the Pages) gives a long-lived user token;
+ * from it the script takes a never-expiring Page token for each Page and pulls Page insights + Reels every morning.
+ * Needs (set from the dashboard): Meta App ID + App secret, and the web app /exec URL as a Valid OAuth Redirect URI.
+ */
+var FB_V = 'v23.0';
+var FB_NAMES = { 'fb-eloop': 'Facebook Eloop', 'fb-moov': 'Facebook Moov' };
+var FB_GUESS = { 'fb-eloop': /eloop|orsen/i, 'fb-moov': /moov/i };
+var FB_SCOPES = 'pages_show_list,pages_read_engagement,read_insights';
+// Daily Page metrics, each with fallbacks in case Meta renames or retires one
+var FB_METRICS = [
+  { key: 'views', names: ['page_media_view', 'page_impressions'] },
+  { key: 'watch_ms', names: ['page_video_view_time'] },
+  { key: 'follows', names: ['page_daily_follows_unique', 'page_fan_adds_unique'] },
+  { key: 'unfollows', names: ['page_daily_unfollows_unique', 'page_fan_removes_unique'] },
+  { key: 'inter', names: ['page_post_engagements'] },
+];
+var FB_REEL_VIEW_METRICS = ['blue_reels_play_count', 'fb_reels_total_plays', 'total_video_views'];
+
+function fbGraph_(path, params, token) {
+  var p = {};
+  Object.keys(params || {}).forEach(function (k) { p[k] = params[k]; });
+  if (token) p.access_token = token;
+  var res = UrlFetchApp.fetch('https://graph.facebook.com/' + FB_V + '/' + path + '?' + qs_(p), { muteHttpExceptions: true });
+  var body = {};
+  try { body = JSON.parse(res.getContentText() || '{}'); } catch (e) { /* not JSON */ }
+  if (res.getResponseCode() >= 400 || body.error) {
+    var err = new Error('Facebook: ' + ((body.error && body.error.message) || ('HTTP ' + res.getResponseCode())));
+    err.fbCode = body.error && body.error.code;
+    throw err;
+  }
+  return body;
+}
+
+function saveFbApp_(b) {
+  var id = String(b.appId || '').trim(), sec = String(b.secret || '').trim(), cfg = String(b.configId || '').trim();
+  var url = String(b.redirect || '').trim();
+  if (id && !/^\d{5,20}$/.test(id)) throw new Error('App ID ต้องเป็นตัวเลข');
+  if (cfg && !/^\d{5,20}$/.test(cfg)) throw new Error('Configuration ID ต้องเป็นตัวเลข');
+  if (!id && !PROPS.getProperty('FB_APP_ID')) throw new Error('ใส่ App ID');
+  if (!sec && !PROPS.getProperty('FB_APP_SECRET')) throw new Error('ใส่ App secret');
+  if (/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) PROPS.setProperty('WEBAPP_URL', url);
+  if (id) PROPS.setProperty('FB_APP_ID', id);
+  if (sec) PROPS.setProperty('FB_APP_SECRET', sec);
+  if (b.configId !== undefined) { if (cfg) PROPS.setProperty('FB_CONFIG_ID', cfg); else PROPS.deleteProperty('FB_CONFIG_ID'); }
+  log_('settings', '', 'ok', 'บันทึกกุญแจ Facebook จากหน้าเว็บ');
+  return { ok: true };
+}
+
+/** Facebook login URL (the dashboard redirects the browser there). */
+function fbStartConnect_() {
+  var id = PROPS.getProperty('FB_APP_ID'), redirect = PROPS.getProperty('WEBAPP_URL');
+  if (!id || !PROPS.getProperty('FB_APP_SECRET')) throw new Error('ยังไม่ได้ใส่กุญแจ Facebook (App ID และ App secret)');
+  if (!redirect) throw new Error('ระบบยังไม่รู้ลิงก์เว็บแอป กด บันทึกกุญแจ Facebook อีกครั้ง');
+  var state = Utilities.getUuid();
+  CacheService.getScriptCache().put('oauth_' + state, 'fb', 3600);
+  var q = { client_id: id, redirect_uri: redirect, state: state, response_type: 'code' };
+  var cfg = PROPS.getProperty('FB_CONFIG_ID');
+  if (cfg) q.config_id = cfg; else q.scope = FB_SCOPES;
+  return { ok: true, url: 'https://www.facebook.com/' + FB_V + '/dialog/oauth?' + qs_(q) };
+}
+
+/** Facebook redirects back to the web app with ?code=...&state=... */
+function fbHandleCallback_(p) {
+  var page = function (ok, msg) {
+    return HtmlService.createHtmlOutput('<div style="font:16px/1.6 \'IBM Plex Sans Thai\',Arial,sans-serif;max-width:520px;margin:48px auto;padding:0 16px">' +
+      '<h2 style="margin:0 0 8px">' + (ok ? 'เชื่อม Facebook สำเร็จ' : 'เชื่อม Facebook ไม่สำเร็จ') + '</h2><p>' + msg + '</p>' +
+      '<p><a href="' + SITE_URL + '" target="_top" style="display:inline-block;padding:9px 16px;border-radius:8px;background:#5b5bd6;color:#fff;text-decoration:none;font-weight:600">กลับไปหน้าแดชบอร์ด</a></p></div>').setTitle('เชื่อม Facebook');
+  };
+  CacheService.getScriptCache().remove('oauth_' + p.state);
+  if (p.error) return page(false, 'Facebook แจ้งว่า: ' + esc_(p.error_description || p.error) + ' (ถ้ากดยกเลิกไป ให้เริ่มใหม่แล้วกดดำเนินการต่อ)');
+  try {
+    var tok = fbGraph_('oauth/access_token', { client_id: PROPS.getProperty('FB_APP_ID'), client_secret: PROPS.getProperty('FB_APP_SECRET'),
+      redirect_uri: PROPS.getProperty('WEBAPP_URL'), code: p.code });
+    var r = fbAdoptUserToken_(tok.access_token);
+    return page(true, r.message);
+  } catch (e) {
+    log_('facebook-connect', '', 'error', e.message);
+    return page(false, esc_(e.message));
+  }
+}
+
+/** From a user token (any lifetime): store a long-lived one, list the Pages, auto-pick Eloop and Moov. */
+function fbAdoptUserToken_(token) {
+  if (!token) throw new Error('ไม่ได้รับ token จาก Facebook');
+  var id = PROPS.getProperty('FB_APP_ID'), sec = PROPS.getProperty('FB_APP_SECRET');
+  if (!id || !sec) throw new Error('ยังไม่ได้ใส่กุญแจ Facebook (App ID และ App secret)');
+  var ut = token;
+  try { ut = fbGraph_('oauth/access_token', { grant_type: 'fb_exchange_token', client_id: id, client_secret: sec, fb_exchange_token: token }).access_token || token; }
+  catch (e) { throw new Error('แลก token แบบใช้ได้นานไม่สำเร็จ (' + e.message + ') ตรวจว่า token มาจากแอปเดียวกับ App ID ที่ใส่ไว้'); }
+  var pages = [], r = fbGraph_('me/accounts', { fields: 'id,name,access_token', limit: 100 }, ut);
+  for (var guard = 0; guard < 10; guard++) {
+    pages = pages.concat(r.data || []);
+    if (!(r.paging && r.paging.next)) break;
+    r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
+  }
+  if (!pages.length) throw new Error('บัญชี Facebook นี้ไม่เห็นเพจไหนเลย ตรวจว่าเป็นแอดมินเพจ และตอนกดอนุญาตได้ติ๊กเลือกเพจ Eloop กับ Moov');
+  PROPS.setProperty('FB_UT', ut);
+  PROPS.setProperty('FB_PAGELIST', JSON.stringify(pages.map(function (pg) { return { id: pg.id, name: pg.name }; })));
+  var done = [], todo = [];
+  Object.keys(FB_NAMES).forEach(function (acc) {
+    var locked = PROPS.getProperty('FB_PAGE_' + acc), pick = null;
+    if (locked) pick = pages.filter(function (pg) { return pg.id === locked; })[0];
+    else { var m = pages.filter(function (pg) { return FB_GUESS[acc].test(pg.name); }); if (m.length === 1) pick = m[0]; }
+    if (pick) { fbSetPage_(acc, pick); done.push(FB_NAMES[acc] + ' = เพจ "' + esc_(pick.name) + '"'); } else todo.push(FB_NAMES[acc]);
+  });
+  log_('facebook-connect', '', 'ok', 'เห็น ' + pages.length + ' เพจ · ' + done.join(', '));
+  return { ok: true, pages: pages.length, message: (done.length ? done.join('<br>') + '<br>ระบบกำลังดึงข้อมูลย้อนหลังตั้งแต่ต้นปี ใช้เวลาไม่กี่นาที' : '') +
+    (todo.length ? (done.length ? '<br><br>' : '') + 'ยังต้องเลือกเพจให้ ' + todo.join(' และ ') + ' ที่หน้าตั้งค่าในแดชบอร์ด' : '') };
+}
+
+function fbSetPage_(acc, pg) {
+  if (!FB_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
+  var other = acc === 'fb-eloop' ? 'fb-moov' : 'fb-eloop';
+  if (PROPS.getProperty('FB_PAGE_' + other) === pg.id) throw new Error('เพจ "' + pg.name + '" เลือกไว้เป็น ' + FB_NAMES[other] + ' แล้ว');
+  var o = {}; o['FB_PAGE_' + acc] = pg.id; o['FB_PT_' + acc] = pg.access_token; o['FB_TITLE_' + acc] = pg.name;
+  PROPS.setProperties(o);
+  PROPS.deleteProperty('LAST_ERR_' + acc);
+  var pending = JSON.parse(PROPS.getProperty('FB_BACKFILL') || '[]');
+  if (pending.indexOf(acc) < 0) pending.push(acc);
+  PROPS.setProperty('FB_BACKFILL', JSON.stringify(pending));
+  ScriptApp.newTrigger('fbBackfillPending').timeBased().after(10 * 1000).create();
+}
+
+/** Dashboard: choose which Page is Eloop / Moov (from the Pages the login could see). */
+function fbPickPage_(b) {
+  var ut = PROPS.getProperty('FB_UT');
+  if (!ut) throw new Error('ยังไม่ได้เชื่อม Facebook');
+  if (!FB_NAMES[b.acc]) throw new Error('ไม่รู้จักบัญชี ' + b.acc);
+  var other = b.acc === 'fb-eloop' ? 'fb-moov' : 'fb-eloop';
+  if (PROPS.getProperty('FB_PAGE_' + other) === String(b.pageId)) throw new Error('เพจนี้เลือกไว้เป็น ' + FB_NAMES[other] + ' แล้ว');
+  var pg = fbGraph_(String(b.pageId), { fields: 'id,name,access_token' }, ut);
+  if (!pg.access_token) throw new Error('ไม่ได้รับสิทธิ์ของเพจนี้ ตรวจว่าเป็นแอดมินเพจ');
+  fbSetPage_(b.acc, pg);
+  log_('facebook-connect', b.acc, 'ok', 'เลือกเพจ ' + pg.name);
+  return { ok: true };
+}
+
+function fbDisconnect_(acc) {
+  if (!FB_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
+  var title = PROPS.getProperty('FB_TITLE_' + acc) || '';
+  ['FB_PAGE_', 'FB_PT_', 'FB_TITLE_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
+  if (!PROPS.getProperty('FB_PAGE_fb-eloop') && !PROPS.getProperty('FB_PAGE_fb-moov')) { PROPS.deleteProperty('FB_UT'); PROPS.deleteProperty('FB_PAGELIST'); }
+  log_('facebook-connect', acc, 'ok', 'ยกเลิกการเชื่อม (เดิม: ' + title + ')');
+  return { ok: true };
+}
+
+function fbBackfillPending() {
+  ScriptApp.getProjectTriggers().forEach(function (t) { if (t.getHandlerFunction() === 'fbBackfillPending') ScriptApp.deleteTrigger(t); });
+  var pending = JSON.parse(PROPS.getProperty('FB_BACKFILL') || '[]');
+  PROPS.deleteProperty('FB_BACKFILL');
+  pending.forEach(function (acc) {
+    try { syncFacebook_(acc, true); } catch (e) { notify_('CT Social OKR: ดึงข้อมูลย้อนหลัง ' + FB_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
+  });
+}
+
+function syncFbWeb_(acc) {
+  var ids = acc ? [acc] : Object.keys(FB_NAMES), out = [];
+  ids.forEach(function (id) {
+    if (!FB_NAMES[id]) throw new Error('ไม่รู้จักบัญชี ' + id);
+    if (!PROPS.getProperty('FB_PT_' + id)) { out.push(FB_NAMES[id] + ': ยังไม่ได้เชื่อม'); return; }
+    try { syncFacebook_(id, !PROPS.getProperty('LAST_OK_' + id)); out.push(FB_NAMES[id] + ': ดึงสำเร็จ'); } catch (e) { out.push(FB_NAMES[id] + ': ' + e.message); }
+  });
+  return { ok: true, report: out };
+}
+
+/** Day-by-day values of one Page metric. Insights allow at most ~90 days per call. */
+function fbInsights_(pid, pt, metric, start, end) {
+  var out = {}, s = new Date(start.getTime());
+  while (s <= end) {
+    var e = new Date(Math.min(end.getTime(), s.getTime() + 89 * 86400000));
+    var r = fbGraph_(pid + '/insights', { metric: metric, period: 'day', since: ymd_(s), until: ymd_(new Date(e.getTime() + 86400000)) }, pt);
+    (r.data || []).forEach(function (d) {
+      (d.values || []).forEach(function (v) {
+        if (!v.end_time) return;
+        var day = Utilities.formatDate(new Date(new Date(v.end_time).getTime() - 86400000), 'UTC', 'yyyy-MM-dd');
+        out[day] = fbNum_(v.value);
+      });
+    });
+    s = new Date(e.getTime() + 86400000);
+  }
+  return out;
+}
+
+function fbNum_(v) {
+  if (typeof v === 'number') return v;
+  if (v && typeof v === 'object') return Object.keys(v).reduce(function (t, k) { return t + (Number(v[k]) || 0); }, 0);
+  return Number(v) || 0;
+}
+
+/** Reels posted from `start`, with play counts. */
+function fbReels_(pid, pt, start) {
+  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,description,created_time,permalink_url', limit: 100 }, pt);
+  for (var guard = 0; guard < 30; guard++) {
+    var older = false;
+    (r.data || []).forEach(function (v) { if (new Date(v.created_time) >= start) reels.push(v); else older = true; });
+    if (older || !(r.paging && r.paging.next)) break;
+    r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
+  }
+  var metric = PROPS.getProperty('FB_REEL_METRIC');
+  for (var i = 0; i < reels.length; i += 50) {
+    var batch = reels.slice(i, i + 50), got = null, tries = metric ? [metric] : FB_REEL_VIEW_METRICS, lastErr = '';
+    for (var t = 0; t < tries.length && !got; t++) {
+      try {
+        got = fbGraph_('', { ids: batch.map(function (v) { return v.id; }).join(','), fields: 'video_insights.metric(' + tries[t] + '){values}' }, pt);
+        metric = tries[t];
+      } catch (e) { lastErr = e.message; if (e.fbCode === 190) throw e; }
+    }
+    if (!got) { log_('facebook', '', 'warn', 'ดึงยอดวิว Reels ไม่ได้: ' + lastErr); break; }
+    batch.forEach(function (v) {
+      var ins = got[v.id] && got[v.id].video_insights && got[v.id].video_insights.data;
+      v.views = ins && ins[0] && ins[0].values && ins[0].values[0] ? fbNum_(ins[0].values[0].value) : '';
+    });
+  }
+  if (metric) PROPS.setProperty('FB_REEL_METRIC', metric);
+  return reels;
+}
+
+function syncFacebook_(acc, full) {
+  var pt = PROPS.getProperty('FB_PT_' + acc), pid = PROPS.getProperty('FB_PAGE_' + acc);
+  if (!pt || !pid) throw new Error(FB_NAMES[acc] + ' ยังไม่ได้เชื่อม');
+  try {
+    var year = +PROPS.getProperty('YEAR');
+    var end = new Date(Date.now() - 86400000);
+    if (end.getFullYear() > year) end = new Date(year, 11, 31);
+    var start = full ? new Date(year, 0, 1) : new Date(Math.max(new Date(year, 0, 1).getTime(), new Date(end.getFullYear(), end.getMonth() - 1, 1).getTime()));
+    if (end < start) return;
+
+    // 1) daily Page metrics
+    var series = {}, used = [];
+    FB_METRICS.forEach(function (m) {
+      var lastErr = '';
+      for (var i = 0; i < m.names.length && !series[m.key]; i++) {
+        try { series[m.key] = fbInsights_(pid, pt, m.names[i], start, end); used.push(m.key + '=' + m.names[i]); }
+        catch (e) { if (e.fbCode === 190) throw e; lastErr = e.message; }
+      }
+      if (!series[m.key]) log_('facebook', acc, 'warn', 'ดึง ' + m.key + ' ไม่ได้: ' + lastErr);
+    });
+    var daily = readTable_('daily'), dIdx = index_(daily, ['date', 'account']), ts = now_(), days = {};
+    Object.keys(series).forEach(function (k) { Object.keys(series[k]).forEach(function (d) { days[d] = true; }); });
+    Object.keys(days).forEach(function (d) {
+      if (d < ymd_(start) || d > ymd_(end)) return;
+      var key = d + '|' + acc, row = dIdx[key], v = function (k) { return series[k] && series[k][d] != null ? series[k][d] : ''; };
+      if (!row) { row = { date: d, account: acc }; daily.push(row); dIdx[key] = row; }
+      row.views = v('views');
+      row.minutes_watched = v('watch_ms') === '' ? '' : Math.round(v('watch_ms') / 60000 * 10) / 10;
+      row.subs_gained = v('follows'); row.subs_lost = v('unfollows');
+      row.net_followers = v('follows') === '' ? '' : v('follows') - (v('unfollows') || 0);
+      row.interactions = v('inter');
+      row.source = 'facebook-api'; row.updated_at = ts;
+    });
+    writeTable_('daily', daily);
+
+    // 2) Reels (count per month, Top 5, views of the month's Reels)
+    var clips = readTable_('clips'), cIdx = index_(clips, ['account', 'id']), reelsOk = clips.some(function (c) { return c.account === acc; });
+    try {
+      fbReels_(pid, pt, start).forEach(function (v) {
+        var key = acc + '|' + v.id, row = cIdx[key], title = String(v.description || '').split('\n')[0].slice(0, 150) || 'Reel';
+        if (!row) { row = { account: acc, id: v.id, type: ttGuessType(title), product: '', boosted: false }; clips.push(row); cIdx[key] = row; }
+        row.title = title;
+        row.url = v.permalink_url ? (/^https?:/.test(v.permalink_url) ? v.permalink_url : 'https://www.facebook.com' + v.permalink_url) : '';
+        row.posted = Utilities.formatDate(new Date(v.created_time), TZ, 'yyyy-MM-dd HH:mm');
+        if (v.views !== '' && v.views != null) row.views = v.views;
+        row.source = 'facebook-api'; row.updated_at = ts;
+      });
+      writeTable_('clips', clips);
+      reelsOk = true;
+    } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึง Reels ไม่ได้: ' + e.message); }
+
+    // 3) monthly totals for the whole year (from the daily table)
+    var monthly = [];
+    for (var mm = 1; mm <= 12; mm++) {
+      var ym = year + '-' + (mm < 10 ? '0' : '') + mm;
+      var rows = daily.filter(function (r) { return r.account === acc && String(r.date).slice(0, 7) === ym; });
+      var has = function (k) { return rows.some(function (r) { return r[k] !== '' && r[k] != null; }); };
+      var s = function (k) { return rows.reduce(function (t, r) { return t + (Number(r[k]) || 0); }, 0); };
+      if (rows.length) {
+        if (has('views')) monthly.push([ym, 'views', s('views')]);
+        if (has('minutes_watched')) monthly.push([ym, 'watch', Math.round(s('minutes_watched'))]);
+        if (has('net_followers')) monthly.push([ym, 'nf', s('net_followers')]);
+        if (has('interactions')) monthly.push([ym, 'inter', s('interactions')]);
+        if (has('views') && has('interactions') && s('views')) monthly.push([ym, 'er', Math.round(s('interactions') / s('views') * 10000) / 100]);
+      }
+      // Reels count; months without Reels count as 0 once Reels could be read at all
+      var n = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; }).length;
+      if (n || (reelsOk && ym <= ymd_(end).slice(0, 7))) monthly.push([ym, 'output', n]);
+    }
+    replaceMonthly_(acc, 'facebook-api', monthly);
+    PROPS.setProperty('LAST_OK_' + acc, now_());
+    PROPS.deleteProperty('LAST_ERR_' + acc);
+    log_('facebook', acc, 'ok', (full ? 'ดึงย้อนหลัง ' : 'ดึงข้อมูล ') + ymd_(start) + ' ถึง ' + ymd_(end) + ' · ' + used.join(', '));
+  } catch (e) {
+    var msg = e.fbCode === 190 ? 'สิทธิ์ Facebook หมดอายุหรือถูกยกเลิก (เช่น แอดมินเปลี่ยนรหัสผ่าน) กดเชื่อม Facebook ใหม่ที่หน้าตั้งค่า' : e.message;
+    PROPS.setProperty('LAST_ERR_' + acc, String(msg).slice(0, 300));
+    log_('facebook', acc, 'error', msg);
+    throw new Error(msg);
+  }
+}
