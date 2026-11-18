@@ -9,7 +9,7 @@
  */
 
 var TABS = {
-  daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions'],
+  daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions', 'views_total', 'minutes_total'],
   monthly: ['month', 'account', 'key', 'value', 'source', 'updated_at'],
   clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at'],
   yt_top: ['month', 'account', 'rank', 'video_id', 'title', 'format', 'views'],
@@ -298,6 +298,7 @@ function buildData_() {
   });
   ['tt-eloop', 'tt-moov'].forEach(function (id) { status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null }; });
   status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null,
+    fbDebug: Object.keys(PROPS.getProperties ? PROPS.getProperties() : {}).filter(function (k) { return k.indexOf('FB_DEBUG_') === 0; }).map(function (k) { return PROPS.getProperty(k); }),
     fb: !!(PROPS.getProperty('FB_APP_ID') && PROPS.getProperty('FB_APP_SECRET')), fbConfig: !!PROPS.getProperty('FB_CONFIG_ID'),
     fbPages: PROPS.getProperty('FB_UT') ? JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]') : [] };
   ['fb-eloop', 'fb-moov'].forEach(function (id) {
@@ -543,8 +544,8 @@ var FB_GUESS = { 'fb-eloop': /eloop|orsen/i, 'fb-moov': /moov/i };
 var FB_SCOPES = 'pages_show_list,pages_read_engagement,read_insights';
 // Daily Page metrics, each with fallbacks in case Meta renames or retires one
 var FB_METRICS = [
-  { key: 'views', names: ['page_media_view', 'page_impressions'] },
-  { key: 'watch_ms', names: ['page_video_view_time'] },
+  { key: 'views', names: ['page_media_view', 'page_impressions'], organic: true },   // team KPI = "From organic" in Business Suite
+  { key: 'watch_ms', names: ['page_video_view_time'], organic: true },
   { key: 'follows', names: ['page_daily_follows_unique', 'page_fan_adds_unique'] },
   { key: 'unfollows', names: ['page_daily_unfollows_unique', 'page_fan_removes_unique'] },
   { key: 'inter', names: ['page_post_engagements'] },
@@ -698,27 +699,61 @@ function syncFbWeb_(acc) {
   return { ok: true, report: out };
 }
 
-/** Day-by-day values of one Page metric. Insights allow at most ~90 days per call. */
-function fbInsights_(pid, pt, metric, start, end) {
-  var out = {}, s = new Date(start.getTime());
+/** Day-by-day values of one Page metric. Insights allow at most ~90 days per call.
+ * With `organic`, asks Meta to split by is_from_ads and returns { total, organic } (organic is null if Meta gave no split). */
+function fbInsights_(pid, pt, metric, start, end, organic) {
+  var total = {}, org = organic ? {} : null, gotSplit = false, s = new Date(start.getTime());
+  var extra = organic ? { breakdown: 'is_from_ads' } : {};
   while (s <= end) {
     var e = new Date(Math.min(end.getTime(), s.getTime() + 89 * 86400000));
-    var r = fbGraph_(pid + '/insights', { metric: metric, period: 'day', since: ymd_(s), until: ymd_(new Date(e.getTime() + 86400000)) }, pt);
+    var q = { metric: metric, period: 'day', since: ymd_(s), until: ymd_(new Date(e.getTime() + 86400000)) };
+    Object.keys(extra).forEach(function (k) { q[k] = extra[k]; });
+    var r;
+    try { r = fbGraph_(pid + '/insights', q, pt); }
+    catch (err) {
+      if (!organic || err.fbCode === 190 || !extra.breakdown) throw err;
+      extra = {}; continue; // this metric does not take a breakdown: plain totals, no organic split
+    }
+    if (organic && s.getTime() === start.getTime()) fbDebug_(metric, q, r);
     (r.data || []).forEach(function (d) {
       (d.values || []).forEach(function (v) {
         if (!v.end_time) return;
         var day = Utilities.formatDate(new Date(new Date(v.end_time).getTime() - 86400000), 'UTC', 'yyyy-MM-dd');
-        out[day] = fbNum_(v.value);
+        total[day] = fbNum_(v.value);
+        if (organic) { var o = fbOrganic_(v.value); if (o != null) { org[day] = o; gotSplit = true; } }
       });
     });
     s = new Date(e.getTime() + 86400000);
   }
-  return out;
+  return organic ? { total: total, organic: gotSplit ? org : null } : total;
+}
+
+/** Organic part of a value split by is_from_ads, e.g. {"false": 120, "true": 900} or {"is_from_ads": {"false": 120}}. */
+function fbOrganic_(v) {
+  if (!v || typeof v !== 'object') return null;
+  var found = null;
+  (function walk(o) {
+    Object.keys(o).forEach(function (k) {
+      if (found != null) return;
+      var x = o[k];
+      if (x && typeof x === 'object') walk(x);
+      else if (/^(false|0|no|organic|non_ads?|is_from_ads_false)$/i.test(k)) found = Number(x) || 0;
+    });
+  })(v);
+  return found;
+}
+
+/** Keep one raw sample of the split response (numbers only, no tokens) so the format can be checked from the dashboard. */
+function fbDebug_(metric, q, r) {
+  try {
+    var d = (r.data || [])[0] || {};
+    PROPS.setProperty('FB_DEBUG_' + metric, JSON.stringify({ metric: metric, breakdown: q.breakdown || null, keys: Object.keys(d), values: (d.values || []).slice(0, 2), total_value: d.total_value || null }).slice(0, 1500));
+  } catch (e) { /* debug only */ }
 }
 
 function fbNum_(v) {
   if (typeof v === 'number') return v;
-  if (v && typeof v === 'object') return Object.keys(v).reduce(function (t, k) { return t + (Number(v[k]) || 0); }, 0);
+  if (v && typeof v === 'object') return Object.keys(v).reduce(function (t, k) { return t + fbNum_(v[k]); }, 0);
   return Number(v) || 0;
 }
 
@@ -765,7 +800,15 @@ function syncFacebook_(acc, full) {
     FB_METRICS.forEach(function (m) {
       var lastErr = '';
       for (var i = 0; i < m.names.length && !series[m.key]; i++) {
-        try { series[m.key] = fbInsights_(pid, pt, m.names[i], start, end); used.push(m.key + '=' + m.names[i]); }
+        try {
+          var got = fbInsights_(pid, pt, m.names[i], start, end, m.organic);
+          if (m.organic) {
+            series[m.key + '_total'] = got.total;
+            if (got.organic) series[m.key] = got.organic;
+            else { series[m.key] = {}; log_('facebook', acc, 'warn', m.names[i] + ': Meta ไม่ได้แยก organic/ads มาให้ ยังไม่ใส่ตัวเลข ' + m.key); }
+          } else series[m.key] = got;
+          used.push(m.key + '=' + m.names[i] + (m.organic ? (got.organic ? ' (organic)' : ' (ไม่มี organic)') : ''));
+        }
         catch (e) { if (e.fbCode === 190) throw e; lastErr = e.message; }
       }
       if (!series[m.key]) log_('facebook', acc, 'warn', 'ดึง ' + m.key + ' ไม่ได้: ' + lastErr);
@@ -776,8 +819,9 @@ function syncFacebook_(acc, full) {
       if (d < ymd_(start) || d > ymd_(end)) return;
       var key = d + '|' + acc, row = dIdx[key], v = function (k) { return series[k] && series[k][d] != null ? series[k][d] : ''; };
       if (!row) { row = { date: d, account: acc }; daily.push(row); dIdx[key] = row; }
-      row.views = v('views');
-      row.minutes_watched = v('watch_ms') === '' ? '' : Math.round(v('watch_ms') / 60000 * 10) / 10;
+      var mins = function (k) { return v(k) === '' ? '' : Math.round(v(k) / 60000 * 10) / 10; };
+      row.views = v('views'); row.views_total = v('views_total');
+      row.minutes_watched = mins('watch_ms'); row.minutes_total = mins('watch_ms_total');
       row.subs_gained = v('follows'); row.subs_lost = v('unfollows');
       row.net_followers = v('follows') === '' ? '' : v('follows') - (v('unfollows') || 0);
       row.interactions = v('inter');
@@ -810,7 +854,9 @@ function syncFacebook_(acc, full) {
       var s = function (k) { return rows.reduce(function (t, r) { return t + (Number(r[k]) || 0); }, 0); };
       if (rows.length) {
         if (has('views')) monthly.push([ym, 'views', s('views')]);
+        if (has('views_total')) monthly.push([ym, 'views_all', s('views_total')]);
         if (has('minutes_watched')) monthly.push([ym, 'watch', Math.round(s('minutes_watched'))]);
+        if (has('minutes_total')) monthly.push([ym, 'watch_all', Math.round(s('minutes_total'))]);
         if (has('net_followers')) monthly.push([ym, 'nf', s('net_followers')]);
         if (has('interactions')) monthly.push([ym, 'inter', s('interactions')]);
         if (has('views') && has('interactions') && s('views')) monthly.push([ym, 'er', Math.round(s('interactions') / s('views') * 10000) / 100]);
