@@ -497,7 +497,7 @@ function readTable_(name) {
   if (last < 2) return [];
   return s.getRange(2, 1, last - 1, h.length).getValues().filter(function (r) { return r.join('') !== ''; }).map(function (r) {
     var o = {};
-    h.forEach(function (k, i) { var v = r[i]; o[k] = v instanceof Date ? Utilities.formatDate(v, TZ, k === 'month' ? 'yyyy-MM' : 'yyyy-MM-dd') : v; });
+    h.forEach(function (k, i) { var v = r[i]; o[k] = v instanceof Date ? Utilities.formatDate(v, TZ, k === 'month' ? 'yyyy-MM' : ['time', 'updated_at', 'imported_at', 'posted'].indexOf(k) >= 0 ? 'yyyy-MM-dd HH:mm' : 'yyyy-MM-dd') : v; });
     return o;
   });
 }
@@ -548,8 +548,9 @@ var FB_METRICS = [
   { key: 'watch_ms', names: ['page_video_view_time'], organic: true },
   { key: 'follows', names: ['page_daily_follows_unique', 'page_fan_adds_unique'] },
   { key: 'unfollows', names: ['page_daily_unfollows_unique', 'page_fan_removes_unique'] },
-  { key: 'inter', names: ['page_post_engagements'] },
+  { key: 'eng', names: ['page_post_engagements'] }, // includes clicks; kept for reference only
 ];
+var FB_FMT = '3'; // bump when the way numbers are counted changes: next sync re-pulls the whole year
 var FB_REEL_VIEW_METRICS = ['blue_reels_play_count', 'fb_reels_total_plays', 'total_video_views'];
 
 function fbGraph_(path, params, token) {
@@ -631,12 +632,16 @@ function fbAdoptUserToken_(token) {
   }
   if (!pages.length) throw new Error('บัญชี Facebook นี้ไม่เห็นเพจไหนเลย ตรวจว่าเป็นแอดมินเพจ และตอนกดอนุญาตได้ติ๊กเลือกเพจ Eloop กับ Moov');
   PROPS.setProperty('FB_UT', ut);
-  PROPS.setProperty('FB_PAGELIST', JSON.stringify(pages.map(function (pg) { return { id: pg.id, name: pg.name }; })));
+  var list = JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]'), seen = {};
+  list.concat(pages.map(function (pg) { return { id: pg.id, name: pg.name }; })).forEach(function (pg) { seen[pg.id] = pg; });
+  PROPS.setProperty('FB_PAGELIST', JSON.stringify(Object.keys(seen).map(function (k) { return seen[k]; })));
   var done = [], todo = [];
   Object.keys(FB_NAMES).forEach(function (acc) {
     var locked = PROPS.getProperty('FB_PAGE_' + acc), pick = null;
-    if (locked) pick = pages.filter(function (pg) { return pg.id === locked; })[0];
-    else { var m = pages.filter(function (pg) { return FB_GUESS[acc].test(pg.name); }); if (m.length === 1) pick = m[0]; }
+    if (locked) {
+      pick = pages.filter(function (pg) { return pg.id === locked; })[0];
+      if (!pick) { done.push(FB_NAMES[acc] + ' = เพจ "' + esc_(PROPS.getProperty('FB_TITLE_' + acc) || '') + '" (เชื่อมไว้แล้วจากบัญชีก่อนหน้า)'); return; }
+    } else { var m = pages.filter(function (pg) { return FB_GUESS[acc].test(pg.name); }); if (m.length === 1) pick = m[0]; }
     if (pick) { fbSetPage_(acc, pick); done.push(FB_NAMES[acc] + ' = เพจ "' + esc_(pick.name) + '"'); } else todo.push(FB_NAMES[acc]);
   });
   log_('facebook-connect', '', 'ok', 'เห็น ' + pages.length + ' เพจ · ' + done.join(', '));
@@ -785,9 +790,27 @@ function fbReels_(pid, pt, start) {
   return reels;
 }
 
+/** Content interactions (reactions + comments + shares) of the posts published in each month, like "Content interactions" in Business Suite. */
+function fbPostInter_(pid, pt, start, end) {
+  var out = {}, r = fbGraph_(pid + '/posts', { fields: 'created_time,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares',
+    since: Math.floor(start.getTime() / 1000), until: Math.floor(end.getTime() / 1000) + 86400, limit: 100 }, pt);
+  for (var guard = 0; guard < 60; guard++) {
+    (r.data || []).forEach(function (p) {
+      var ym = Utilities.formatDate(new Date(p.created_time), TZ, 'yyyy-MM');
+      var n = ((p.reactions && p.reactions.summary && p.reactions.summary.total_count) || 0) + ((p.comments && p.comments.summary && p.comments.summary.total_count) || 0) + ((p.shares && p.shares.count) || 0);
+      out[ym] = (out[ym] || 0) + n;
+    });
+    if (!(r.paging && r.paging.next)) break;
+    r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
+    if (r.error) throw new Error('Facebook: ' + r.error.message);
+  }
+  return out;
+}
+
 function syncFacebook_(acc, full) {
   var pt = PROPS.getProperty('FB_PT_' + acc), pid = PROPS.getProperty('FB_PAGE_' + acc);
   if (!pt || !pid) throw new Error(FB_NAMES[acc] + ' ยังไม่ได้เชื่อม');
+  if (PROPS.getProperty('FB_FMT_' + acc) !== FB_FMT) full = true;
   try {
     var year = +PROPS.getProperty('YEAR');
     var end = new Date(Date.now() - 86400000);
@@ -824,7 +847,7 @@ function syncFacebook_(acc, full) {
       row.minutes_watched = mins('watch_ms'); row.minutes_total = mins('watch_ms_total');
       row.subs_gained = v('follows'); row.subs_lost = v('unfollows');
       row.net_followers = v('follows') === '' ? '' : v('follows') - (v('unfollows') || 0);
-      row.interactions = v('inter');
+      row.interactions = v('eng');
       row.source = 'facebook-api'; row.updated_at = ts;
     });
     writeTable_('daily', daily);
@@ -845,7 +868,16 @@ function syncFacebook_(acc, full) {
       reelsOk = true;
     } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึง Reels ไม่ได้: ' + e.message); }
 
-    // 3) monthly totals for the whole year (from the daily table)
+    // 3) content interactions per month, from the posts published that month
+    var inter = JSON.parse(PROPS.getProperty('FB_INTER_' + acc) || '{}');
+    if (full) inter = {};
+    try {
+      var got = fbPostInter_(pid, pt, start, end);
+      for (var mi = start.getMonth(); mi <= end.getMonth(); mi++) { var k = year + '-' + (mi < 9 ? '0' : '') + (mi + 1); inter[k] = got[k] || 0; }
+      PROPS.setProperty('FB_INTER_' + acc, JSON.stringify(inter));
+    } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึง Content interactions จากโพสต์ไม่ได้: ' + e.message); }
+
+    // 4) monthly totals for the whole year (from the daily table)
     var monthly = [];
     for (var mm = 1; mm <= 12; mm++) {
       var ym = year + '-' + (mm < 10 ? '0' : '') + mm;
@@ -858,14 +890,16 @@ function syncFacebook_(acc, full) {
         if (has('minutes_watched')) monthly.push([ym, 'watch', Math.round(s('minutes_watched'))]);
         if (has('minutes_total')) monthly.push([ym, 'watch_all', Math.round(s('minutes_total'))]);
         if (has('net_followers')) monthly.push([ym, 'nf', s('net_followers')]);
-        if (has('interactions')) monthly.push([ym, 'inter', s('interactions')]);
-        if (has('views') && has('interactions') && s('views')) monthly.push([ym, 'er', Math.round(s('interactions') / s('views') * 10000) / 100]);
+        if (has('interactions')) monthly.push([ym, 'eng_all', s('interactions')]);
+        if (inter[ym] != null && has('views') && s('views')) monthly.push([ym, 'er', Math.round(inter[ym] / s('views') * 10000) / 100]);
       }
+      if (inter[ym] != null) monthly.push([ym, 'inter', inter[ym]]);
       // Reels count; months without Reels count as 0 once Reels could be read at all
       var n = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; }).length;
       if (n || (reelsOk && ym <= ymd_(end).slice(0, 7))) monthly.push([ym, 'output', n]);
     }
     replaceMonthly_(acc, 'facebook-api', monthly);
+    if (full) PROPS.setProperty('FB_FMT_' + acc, FB_FMT);
     PROPS.setProperty('LAST_OK_' + acc, now_());
     PROPS.deleteProperty('LAST_ERR_' + acc);
     log_('facebook', acc, 'ok', (full ? 'ดึงย้อนหลัง ' : 'ดึงข้อมูล ') + ymd_(start) + ' ถึง ' + ymd_(end) + ' · ' + used.join(', '));
