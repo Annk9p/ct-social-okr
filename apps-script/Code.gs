@@ -555,7 +555,7 @@ var FB_METRICS = [
   { key: 'unfollows', names: ['page_daily_unfollows_unique', 'page_fan_removes_unique'] },
   { key: 'eng', names: ['page_post_engagements'] }, // includes clicks; kept for reference only
 ];
-var FB_FMT = '3'; // bump when the way numbers are counted changes: next sync re-pulls the whole year
+var FB_FMT = '4'; // bump when the way numbers are counted changes: next sync re-pulls the whole year
 var FB_REEL_VIEW_METRICS = ['blue_reels_play_count', 'fb_reels_total_plays', 'total_video_views'];
 
 function fbGraph_(path, params, token) {
@@ -729,6 +729,13 @@ function fbInsights_(pid, pt, metric, start, end, organic) {
       (d.values || []).forEach(function (v) {
         if (!v.end_time) return;
         var day = Utilities.formatDate(new Date(new Date(v.end_time).getTime() - 86400000), 'UTC', 'yyyy-MM-dd');
+        if (v.is_from_ads != null) {
+          // split rows: {value, end_time, is_from_ads: "0"} and {..., is_from_ads: "1"} for the same day
+          var n = fbNum_(v.value), isAd = String(v.is_from_ads) === '1' || String(v.is_from_ads).toLowerCase() === 'true';
+          total[day] = (total[day] || 0) + n;
+          if (organic) { org[day] = (org[day] || 0) + (isAd ? 0 : n); gotSplit = true; }
+          return;
+        }
         total[day] = fbNum_(v.value);
         if (organic) { var o = fbOrganic_(v.value); if (o != null) { org[day] = o; gotSplit = true; } }
       });
@@ -795,20 +802,36 @@ function fbReels_(pid, pt, start) {
   return reels;
 }
 
-/** Content interactions (reactions + comments + shares) of the posts published in each month, like "Content interactions" in Business Suite. */
-function fbPostInter_(pid, pt, start, end) {
-  var out = {}, r = fbGraph_(pid + '/posts', { fields: 'created_time,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares',
-    since: Math.floor(start.getTime() / 1000), until: Math.floor(end.getTime() / 1000) + 86400, limit: 100 }, pt);
-  for (var guard = 0; guard < 60; guard++) {
-    (r.data || []).forEach(function (p) {
-      var ym = Utilities.formatDate(new Date(p.created_time), TZ, 'yyyy-MM');
-      var n = ((p.reactions && p.reactions.summary && p.reactions.summary.total_count) || 0) + ((p.comments && p.comments.summary && p.comments.summary.total_count) || 0) + ((p.shares && p.shares.count) || 0);
-      out[ym] = (out[ym] || 0) + n;
+/** Content interactions per month (reactions + comments + shares) of the posts and Reels published that month. */
+function fbPostInter_(pid, pt, start, end, acc) {
+  var out = {}, seen = {}, stat = { posts: 0, postInter: 0, reels: 0, reelInter: 0, reelsAlsoPosts: 0 };
+  var since = Math.floor(start.getTime() / 1000), until = Math.floor(end.getTime() / 1000) + 86400;
+  var sumOf = function (x) { return (x && x.summary && x.summary.total_count) || 0; };
+  var pages = function (path, fields, each) {
+    var r = fbGraph_(path, { fields: fields, since: since, until: until, limit: 100 }, pt);
+    for (var guard = 0; guard < 60; guard++) {
+      (r.data || []).forEach(each);
+      if (!(r.paging && r.paging.next)) break;
+      r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
+      if (r.error) throw new Error('Facebook: ' + r.error.message);
+    }
+  };
+  pages(pid + '/posts', 'id,created_time,reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares', function (p) {
+    var ym = Utilities.formatDate(new Date(p.created_time), TZ, 'yyyy-MM');
+    var n = sumOf(p.reactions) + sumOf(p.comments) + ((p.shares && p.shares.count) || 0);
+    seen[p.id] = true; seen[String(p.id).split('_').pop()] = true;
+    out[ym] = (out[ym] || 0) + n; stat.posts++; stat.postInter += n;
+  });
+  try {
+    pages(pid + '/video_reels', 'id,post_id,created_time,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)', function (v) {
+      if (new Date(v.created_time) < start) return;
+      stat.reels++;
+      if (seen[v.post_id] || seen[String(v.post_id || '').split('_').pop()] || seen[v.id]) { stat.reelsAlsoPosts++; return; }
+      var ym = Utilities.formatDate(new Date(v.created_time), TZ, 'yyyy-MM'), n = sumOf(v.likes) + sumOf(v.comments);
+      out[ym] = (out[ym] || 0) + n; stat.reelInter += n;
     });
-    if (!(r.paging && r.paging.next)) break;
-    r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
-    if (r.error) throw new Error('Facebook: ' + r.error.message);
-  }
+  } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'นับ interactions ของ Reels ไม่ได้: ' + e.message); }
+  PROPS.setProperty('FB_DEBUG_inter_' + acc, JSON.stringify({ interactions: stat, from: ymd_(start), to: ymd_(end) }));
   return out;
 }
 
@@ -833,7 +856,10 @@ function syncFacebook_(acc, full) {
           if (m.organic) {
             series[m.key + '_total'] = got.total;
             if (got.organic) series[m.key] = got.organic;
-            else { series[m.key] = {}; log_('facebook', acc, 'warn', m.names[i] + ': Meta ไม่ได้แยก organic/ads มาให้ ยังไม่ใส่ตัวเลข ' + m.key); }
+            else {
+              series[m.key] = {};
+              if (m.key !== 'watch_ms') log_('facebook', acc, 'warn', m.names[i] + ': Meta ไม่ได้แยก organic/ads มาให้ ยังไม่ใส่ตัวเลข ' + m.key);
+            }
           } else series[m.key] = got;
           used.push(m.key + '=' + m.names[i] + (m.organic ? (got.organic ? ' (organic)' : ' (ไม่มี organic)') : ''));
         }
@@ -877,7 +903,7 @@ function syncFacebook_(acc, full) {
     var inter = JSON.parse(PROPS.getProperty('FB_INTER_' + acc) || '{}');
     if (full) inter = {};
     try {
-      var got = fbPostInter_(pid, pt, start, end);
+      var got = fbPostInter_(pid, pt, start, end, acc);
       for (var mi = start.getMonth(); mi <= end.getMonth(); mi++) { var k = year + '-' + (mi < 9 ? '0' : '') + (mi + 1); inter[k] = got[k] || 0; }
       PROPS.setProperty('FB_INTER_' + acc, JSON.stringify(inter));
     } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึง Content interactions จากโพสต์ไม่ได้: ' + e.message); }
@@ -893,6 +919,7 @@ function syncFacebook_(acc, full) {
         if (has('views')) monthly.push([ym, 'views', s('views')]);
         if (has('views_total')) monthly.push([ym, 'views_all', s('views_total')]);
         if (has('minutes_watched')) monthly.push([ym, 'watch', Math.round(s('minutes_watched'))]);
+        else if (has('minutes_total') && has('views') && s('views_total')) monthly.push([ym, 'watch', Math.round(s('minutes_total') * s('views') / s('views_total'))]); // estimate
         if (has('minutes_total')) monthly.push([ym, 'watch_all', Math.round(s('minutes_total'))]);
         if (has('net_followers')) monthly.push([ym, 'nf', s('net_followers')]);
         if (has('interactions')) monthly.push([ym, 'eng_all', s('interactions')]);
