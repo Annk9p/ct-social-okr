@@ -289,7 +289,7 @@ function yppByVideo_(acc, today, end) {
 function ytSaveClips_(acc, uploads, year, end) {
   var shares = {};
   try {
-    ytReport_(acc, { startDate: year + '-01-01', endDate: ymd_(end), metrics: 'shares', dimensions: 'video', sort: '-shares', maxResults: 200 })
+    ytReport_(acc, { startDate: year + '-01-01', endDate: ymd_(end), metrics: 'views,shares', dimensions: 'video', sort: '-views', maxResults: 200 })
       .forEach(function (r) { shares[r.video] = +r.shares || 0; });
   } catch (e) { log_('youtube', acc, 'warn', 'ดึงยอดแชร์รายคลิปไม่ได้: ' + e.message); }
   var clips = readTable_('clips'), cIdx = index_(clips, ['account', 'id']), ts = now_();
