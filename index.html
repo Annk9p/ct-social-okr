@@ -2141,18 +2141,18 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   function renderConn() {
     const st = SYS || {}, ready = !!st.setup;
     const fbRow = id => {
-      const x = st[id] || {}, s = st.setup || {}, pages = s.fbPages || [];
+      const x = st[id] || {}, s = st.setup || {}, guess = id === 'fb-moov' ? /moov/i : /eloop|orsen/i;
+      const pages = (s.fbPages || []).filter(p => guess.test(p.name) || p.id === x.pageId); // only this brand's Pages
       const pick = pages.length ? `<select id="fbsel-${id}" aria-label="เลือกเพจสำหรับ ${accById(id).name}"><option value="">— ไม่เลือก —</option>${pages.map(p => `<option value="${esc(p.id)}"${p.id === x.pageId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select><button class="btn" type="button" data-sys="fbpage" data-sacc="${id}">${x.connected ? 'เปลี่ยนเป็นเพจนี้' : 'ใช้เพจนี้'}</button>` : '';
       let st2, det, act = '';
       if (!ready || !s.fb) { st2 = '<span class="st none">ยังไม่ได้ตั้งค่า</span>'; det = 'ใส่กุญแจ Facebook ในกล่อง ตั้งค่าระบบ ข้อ 4 ก่อน · ตัวเลข Facebook ในแดชบอร์ดยังเป็นตัวอย่าง'; }
       else if (!x.connected) {
         st2 = '<span class="st warn">ยังไม่ได้เชื่อม</span>';
         det = pages.length ? 'เลือกเพจของบัญชีนี้ หรือกดเชื่อมใหม่ด้วยบัญชี Facebook ที่เป็นแอดมินเพจ' : 'กดปุ่มแล้วล็อกอิน Facebook ที่เป็นแอดมินเพจ Eloop และ Moov ครั้งเดียวได้ทั้งสองเพจ ระบบได้สิทธิ์อ่านสถิติอย่างเดียว';
-        const guess = id === 'fb-moov' ? /moov/i : /eloop|orsen/i, seen = pages.some(p => guess.test(p.name));
-        if (pages.length && !seen) det = `ระบบยังไม่เห็นเพจ ${accById(id).brand} ในบัญชี Facebook ที่เชื่อมไว้ · กดเชื่อมใหม่แล้วติ๊กเพจ ${accById(id).brand} ตอนอนุญาต ถ้าเพจอยู่ใน Business portfolio ให้กดปุ่ม "เพจใน Business"`;
+        const seen = pages.length > 0, anyFb = (s.fbPages || []).length > 0;
+        if (anyFb && !seen) det = `ระบบยังไม่เห็นเพจ ${accById(id).brand} ในบัญชี Facebook ที่เชื่อมไว้ · กดเชื่อมใหม่แล้วติ๊กเพจ ${accById(id).brand} ตอนอนุญาต ถ้าเพจอยู่ใน Business portfolio ให้กดปุ่ม "เพจใน Business"`;
         act = (seen ? pick : '') + `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อมด้วย Facebook</button>`
-          + (pages.length ? `<button class="btn" type="button" data-sys="fbconnect" data-biz="1">เชื่อมเพจใน Business</button>` : '')
-          + (pages.length && !seen ? `<details style="flex-basis:100%"><summary>เลือกจากเพจที่ระบบเห็นแล้ว (ไม่ต้องเลือกก็ได้)</summary><div class="conn-act" style="margin-top:6px">${pick}</div></details>` : '');
+          + (anyFb ? `<button class="btn" type="button" data-sys="fbconnect" data-biz="1">เชื่อมเพจใน Business</button>` : '');
       } else {
         st2 = x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>';
         det = `เพจ ${esc(x.page || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}`;

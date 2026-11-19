@@ -301,7 +301,7 @@ function buildData_() {
   status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null,
     fbDebug: Object.keys(PROPS.getProperties ? PROPS.getProperties() : {}).filter(function (k) { return k.indexOf('FB_DEBUG_') === 0; }).map(function (k) { return PROPS.getProperty(k); }),
     fb: !!(PROPS.getProperty('FB_APP_ID') && PROPS.getProperty('FB_APP_SECRET')), fbConfig: !!PROPS.getProperty('FB_CONFIG_ID'),
-    fbPages: PROPS.getProperty('FB_UT') ? JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]') : [] };
+    fbPages: PROPS.getProperty('FB_UT') ? fbTeamPages_(JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]')) : [] };
   ['fb-eloop', 'fb-moov'].forEach(function (id) {
     status[id] = { connected: !!PROPS.getProperty('FB_PT_' + id), page: PROPS.getProperty('FB_TITLE_' + id) || null, pageId: PROPS.getProperty('FB_PAGE_' + id) || null,
       lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
@@ -548,6 +548,12 @@ function esc_(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '
 var FB_V = 'v23.0';
 var FB_NAMES = { 'fb-eloop': 'Facebook Eloop', 'fb-moov': 'Facebook Moov' };
 var FB_GUESS = { 'fb-eloop': /eloop|orsen/i, 'fb-moov': /moov/i };
+// Only the team's own Pages are kept and shown; other Pages of the person who logs in stay private
+var FB_TEAM_PAGE = /eloop|orsen|moov/i;
+function fbTeamPages_(list) {
+  var keep = [PROPS.getProperty('FB_PAGE_fb-eloop'), PROPS.getProperty('FB_PAGE_fb-moov')];
+  return (list || []).filter(function (pg) { return FB_TEAM_PAGE.test(pg.name || '') || keep.indexOf(pg.id) >= 0; });
+}
 var FB_SCOPES = 'pages_show_list,pages_read_engagement,read_insights';
 // Daily Page metrics, each with fallbacks in case Meta renames or retires one
 var FB_METRICS = [
@@ -653,7 +659,7 @@ function fbAdoptUserToken_(token) {
   PROPS.setProperty('FB_UT', ut);
   var list = JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]'), seen = {};
   list.concat(pages.map(function (pg) { return { id: pg.id, name: pg.name }; })).forEach(function (pg) { seen[pg.id] = pg; });
-  PROPS.setProperty('FB_PAGELIST', JSON.stringify(Object.keys(seen).map(function (k) { return seen[k]; })));
+  PROPS.setProperty('FB_PAGELIST', JSON.stringify(fbTeamPages_(Object.keys(seen).map(function (k) { return seen[k]; }))));
   var done = [], todo = [];
   Object.keys(FB_NAMES).forEach(function (acc) {
     var locked = PROPS.getProperty('FB_PAGE_' + acc), pick = null;
@@ -663,7 +669,7 @@ function fbAdoptUserToken_(token) {
     } else { var m = pages.filter(function (pg) { return FB_GUESS[acc].test(pg.name); }); if (m.length === 1) pick = m[0]; }
     if (pick) { fbSetPage_(acc, pick); done.push(FB_NAMES[acc] + ' = เพจ "' + esc_(pick.name) + '"'); } else todo.push(FB_NAMES[acc]);
   });
-  log_('facebook-connect', '', 'ok', 'เห็น ' + pages.length + ' เพจ · ' + done.join(', '));
+  log_('facebook-connect', '', 'ok', 'เห็นเพจของทีม ' + fbTeamPages_(pages).length + ' เพจ · ' + done.join(', '));
   return { ok: true, pages: pages.length, message: (done.length ? done.join('<br>') + '<br>ระบบกำลังดึงข้อมูลย้อนหลังตั้งแต่ต้นปี ใช้เวลาไม่กี่นาที' : '') +
     (todo.length ? (done.length ? '<br><br>' : '') + 'ยังต้องเลือกเพจให้ ' + todo.join(' และ ') + ' ที่หน้าตั้งค่าในแดชบอร์ด' : '') };
 }
