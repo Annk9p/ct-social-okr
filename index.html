@@ -859,6 +859,13 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 .chip .n { font-size: 11.5px; font-weight: 600; min-width: 20px; height: 18px; padding: 0 6px; border-radius: 999px; display: inline-grid; place-items: center; background: var(--omnix-surface-2); color: var(--omnix-fg-muted); }
 .chip[aria-pressed="true"] .n { background: var(--omnix-surface); color: var(--omnix-accent); }
 .chip:disabled { opacity: .45; cursor: default; }
+
+.plat.p-ig { color: var(--p-ig); background: var(--p-ig-bg); }
+.card.p-ig { box-shadow: inset 0 4px 0 var(--p-ig), var(--shadow-card); }
+.card.p-ig .card-foot svg { color: var(--p-ig); }
+:root { --p-ig: #c1356f; --p-ig-bg: #fdecf4; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) { --p-ig: #ff7eb6; --p-ig-bg: rgb(214 41 118 / .18); } }
+:root[data-theme="dark"], :root.dark { --p-ig: #ff7eb6; --p-ig-bg: rgb(214 41 118 / .18); }
 </style>
 </head>
 <body>
@@ -1264,6 +1271,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 
   /* ---------- sparkline (inline SVG, KPI spark per OMNIX template) ---------- */
   function sparkline(data) {
+    if (!data.some(v => v != null)) return '<svg aria-hidden="true"></svg>';
     const W = 100, H = 30, n = 12;
     const vals = data.map((v, i) => [i, v]).filter(p => p[1] != null);
     const ys = vals.map(p => p[1]), max = Math.max(...ys), min = Math.min(0, ...ys), r = max - min || 1;
@@ -1285,8 +1293,11 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   const PLAT = {
     TikTok: { c: 'tt', svg: '<svg class="ico-tt" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#000"/><g transform="translate(3.4 3.2) scale(.72)"><path fill="#25F4EE" transform="translate(-.9 -.9)" d="M16.6 5.8a3.9 3.9 0 0 1-.9-2.3h-2.8v11.3a2.4 2.4 0 1 1-1.7-2.3V9.7a5.2 5.2 0 1 0 4.5 5.1V9.1a6.6 6.6 0 0 0 3.9 1.2V7.5a3.9 3.9 0 0 1-3-1.7z"/><path fill="#FE2C55" transform="translate(.9 .9)" d="M16.6 5.8a3.9 3.9 0 0 1-.9-2.3h-2.8v11.3a2.4 2.4 0 1 1-1.7-2.3V9.7a5.2 5.2 0 1 0 4.5 5.1V9.1a6.6 6.6 0 0 0 3.9 1.2V7.5a3.9 3.9 0 0 1-3-1.7z"/><path fill="#fff" d="M16.6 5.8a3.9 3.9 0 0 1-.9-2.3h-2.8v11.3a2.4 2.4 0 1 1-1.7-2.3V9.7a5.2 5.2 0 1 0 4.5 5.1V9.1a6.6 6.6 0 0 0 3.9 1.2V7.5a3.9 3.9 0 0 1-3-1.7z"/></g></svg>' },
     Facebook: { c: 'fb', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#1877F2"/><path fill="#fff" d="M15.1 12.6l.4-2.7h-2.6V8.2c0-.7.4-1.5 1.5-1.5h1.2V4.4s-1.1-.2-2.1-.2c-2.2 0-3.6 1.3-3.6 3.7v2H7.5v2.7h2.4V24h3v-11.4z"/></svg>' },
+    Instagram: { c: 'ig', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="igg" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#FEDA75"/><stop offset=".3" stop-color="#FA7E1E"/><stop offset=".6" stop-color="#D62976"/><stop offset="1" stop-color="#4F5BD5"/></linearGradient></defs><rect width="24" height="24" rx="6.5" fill="url(#igg)"/><rect x="5.5" y="5.5" width="13" height="13" rx="4" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.1" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.1" cy="7.9" r="1" fill="#fff"/></svg>' },
     YouTube: { c: 'yt', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="4.5" width="22" height="15" rx="4.5" fill="#FF0000"/><path fill="#fff" d="m10 8.6 5.6 3.4-5.6 3.4z"/></svg>' },
   };
+  // Platforms in display order; Instagram shows up once the system has its data
+  const platforms = () => ['TikTok', 'Facebook', 'Instagram', 'YouTube'].filter(p => ACCOUNTS.some(a => a.platform === p));
   const pIco = p => PLAT[p] ? `<span class="pico">${PLAT[p].svg}</span>` : '';
   const pPill = (p, label) => `<span class="plat p-${PLAT[p].c}">${PLAT[p].svg}${label || p}</span>`;
   const accName = a => `${pIco(a.platform)}${a.name}`;
@@ -1308,7 +1319,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       const views = a.metrics.find(m => m.key === 'views');
       const li = lastIdx(views.data);
       const kpis = targeted.map(({ m, e }) => {
-        if (!m.target) return `<div class="kpi untargeted"><span class="k">${m.label}</span><span class="v">${fmt(e.ytd)}</span><div class="meta"><span>${m.pending}</span></div></div>`;
+        if (!m.target) return `<div class="kpi untargeted"><span class="k">${m.label}${m.kind === 'rate' ? ' <small>(เฉลี่ยรายเดือน)</small>' : ''}</span><span class="v">${m.kind === 'rate' ? (isNaN(e.avg) ? '–' : pct(e.avg, 2)) : fmt(e.ytd)}</span><div class="meta"><span>${m.pending}</span></div></div>`;
         if (m.kind === 'sum') {
           const w = Math.min(100, e.progress);
           return `<div class="kpi"><span class="k">${m.label}</span><span class="v">${fmtC(e.ytd)} <small>/ ${fmtC(m.target)}</small></span>
@@ -1321,7 +1332,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       return `<article class="card p-${PLAT[a.platform].c}">
         <div class="card-head">${pPill(a.platform)}<h3>${a.brand}</h3>${worst ? `<span class="st ${worst.e.status}">${ST_LABEL[worst.e.status]}</span>` : ''}</div>
         <div class="kpis">${kpis}</div>
-        <div class="card-foot"><span>วิวรายเดือน</span>${sparkline(views.data)}<span>ถึง ${MONTHS[li]}</span><button class="link" type="button" data-open="${a.id}">ดูรายละเอียด</button></div>
+        <div class="card-foot"><span>วิวรายเดือน</span>${sparkline(views.data)}<span>${li < 0 ? 'ยังไม่มีข้อมูล' : 'ถึง ' + MONTHS[li]}</span><button class="link" type="button" data-open="${a.id}">ดูรายละเอียด</button></div>
       </article>`;
     }).join('');
   }
@@ -1579,18 +1590,18 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   function renderShort() {
     const brands = ['Eloop', 'Moov'].filter(b => repBrand === 'all' || b === repBrand);
     $('#rep-short').innerHTML = brands.map(b => {
-      const plats = ['TikTok', 'Facebook'].map(p => ACCOUNTS.find(a => a.brand === b && a.platform === p));
+      const plats = ['TikTok', 'Facebook', 'Instagram'].map(p => ACCOUNTS.find(a => a.brand === b && a.platform === p)).filter(Boolean);
       const rows = plats.map(a => {
         const out = a.metrics.find(m => m.key === 'output').data;
         const n = out[repMonth], uv = uploadViews(a.id, repMonth);
-        return `<div class="sv">${pPill(a.platform, a.platform === 'Facebook' ? 'Reels' : 'TikTok')}
+        return `<div class="sv">${pPill(a.platform, a.platform === 'TikTok' ? 'TikTok' : 'Reels')}
           <div><div class="k">คลิปที่ลง</div><div class="v">${n == null ? '<span class="em">รอข้อมูล</span>' : fmt(n) + ' ' + momEl(momOf(n, out[repMonth - 1]))}</div></div>
           <div><div class="k">วิวรวมของคลิปที่ลง</div><div class="v">${uv ? fmt(uv.v) + ' ' + momEl(uv.mom) : `<span class="em">${a.platform === 'TikTok' ? 'รอไฟล์วิดีโอ' : 'รอเชื่อม API'}</span>`}</div></div></div>`;
       }).join('');
       const tops = plats.map(a => {
         const cl = clipsFor(a.id, repMonth).sort((p, q) => q.views - p.views).slice(0, 5);
         const body = cl.length ? `<ol class="top-list">${cl.map((c, i) => `<li><span class="n">${i + 1}</span><a class="clip t" href="${clipUrl(c)}" target="_blank" rel="noopener" title="${esc(c.title)}">${esc(shortT(c.title, 60))}</a><span class="val">${fmtC(c.views)}</span></li>`).join('')}</ol>` : noClips(a);
-        return `<div><h3 class="mini" style="margin-top:14px">${pIco(a.platform)}${a.platform === 'Facebook' ? 'Facebook Reels' : 'TikTok'} Top 5</h3>${body}</div>`;
+        return `<div><h3 class="mini" style="margin-top:14px">${pIco(a.platform)}${a.platform === 'TikTok' ? 'TikTok' : a.platform + ' Reels'} Top 5</h3>${body}</div>`;
       }).join('');
       return `<div class="panel"><h3 class="ph">${b}<span class="tag right">${MONTHS[repMonth]} 2026</span></h3>${rows}<div class="top2">${tops}</div>
         <p class="foot">วิวเป็นยอดสะสมถึงวันที่ดึงข้อมูล · TikTok รวมคลิปแคมเปญและแอด ไม่รวม Highlight Live · Facebook นับแบบ organic</p></div>`;
@@ -1633,7 +1644,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   function renderOkr() {
     const lastDay = MONTH_DAYS[repMonth];
     $('#okr-period').textContent = `สะสม 1 ม.ค. – ${partial() ? AS_OF.getDate() - 1 : lastDay} ${MONTHS[repMonth]} 2026`;
-    $('#rep-okr').innerHTML = ['TikTok', 'Facebook', 'YouTube'].map(p => {
+    $('#rep-okr').innerHTML = platforms().map(p => {
       const accs = ACCOUNTS.filter(a => a.platform === p && brandOk(a));
       const rows = accs.flatMap(a => a.metrics.filter(m => m.target).map(m => krRow(a, m))).join('');
       const obs = autoObs(p);
@@ -1758,8 +1769,8 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     $('#rep-month').value = String(repMonth);
     $('#rep-title').textContent = `สรุปประจำเดือน ${MONTH_FULL[repMonth]} 2026${partial() ? ` (ถึง ${AS_OF.getDate() - 1} ${MONTHS[repMonth]} · เดือนยังไม่จบ ไม่เทียบเดือนก่อน)` : ''}`;
     $('#rep-sub').textContent = `ตัวเลขในหน้านี้ดึงจากข้อมูลของระบบชุดเดียวกับหน้าภาพรวม อัปโหลดไฟล์หรือแก้เป้าแล้วหน้านี้เปลี่ยนตาม ทีมเขียนแค่บทวิเคราะห์ แล้วกดสร้างสไลด์ได้เลย`;
-    const SRC = { TikTok: 'ไฟล์อัปโหลด', Facebook: 'Facebook API', YouTube: 'YouTube API' };
-    $('#rep-fresh').innerHTML = ['TikTok', 'Facebook', 'YouTube'].map(p => {
+    const SRC = { TikTok: 'ไฟล์อัปโหลด', Facebook: 'Facebook API', Instagram: 'Instagram API', YouTube: 'YouTube API' };
+    $('#rep-fresh').innerHTML = platforms().map(p => {
       const li = latestMonth(ACCOUNTS.filter(a => a.platform === p));
       const ok = li >= repMonth;
       return `<span class="st ${ok ? 'good' : 'warn'}">${pIco(p)}${p} · ${li < 0 ? 'ยังไม่มีข้อมูล' : 'ข้อมูลถึง ' + MONTHS[li]} (${SRC[p]})</span>`;
@@ -1952,7 +1963,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   const drawer = $('#drawer');
   function insight() {
     if (repMonth == null) repMonth = latestMonth(ACCOUNTS);
-    const o = ['TikTok', 'Facebook', 'YouTube'].flatMap(p => autoObs(p).slice(0, 1));
+    const o = platforms().flatMap(p => autoObs(p).slice(0, 1));
     return o.length ? 'เช่น ' + o.map(x => `"${x}"`).join(' และ ') : 'ทุกตัวชี้วัดตามแผน';
   }
   $('#btn-slides').addEventListener('click', () => { $('#dr-title').textContent = `สร้างสไลด์สรุป ${MONTHS[repMonth]} 2026`; $('#dr-insight').textContent = insight(); $('#dr-msg').innerHTML = ''; drawer.hidden = false; $('#dr-close').focus(); });
@@ -2007,8 +2018,24 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   const TERR_TH = { TH: 'ไทย', LA: 'ลาว', KR: 'เกาหลีใต้', MM: 'เมียนมา', KH: 'กัมพูชา', VN: 'เวียดนาม', MY: 'มาเลเซีย', SG: 'สิงคโปร์', JP: 'ญี่ปุ่น', CN: 'จีน', US: 'สหรัฐฯ', TW: 'ไต้หวัน', ID: 'อินโดนีเซีย', PH: 'ฟิลิปปินส์', Others: 'อื่นๆ' };
   const thDate = s => { const [y, m, d] = String(s).slice(0, 10).split('-'); return y && m ? `${+d} ${MONTHS[+m - 1]} ${y}` : s; };
 
+  const igAccount = (id, brand) => ({ id, brand, platform: 'Instagram', name: 'Instagram ' + brand, metrics: [
+    { key: 'views', label: 'Views', kind: 'sum', pending: 'ยังไม่มีเป้า', data: [] },
+    { key: 'nf', label: 'Net Follower', kind: 'sum', pending: 'ยังไม่มีเป้า', data: [] },
+    { key: 'er', label: 'Engagement Rate', kind: 'rate', unit: '%', pending: 'ยังไม่มีเป้า', data: [] },
+    { key: 'inter', label: 'Interactions', kind: 'sum', data: [] },
+    { key: 'likes', label: 'Like', kind: 'sum', data: [] },
+    { key: 'comments', label: 'Comment', kind: 'sum', data: [] },
+    { key: 'shares', label: 'Share', kind: 'sum', data: [] },
+    { key: 'saves', label: 'Save', kind: 'sum', data: [] },
+    { key: 'output', label: 'จำนวนคลิป', kind: 'sum', data: [] },
+  ], notes: [] });
   function applyLive(j) {
     LIVE.on = true; LIVE.at = j.generatedAt;
+    [['ig-eloop', 'Eloop'], ['ig-moov', 'Moov']].forEach(([id, brand]) => {
+      const has = j.accounts && j.accounts[id] && Object.keys(j.accounts[id].monthly || {}).length;
+      if (has && !accById(id)) ACCOUNTS.splice(ACCOUNTS.findIndex(a => a.platform === 'YouTube'), 0, igAccount(id, brand));
+    });
+    $('#f-acc').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     if (j.generatedAt) { const d = new Date(String(j.generatedAt).replace(' ', 'T') + ':00+07:00'); if (!isNaN(d)) AS_OF = d; }
     (j.targets || []).forEach(t => { const a = accById(t.account), m = a && a.metrics.find(x => x.key === t.key); if (m) { m.target = t.target; m.base = t.base; } });
     Object.entries(j.accounts || {}).forEach(([id, la]) => {
@@ -2047,11 +2074,11 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     SYS = j.status || {};
     renderConn(); renderSystem();
     const b = $('#data-banner');
-    const PL = ['TikTok', 'Facebook', 'YouTube'];
+    const PL = platforms();
     const liveP = PL.filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length)), sampleP = PL.filter(p => !liveP.includes(p));
     b.className = 'ox-alert proto-alert ' + (liveP.length ? 'ox-alert--info' : 'ox-alert--warning');
     b.innerHTML = liveP.length
-      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.join(' และ ')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${sampleP.length ? sampleP.join(' และ ') + ' ยังเป็นตัวอย่างจากชีตเดิม · ' : ''}เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
+      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.join(' และ ')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${sampleP.length ? sampleP.join(' และ ') + ' ยังเป็นตัวอย่างจากชีตเดิม · ' : ''}${liveP.includes('Facebook') ? 'Facebook: Watch time และ Interactions คำนวณจาก API อาจต่างจาก Business Suite · ' : ''}เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
       : `<span><b>ระบบเชื่อมแล้ว รอข้อมูลเข้า</b>ยังไม่มีไฟล์ TikTok และยังไม่ได้เชื่อม YouTube หรือ Facebook ตัวเลขทั้งหมดในหน้านี้ยังเป็นตัวอย่างจากชีต Data OKR 2026</span>`;
     $('#upload-live').hidden = false;
   }
@@ -2162,6 +2189,23 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       }
       return `<div class="conn"><span class="name">${accName(accById(id))}</span>${st2}<span class="det">${det}</span>${act ? `<span class="conn-act">${act}</span>` : ''}</div>`;
     };
+    const igRow = id => {
+      const x = st[id] || {}, brand = id === 'ig-eloop' ? 'Eloop' : 'Moov', fb = st['fb-' + id.slice(3)] || {};
+      const name = `${pIco('Instagram')}Instagram ${brand}`;
+      let st2, det, act = '';
+      if (!fb.connected) { st2 = '<span class="st none">รอ Facebook</span>'; det = `เชื่อม Facebook ${brand} ก่อน Instagram ใช้สิทธิ์ของเพจ Facebook ที่ผูกกันไว้`; }
+      else if (!x.connected) {
+        st2 = '<span class="st warn">ยังไม่ได้เชื่อม</span>';
+        det = 'กด เชื่อม Instagram ครั้งเดียว ล็อกอินบัญชี Facebook เดิม แล้วอนุญาตสิทธิ์ Instagram ระบบหาบัญชีที่ผูกกับเพจให้เอง (แอป Meta ต้องเปิดสิทธิ์ instagram_basic และ instagram_manage_insights)';
+        act = `<button class="btn primary" type="button" data-sys="fbconnect" data-ig="1">เชื่อม Instagram</button><button class="btn" type="button" data-sys="igdetect">ค้นหาบัญชีอีกครั้ง</button>`;
+      } else {
+        st2 = x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>';
+        det = `@${esc(x.username || '')}${x.followers ? ` · ผู้ติดตาม ${fmt(x.followers)}` : ''} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}`;
+        act = (x.error ? `<button class="btn primary" type="button" data-sys="fbconnect" data-ig="1">เชื่อม Instagram ใหม่</button>` : '')
+          + `<button class="btn" type="button" data-sys="syncig" data-sacc="${id}">ดึงข้อมูลตอนนี้</button><button class="btn" type="button" data-sys="igdisconnect" data-sacc="${id}">ยกเลิกการเชื่อม</button>`;
+      }
+      return `<div class="conn"><span class="name">${name}</span>${st2}<span class="det">${det}</span>${act ? `<span class="conn-act">${act}</span>` : ''}</div>`;
+    };
     const ytRow = id => {
       const x = st[id] || {};
       const act = !x.connected
@@ -2175,6 +2219,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
       + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accName(accById(id))}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
       + ['fb-eloop', 'fb-moov'].map(fbRow).join('')
+      + ['ig-eloop', 'ig-moov'].map(igRow).join('')
       + '<div id="yt-msg"></div>';
   }
 
@@ -2266,16 +2311,17 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const where = acc ? '#yt-msg' : '#sys-msg';
     try {
       if (act === 'forget') { passStore.clear(); renderSystem(); return; }
+      if (act === 'igdisconnect' && !confirm(`ยกเลิกการเชื่อม Instagram ${acc === 'ig-eloop' ? 'Eloop' : 'Moov'}? ข้อมูลที่ดึงมาแล้วยังอยู่`)) return;
       if (act === 'fbdisconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่`)) return;
       if (act === 'disconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่ และเชื่อมช่องใหม่ได้`)) return;
-      b.disabled = true; b.textContent = act === 'syncyt' || act === 'syncfb' ? 'กำลังดึงข้อมูล… (ไม่เกิน 2 นาที)' : 'กำลังบันทึก…';
+      b.disabled = true; b.textContent = act === 'syncyt' || act === 'syncfb' || act === 'syncig' ? 'กำลังดึงข้อมูล… (ไม่เกิน 2 นาที)' : 'กำลังบันทึก…';
       if (act === 'setpass') { await setPass(); renderSystem(); sysMsg('#sys-msg', 'ตั้งรหัสทีมแล้ว'); return; }
-      if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect', business: !!b.dataset.biz }); location.href = r.url; return; }
+      if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect', business: !!b.dataset.biz, ig: !!b.dataset.ig }); location.href = r.url; return; }
       const body = { api: act, acc };
       if (act === 'fbpage') { body.pageId = $('#fbsel-' + acc).value; if (!body.pageId) { b.disabled = false; b.textContent = label; sysMsg(where, 'ยังไม่ได้เลือกเพจ เลือกจากรายการก่อน หรือกดเชื่อมด้วย Facebook แทน', true); return; } }
       const j = await admin(body);
       await refreshLive();
-      sysMsg(where, /disconnect/.test(act) ? `ยกเลิกการเชื่อม ${accById(acc).name} แล้ว` : act === 'fbpage' ? `เลือกเพจให้ ${accById(acc).name} แล้ว ระบบกำลังดึงข้อมูลย้อนหลัง ใช้เวลาไม่กี่นาที` : esc((j.report || []).join(' · ') || 'เสร็จแล้ว'));
+      sysMsg(where, /disconnect/.test(act) ? `ยกเลิกการเชื่อม ${accById(acc) ? accById(acc).name : (acc === 'ig-eloop' ? 'Instagram Eloop' : 'Instagram Moov')} แล้ว` : act === 'fbpage' ? `เลือกเพจให้ ${accById(acc).name} แล้ว ระบบกำลังดึงข้อมูลย้อนหลัง ใช้เวลาไม่กี่นาที` : esc((j.report || []).join(' · ') || 'เสร็จแล้ว'));
     } catch (err) {
       b.disabled = false; b.textContent = label;
       if (!err.cancel) sysMsg(where, esc(err.message), true);
