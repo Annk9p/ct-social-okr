@@ -158,7 +158,7 @@ function webApi_(b) {
     case 'import': return { ok: true, report: withLock_(importTikTok) };
     case 'target': return saveTarget_(b);
     case 'fbapp': return saveFbApp_(b);
-    case 'fbconnect': return fbStartConnect_();
+    case 'fbconnect': return fbStartConnect_(b);
     case 'fbtoken': return fbAdoptUserToken_(String(b.token || '').trim());
     case 'fbpage': return fbPickPage_(b);
     case 'fbdisconnect': return fbDisconnect_(b.acc);
@@ -591,15 +591,16 @@ function saveFbApp_(b) {
 }
 
 /** Facebook login URL (the dashboard redirects the browser there). */
-function fbStartConnect_() {
+function fbStartConnect_(b) {
   var id = PROPS.getProperty('FB_APP_ID'), redirect = PROPS.getProperty('WEBAPP_URL');
   if (!id || !PROPS.getProperty('FB_APP_SECRET')) throw new Error('ยังไม่ได้ใส่กุญแจ Facebook (App ID และ App secret)');
   if (!redirect) throw new Error('ระบบยังไม่รู้ลิงก์เว็บแอป กด บันทึกกุญแจ Facebook อีกครั้ง');
   var state = Utilities.getUuid();
   CacheService.getScriptCache().put('oauth_' + state, 'fb', 3600);
-  var q = { client_id: id, redirect_uri: redirect, state: state, response_type: 'code' };
+  // auth_type=rerequest: Facebook shows the Page picker again instead of reusing the first choice
+  var q = { client_id: id, redirect_uri: redirect, state: state, response_type: 'code', auth_type: 'rerequest' };
   var cfg = PROPS.getProperty('FB_CONFIG_ID');
-  if (cfg) q.config_id = cfg; else q.scope = FB_SCOPES;
+  if (cfg) q.config_id = cfg; else q.scope = FB_SCOPES + (b && b.business ? ',business_management' : ''); // Pages reached through a Business portfolio
   return { ok: true, url: 'https://www.facebook.com/' + FB_V + '/dialog/oauth?' + qs_(q) };
 }
 
@@ -637,6 +638,17 @@ function fbAdoptUserToken_(token) {
     if (!(r.paging && r.paging.next)) break;
     r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
   }
+  // Pages the person reaches through a Business portfolio (needs business_management; ignored when not granted)
+  try {
+    var biz = fbGraph_('me/businesses', { fields: 'id,name,owned_pages.limit(100){id,name,access_token},client_pages.limit(100){id,name,access_token}', limit: 50 }, ut);
+    (biz.data || []).forEach(function (bz) {
+      ['owned_pages', 'client_pages'].forEach(function (k) {
+        ((bz[k] && bz[k].data) || []).forEach(function (pg) {
+          if (pg.access_token && !pages.some(function (x) { return x.id === pg.id; })) pages.push(pg);
+        });
+      });
+    });
+  } catch (e) { /* no business_management permission */ }
   if (!pages.length) throw new Error('บัญชี Facebook นี้ไม่เห็นเพจไหนเลย ตรวจว่าเป็นแอดมินเพจ และตอนกดอนุญาตได้ติ๊กเลือกเพจ Eloop กับ Moov');
   PROPS.setProperty('FB_UT', ut);
   var list = JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]'), seen = {};

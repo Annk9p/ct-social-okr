@@ -2148,7 +2148,10 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       else if (!x.connected) {
         st2 = '<span class="st warn">ยังไม่ได้เชื่อม</span>';
         det = pages.length ? 'เลือกเพจของบัญชีนี้ หรือกดเชื่อมใหม่ด้วยบัญชี Facebook ที่เป็นแอดมินเพจ' : 'กดปุ่มแล้วล็อกอิน Facebook ที่เป็นแอดมินเพจ Eloop และ Moov ครั้งเดียวได้ทั้งสองเพจ ระบบได้สิทธิ์อ่านสถิติอย่างเดียว';
-        act = pick + `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อมด้วย Facebook</button>`;
+        const guess = id === 'fb-moov' ? /moov/i : /eloop|orsen/i, seen = pages.some(p => guess.test(p.name));
+        if (pages.length && !seen) det = `ระบบยังไม่เห็นเพจ ${accById(id).brand} ในบัญชี Facebook ที่เชื่อมไว้ · กดเชื่อมใหม่แล้วติ๊กเพจ ${accById(id).brand} ตอนอนุญาต ถ้าเพจอยู่ใน Business portfolio ให้กดปุ่ม "เพจใน Business"`;
+        act = pick + `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อมด้วย Facebook</button>`
+          + (pages.length ? `<button class="btn" type="button" data-sys="fbconnect" data-biz="1">เชื่อมเพจใน Business</button>` : '');
       } else {
         st2 = x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>';
         det = `เพจ ${esc(x.page || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}`;
@@ -2266,7 +2269,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       if (act === 'disconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่ และเชื่อมช่องใหม่ได้`)) return;
       b.disabled = true; b.textContent = act === 'syncyt' || act === 'syncfb' ? 'กำลังดึงข้อมูล… (ไม่เกิน 2 นาที)' : 'กำลังบันทึก…';
       if (act === 'setpass') { await setPass(); renderSystem(); sysMsg('#sys-msg', 'ตั้งรหัสทีมแล้ว'); return; }
-      if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect' }); location.href = r.url; return; }
+      if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect', business: !!b.dataset.biz }); location.href = r.url; return; }
       const body = { api: act, acc };
       if (act === 'fbpage') body.pageId = $('#fbsel-' + acc).value;
       const j = await admin(body);

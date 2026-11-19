@@ -1,0 +1,20 @@
+const { makeEnv } = require('./mock.js');
+const { ctx, props } = makeEnv(); const calls = [];
+const ok = o => ({ getResponseCode: () => 200, getContentText: () => JSON.stringify(o) });
+const base = url => { const u = new URL(url), p = Object.fromEntries(u.searchParams); calls.push(u.pathname); if (u.pathname.endsWith('/oauth/access_token')) return ok({ access_token: p.code ? 'short' : 'long-' + p.fb_exchange_token }); return ok({ data: [] }); };
+ctx.UrlFetchApp.fetch = url => {
+  const u = new URL(url);
+  if (u.pathname.endsWith('/me/accounts')) return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ data: [{ id: '111', name: 'Orsen & Eloop Thailand', access_token: 'pt1' }] }) };
+  if (u.pathname.endsWith('/me/businesses')) return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ data: [{ id: 'b1', name: 'CT', owned_pages: { data: [{ id: '222', name: 'Moov Thailand', access_token: 'pt2' }, { id: '111', name: 'Orsen & Eloop Thailand', access_token: 'pt1b' }] } }] }) };
+  return base(url);
+};
+let pass = 0, fail = 0; const t = (n, c, x) => { if (c) pass++; else { fail++; console.log('FAIL', n, JSON.stringify(x)); } };
+const post = b => JSON.parse(ctx.doPost({ postData: { contents: JSON.stringify(b) } }).text);
+ctx.setup(); post({ api: 'setpass', newPass: 'secret12' }); const P = 'secret12';
+post({ api: 'fbapp', pass: P, appId: '1234567890', secret: 's', redirect: 'https://script.google.com/macros/s/X/exec' });
+const u1 = new URL(post({ api: 'fbconnect', pass: P }).url), u2 = new URL(post({ api: 'fbconnect', pass: P, business: true }).url);
+t('rerequest always', u1.searchParams.get('auth_type') === 'rerequest' && u2.searchParams.get('auth_type') === 'rerequest');
+t('business scope only on business button', !/business_management/.test(u1.searchParams.get('scope')) && /business_management/.test(u2.searchParams.get('scope')), [u1.searchParams.get('scope'), u2.searchParams.get('scope')]);
+const r = post({ api: 'fbtoken', pass: P, token: 'EAA' });
+t('moov found through business and auto-picked, no duplicate eloop', r.ok && props['FB_PAGE_fb-moov'] === '222' && props['FB_PAGE_fb-eloop'] === '111' && r.pages === 2, r);
+console.log(`${pass} passed, ${fail} failed`);
