@@ -2142,7 +2142,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const st = SYS || {}, ready = !!st.setup;
     const fbRow = id => {
       const x = st[id] || {}, s = st.setup || {}, pages = s.fbPages || [];
-      const pick = pages.length ? `<select id="fbsel-${id}" aria-label="เลือกเพจสำหรับ ${accById(id).name}">${pages.map(p => `<option value="${esc(p.id)}"${p.id === x.pageId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select><button class="btn" type="button" data-sys="fbpage" data-sacc="${id}">${x.connected ? 'เปลี่ยนเป็นเพจนี้' : 'ใช้เพจนี้'}</button>` : '';
+      const pick = pages.length ? `<select id="fbsel-${id}" aria-label="เลือกเพจสำหรับ ${accById(id).name}"><option value="">— ไม่เลือก —</option>${pages.map(p => `<option value="${esc(p.id)}"${p.id === x.pageId ? ' selected' : ''}>${esc(p.name)}</option>`).join('')}</select><button class="btn" type="button" data-sys="fbpage" data-sacc="${id}">${x.connected ? 'เปลี่ยนเป็นเพจนี้' : 'ใช้เพจนี้'}</button>` : '';
       let st2, det, act = '';
       if (!ready || !s.fb) { st2 = '<span class="st none">ยังไม่ได้ตั้งค่า</span>'; det = 'ใส่กุญแจ Facebook ในกล่อง ตั้งค่าระบบ ข้อ 4 ก่อน · ตัวเลข Facebook ในแดชบอร์ดยังเป็นตัวอย่าง'; }
       else if (!x.connected) {
@@ -2150,8 +2150,9 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
         det = pages.length ? 'เลือกเพจของบัญชีนี้ หรือกดเชื่อมใหม่ด้วยบัญชี Facebook ที่เป็นแอดมินเพจ' : 'กดปุ่มแล้วล็อกอิน Facebook ที่เป็นแอดมินเพจ Eloop และ Moov ครั้งเดียวได้ทั้งสองเพจ ระบบได้สิทธิ์อ่านสถิติอย่างเดียว';
         const guess = id === 'fb-moov' ? /moov/i : /eloop|orsen/i, seen = pages.some(p => guess.test(p.name));
         if (pages.length && !seen) det = `ระบบยังไม่เห็นเพจ ${accById(id).brand} ในบัญชี Facebook ที่เชื่อมไว้ · กดเชื่อมใหม่แล้วติ๊กเพจ ${accById(id).brand} ตอนอนุญาต ถ้าเพจอยู่ใน Business portfolio ให้กดปุ่ม "เพจใน Business"`;
-        act = pick + `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อมด้วย Facebook</button>`
-          + (pages.length ? `<button class="btn" type="button" data-sys="fbconnect" data-biz="1">เชื่อมเพจใน Business</button>` : '');
+        act = (seen ? pick : '') + `<button class="btn primary" type="button" data-sys="fbconnect">เชื่อมด้วย Facebook</button>`
+          + (pages.length ? `<button class="btn" type="button" data-sys="fbconnect" data-biz="1">เชื่อมเพจใน Business</button>` : '')
+          + (pages.length && !seen ? `<details style="flex-basis:100%"><summary>เลือกจากเพจที่ระบบเห็นแล้ว (ไม่ต้องเลือกก็ได้)</summary><div class="conn-act" style="margin-top:6px">${pick}</div></details>` : '');
       } else {
         st2 = x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>';
         det = `เพจ ${esc(x.page || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}`;
@@ -2271,7 +2272,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       if (act === 'setpass') { await setPass(); renderSystem(); sysMsg('#sys-msg', 'ตั้งรหัสทีมแล้ว'); return; }
       if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect', business: !!b.dataset.biz }); location.href = r.url; return; }
       const body = { api: act, acc };
-      if (act === 'fbpage') body.pageId = $('#fbsel-' + acc).value;
+      if (act === 'fbpage') { body.pageId = $('#fbsel-' + acc).value; if (!body.pageId) { b.disabled = false; b.textContent = label; sysMsg(where, 'ยังไม่ได้เลือกเพจ เลือกจากรายการก่อน หรือกดเชื่อมด้วย Facebook แทน', true); return; } }
       const j = await admin(body);
       await refreshLive();
       sysMsg(where, /disconnect/.test(act) ? `ยกเลิกการเชื่อม ${accById(acc).name} แล้ว` : act === 'fbpage' ? `เลือกเพจให้ ${accById(acc).name} แล้ว ระบบกำลังดึงข้อมูลย้อนหลัง ใช้เวลาไม่กี่นาที` : esc((j.report || []).join(' · ') || 'เสร็จแล้ว'));
