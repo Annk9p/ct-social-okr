@@ -1297,7 +1297,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     YouTube: { c: 'yt', svg: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="4.5" width="22" height="15" rx="4.5" fill="#FF0000"/><path fill="#fff" d="m10 8.6 5.6 3.4-5.6 3.4z"/></svg>' },
   };
   // Platforms in display order; Instagram shows up once the system has its data
-  const platforms = () => ['TikTok', 'Facebook', 'Instagram', 'YouTube'].filter(p => ACCOUNTS.some(a => a.platform === p));
+  const platforms = () => ['TikTok', 'Facebook', 'YouTube', 'Instagram'].filter(p => ACCOUNTS.some(a => a.platform === p));
   const pIco = p => PLAT[p] ? `<span class="pico">${PLAT[p].svg}</span>` : '';
   const pPill = (p, label) => `<span class="plat p-${PLAT[p].c}">${PLAT[p].svg}${label || p}</span>`;
   const accName = a => `${pIco(a.platform)}${a.name}`;
@@ -2036,7 +2036,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     LIVE.on = true; LIVE.at = j.generatedAt;
     [['ig-eloop', 'Eloop'], ['ig-moov', 'Moov']].forEach(([id, brand]) => {
       const has = j.accounts && j.accounts[id] && Object.keys(j.accounts[id].monthly || {}).length;
-      if (has && !accById(id)) ACCOUNTS.splice(ACCOUNTS.findIndex(a => a.platform === 'YouTube'), 0, igAccount(id, brand));
+      if (has && !accById(id)) ACCOUNTS.push(igAccount(id, brand)); // after YouTube: TikTok, Facebook, YouTube, Instagram
     });
     $('#f-acc').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     if (j.generatedAt) { const d = new Date(String(j.generatedAt).replace(' ', 'T') + ':00+07:00'); if (!isNaN(d)) AS_OF = d; }
@@ -2219,9 +2219,10 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
         + `<span class="det">${x.connected ? `ช่อง ${esc(x.channel || '')} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || 'กำลังดึงข้อมูลย้อนหลัง')}${x.error ? ' · ' + esc(x.error) : ''}` : 'กดปุ่มแล้วล็อกอินด้วย Gmail ที่เป็นเจ้าของช่อง ครั้งเดียว ระบบได้สิทธิ์อ่านสถิติอย่างเดียว'}</span>`
         + `<span class="conn-act">${act}</span></div>`;
     };
-    $('#conn-list').innerHTML = ytRow('yt-eloop') + ytRow('yt-moov')
+    $('#conn-list').innerHTML = ''
       + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accName(accById(id))}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
       + ['fb-eloop', 'fb-moov'].map(fbRow).join('')
+      + ytRow('yt-eloop') + ytRow('yt-moov')
       + ['ig-eloop', 'ig-moov'].map(igRow).join('')
       + '<div id="yt-msg"></div>';
   }
