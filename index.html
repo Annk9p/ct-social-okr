@@ -767,7 +767,7 @@ section[data-v] > * { margin-top: 0; margin-bottom: 0; }
 .ic.crit { background: var(--omnix-danger-bg); color: var(--omnix-danger-fg); }
 
 /* ---- grids: 3 columns; the first block of a split takes 2 ---- */
-.cards { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); }
+.cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--gap); } /* one row per platform: Eloop | Moov */
 .grid2 { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--gap); margin: 0; }
 .grid2 > :first-child { grid-column: span 2; }
 .rep-grid, .rep-grid3, .rep-stack, .vs { gap: var(--gap); }
@@ -1302,7 +1302,10 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   const pPill = (p, label) => `<span class="plat p-${PLAT[p].c}">${PLAT[p].svg}${label || p}</span>`;
   const accName = a => `${pIco(a.platform)}${a.name}`;
   function renderOverview() {
-    const accs = ACCOUNTS.filter(a => brandFilter === 'all' || a.brand === brandFilter);
+    // overview order: one row per platform (TikTok, Facebook, YouTube, Instagram), Eloop then Moov
+    const ORDER = ['TikTok', 'Facebook', 'YouTube', 'Instagram'];
+    const accs = ACCOUNTS.filter(a => brandFilter === 'all' || a.brand === brandFilter)
+      .sort((p, q) => ORDER.indexOf(p.platform) - ORDER.indexOf(q.platform) || (p.brand === 'Eloop' ? 0 : 1) - (q.brand === 'Eloop' ? 0 : 1));
     const counts = { good: 0, warn: 0, crit: 0 };
     accs.forEach(a => a.metrics.forEach(m => { const e = evalMetric(m); if (counts[e.status] != null) counts[e.status]++; }));
     const total = counts.good + counts.warn + counts.crit;
