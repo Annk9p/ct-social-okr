@@ -878,6 +878,12 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 .live-line b { color: var(--omnix-fg); }
 .live-line .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--omnix-success-fg); box-shadow: 0 0 0 3px var(--omnix-success-bg); margin-right: 2px; }
 .live-line .at { margin-left: auto; }
+
+/* report notes: drafts from the system + save status */
+.note-ta.draft { background: color-mix(in srgb, var(--omnix-accent-soft) 55%, var(--omnix-surface)); }
+.note-st { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: var(--omnix-fg-muted); }
+.note-tag.is-draft { color: var(--omnix-accent); font-weight: 600; }
+.note-st .linkbtn { margin-left: auto; }
 </style>
 </head>
 <body>
@@ -1580,10 +1586,44 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     'yt-yt-moov-next': '- ใส่ลูกเล่นกระตุ้นท้ายคลิป เช่น "มีใครเจอปัญหานี้บ้าง เมนต์บอกหน่อย"\n- ใส่แฮชแท็กคำค้น เช่น เคสไอแพด, เคส iPhone 17 Pro Max, ios27',
   } };
   const noteVal = k => (NOTES[repMonth] && NOTES[repMonth][k]) || '';
-  const ta = (k, ph, rows = 3) => `<textarea class="note-ta" rows="${Math.max(rows, noteVal(k).split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 55)), 0))}" data-note="${k}" placeholder="${esc(ph)}" aria-label="${esc(ph)}">${esc(noteVal(k))}</textarea>`;
+  const DRAFTS = {}; // key -> latest draft text written by the system
+  const taRows = (v, rows) => Math.max(rows, v.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.length / 55)), 0));
+  const ta = (k, ph, rows = 3, draft) => {
+    const saved = noteVal(k), useDraft = !saved && !!draft, v = useDraft ? draft : saved;
+    if (draft) DRAFTS[k] = draft;
+    const st = draft ? `<div class="note-st"><span class="note-tag${useDraft ? ' is-draft' : ''}">${useDraft ? 'ร่างจากระบบ · แก้ไขได้' : 'ข้อความของทีม'}</span><button class="linkbtn" type="button" data-redraft="${k}">สร้างร่างใหม่จากตัวเลข</button></div>` : '';
+    return `<textarea class="note-ta${useDraft ? ' draft' : ''}" rows="${taRows(v, rows)}" data-note="${k}" placeholder="${esc(ph)}" aria-label="${esc(ph)}">${esc(v)}</textarea>${st}`;
+  };
+  const noteMonth = mi => `2026-${String(mi + 1).padStart(2, '0')}`;
+  const noteTimers = {};
+  const noteTag = el => { const n = el.nextElementSibling; return n && n.classList.contains('note-st') ? n.querySelector('.note-tag') : null; };
+  function queueNoteSave(el) {
+    const k = el.dataset.note, mi = repMonth, text = el.value;
+    (NOTES[mi] = NOTES[mi] || {})[k] = text;
+    el.classList.remove('draft');
+    const tag = noteTag(el);
+    if (tag) { tag.classList.remove('is-draft'); tag.textContent = LIVE.on ? 'กำลังบันทึก…' : 'แก้ไขแล้ว (หน้าตัวอย่าง ไม่บันทึก)'; }
+    if (!LIVE.on) return;
+    clearTimeout(noteTimers[k]);
+    noteTimers[k] = setTimeout(async () => {
+      try {
+        const r = await admin({ api: 'note', month: noteMonth(mi), key: k, text });
+        if (tag) tag.textContent = `บันทึกแล้ว ${String(r.at || '').slice(11, 16)}`;
+      } catch (err) { if (tag) tag.textContent = err.cancel ? 'ยังไม่ได้บันทึก (ไม่ได้ใส่รหัสทีม)' : 'บันทึกไม่สำเร็จ: ' + err.message; }
+    }, 1200);
+  }
   document.addEventListener('input', e => {
-    const t = e.target.closest('[data-note]');
-    if (t) { (NOTES[repMonth] = NOTES[repMonth] || {})[t.dataset.note] = t.value; }
+    const t = e.target.closest('textarea[data-note], input[data-note]');
+    if (t) queueNoteSave(t);
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-redraft]');
+    if (!b) return;
+    const k = b.dataset.redraft, el = document.querySelector(`[data-note="${k}"]`);
+    if (!el || !DRAFTS[k]) return;
+    if (el.value.trim() && el.value !== DRAFTS[k] && !confirm('แทนที่ข้อความเดิมด้วยร่างใหม่จากตัวเลขเดือนนี้?')) return;
+    el.value = DRAFTS[k]; el.rows = taRows(el.value, 3);
+    queueNoteSave(el);
   });
 
   let repMonth = null, repBrand = 'all';
@@ -1663,6 +1703,58 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     off.sort((p, q) => p[0] - q[0]); big.sort((p, q) => p[0] - q[0]);
     return [...big.slice(0, 2), ...off.slice(0, 3)].map(x => x[1]);
   }
+  // Drafts for Monthly Update / Next Step, written from this month's numbers (the team edits them)
+  const metricOf = (a, k) => a.metrics.find(m => m.key === k);
+  const valAt = (a, k, mi) => { const m = metricOf(a, k); return m ? m.data[mi] : null; };
+  const momTxt = (cur, prev) => { const mo = momOf(cur, prev); return mo == null ? '' : ` (${mo >= 0 ? '+' : ''}${mo.toFixed(0)}% จาก ${MONTHS[repMonth - 1]})`; };
+  function typeStats(clips) {
+    const by = {};
+    clips.forEach(c => { const t = c.type || 'อื่นๆ', x = by[t] = by[t] || { n: 0, v: 0, er: 0 }; x.n++; x.v += c.views || 0; x.er += c.er || 0; });
+    return Object.entries(by).filter(([, x]) => x.n >= 2).map(([t, x]) => ({ t, n: x.n, avg: x.v / x.n, er: x.er / x.n }));
+  }
+  function draftUpdate(p) {
+    const mi = repMonth, lines = [];
+    ACCOUNTS.filter(a => a.platform === p && brandOk(a)).forEach(a => {
+      const v = valAt(a, 'views', mi);
+      if (v == null && !clipsFor(a.id, mi).length) return;
+      const parts = [];
+      if (v != null) parts.push(`วิว ${fmtC(v)}${momTxt(v, valAt(a, 'views', mi - 1))}`);
+      const out = valAt(a, 'output', mi);
+      if (out != null) parts.push(`ลง ${fmt(out)} คลิป${momTxt(out, valAt(a, 'output', mi - 1))}`);
+      const nf = valAt(a, 'nf', mi);
+      if (nf != null) parts.push(`${p === 'YouTube' ? 'ผู้ติดตามใหม่' : 'ผู้ติดตามสุทธิ'} ${nf >= 0 ? '+' : ''}${fmt(nf)}`);
+      const er = valAt(a, 'er', mi);
+      if (er != null) parts.push(`ER ${pct(er, 2)}`);
+      const awt = valAt(a, 'awt', mi);
+      if (awt != null) parts.push(`ดูเฉลี่ย ${pct(awt, 1)} ของคลิป`);
+      lines.push(`- ${a.name}: ${parts.join(' · ')}`);
+      const clips = clipsFor(a.id, mi).sort((x, y) => y.views - x.views);
+      if (clips[0]) lines.push(`  คลิปเด่น "${shortT(clips[0].title, 60)}" ${fmtC(clips[0].views)} วิว (${clips[0].type || 'ไม่ระบุประเภท'})`);
+      const ts = typeStats(clips).sort((x, y) => y.avg - x.avg);
+      if (ts.length > 1) lines.push(`  ประเภทที่ได้วิวเฉลี่ยสูงสุด: ${ts[0].t} ${fmtC(ts[0].avg)}/คลิป (${ts[0].n} คลิป) · ต่ำสุด: ${ts[ts.length - 1].t} ${fmtC(ts[ts.length - 1].avg)}/คลิป`);
+    });
+    return lines.join('\n');
+  }
+  function draftNext(p) {
+    const mi = repMonth, lines = [];
+    ACCOUNTS.filter(a => a.platform === p && brandOk(a)).forEach(a => {
+      a.metrics.filter(m => m.target).forEach(m => {
+        const e = evalMetric(Object.assign({}, m, { data: m.data.slice(0, mi + 1) }));
+        if (e.li < 0 || e.status === 'good') return;
+        if (m.kind === 'sum') {
+          if (e.needPerMonth > 0) lines.push(`- ${a.name} ${m.label}: ต้องทำเฉลี่ย ${fmtC(e.needPerMonth)}/เดือน ในเดือนที่เหลือ (เดือนนี้ได้ ${fmtC(m.data[mi])}) เพื่อให้ถึงเป้า ${fmtC(m.target)}`);
+        } else {
+          const best = typeStats(clipsFor(a.id, mi)).sort((x, y) => y.er - x.er)[0];
+          lines.push(`- ${a.name} ${m.label} เฉลี่ย ${pct(e.avg, 2)} ต่ำกว่าเป้า ${pct(m.target, 2)}${best ? ` · เพิ่มคอนเทนต์ประเภท "${best.t}" ที่ ER เฉลี่ยสูงสุดเดือนนี้ (${pct(best.er, 2)})` : ' · เพิ่มคลิปที่ชวนคอมเมนต์และแชร์'}`);
+        }
+      });
+      const ts = typeStats(clipsFor(a.id, mi)).sort((x, y) => y.avg - x.avg);
+      if (ts.length > 1) lines.push(`- ${a.name}: ต่อยอดคอนเทนต์ประเภท "${ts[0].t}" (วิวเฉลี่ย ${fmtC(ts[0].avg)}/คลิป) และทบทวนประเภท "${ts[ts.length - 1].t}" ที่วิวเฉลี่ยต่ำสุด`);
+      const out = valAt(a, 'output', mi), prev = valAt(a, 'output', mi - 1);
+      if (out != null && prev && out < prev * 0.75) lines.push(`- ${a.name}: จำนวนคลิปลดลงจาก ${fmt(prev)} เหลือ ${fmt(out)} คลิป วางแผนให้กลับมาใกล้ระดับเดิม`);
+    });
+    return lines.length ? lines.join('\n') : '- ทุกตัวชี้วัดตามแผน รักษาจังหวะการลงคลิปและประเภทคอนเทนต์ที่ได้ผลต่อ';
+  }
   function renderOkr() {
     const lastDay = MONTH_DAYS[repMonth];
     $('#okr-period').textContent = `สะสม 1 ม.ค. – ${partial() ? AS_OF.getDate() - 1 : lastDay} ${MONTHS[repMonth]} 2026`;
@@ -1675,8 +1767,8 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
         <div>${rows || '<p class="empty-note">ไม่มีเป้าหมายของแพลตฟอร์มนี้</p>'}</div>
         <div>
           <div class="ins"><h3>ข้อสังเกตจากระบบ</h3>${obs.length || extra ? `<ul class="facts">${obs.map(o => `<li>${esc(o)}</li>`).join('')}${extra}</ul>` : '<p class="empty-note">ทุกตัวชี้วัดตามแผน</p>'}</div>
-          <div class="ins"><h3>Monthly Update</h3>${ta(`okr-${p}-update`, 'เดือนนี้ทำอะไรไปบ้าง เช่น เกาะกระแสอะไร ลงคอนเทนต์แนวไหน')}</div>
-          <div class="ins"><h3>Next Step</h3>${ta(`okr-${p}-next`, 'เดือนหน้าจะทำอะไรต่อ', 2)}</div>
+          <div class="ins"><h3>Monthly Update</h3>${ta(`okr-${p}-update`, 'เดือนนี้ทำอะไรไปบ้าง เช่น เกาะกระแสอะไร ลงคอนเทนต์แนวไหน', 3, draftUpdate(p))}</div>
+          <div class="ins"><h3>Next Step</h3>${ta(`okr-${p}-next`, 'เดือนหน้าจะทำอะไรต่อ', 2, draftNext(p))}</div>
         </div></div></div>`;
     }).join('');
   }
@@ -2053,6 +2145,11 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   ], notes: [] });
   function applyLive(j) {
     LIVE.on = true; LIVE.at = j.generatedAt;
+    Object.entries(j.notes || {}).forEach(([ym, obj]) => {
+      if (String(ym).slice(0, 4) !== '2026') return;
+      const mi = +String(ym).slice(5, 7) - 1;
+      NOTES[mi] = Object.assign(NOTES[mi] || {}, obj);
+    });
     [['ig-eloop', 'Eloop'], ['ig-moov', 'Moov']].forEach(([id, brand]) => {
       const has = j.accounts && j.accounts[id] && Object.keys(j.accounts[id].monthly || {}).length;
       if (has && !accById(id)) ACCOUNTS.push(igAccount(id, brand)); // after YouTube: TikTok, Facebook, YouTube, Instagram

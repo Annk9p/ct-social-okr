@@ -162,6 +162,7 @@ function webApi_(b) {
     case 'upload': return uploadTikTok_(b);
     case 'import': return { ok: true, report: withLock_(importTikTok) };
     case 'target': return saveTarget_(b);
+    case 'note': return saveNote_(b);
     case 'fbapp': return saveFbApp_(b);
     case 'fbconnect': return fbStartConnect_(b);
     case 'fbtoken': return fbAdoptUserToken_(String(b.token || '').trim());
@@ -249,6 +250,17 @@ function uploadTikTok_(b) {
   // import this file right away (other files in the folders are picked up by the hourly job)
   return { ok: true, report: withLock_(function () { return importTikTok([{ f: file, acc: b.acc, upd: file.getLastUpdated().toISOString() }]); }) };
 }
+
+/** Report notes typed on the dashboard (Monthly Update, Next Step, analysis fields). Empty text removes the note. */
+function saveNote_(b) { return locked_(function () {
+  var month = String(b.month || ''), key = String(b.key || ''), text = String(b.text == null ? '' : b.text).slice(0, 5000);
+  if (!/^\d{4}-\d{2}$/.test(month)) throw new Error('เดือนไม่ถูกต้อง');
+  if (!/^[\w.-]{1,80}$/.test(key)) throw new Error('ชื่อช่องไม่ถูกต้อง');
+  var rows = readTable_('notes').filter(function (r) { return !(String(r.month) === month && r.key === key); });
+  if (text.trim()) rows.push({ month: month, key: key, text: text, updated_at: now_() });
+  writeTable_('notes', rows);
+  return { ok: true, at: now_() };
+}, 60000); }
 
 function saveTarget_(b) { var a = arguments; return locked_(function () { return saveTargetImpl_.apply(null, a); }, 60000); }
 function saveTargetImpl_(b) {
