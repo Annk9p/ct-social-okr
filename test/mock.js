@@ -38,7 +38,7 @@ function makeEnv() {
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: t => ({ text: t, setMimeType() { return this; } }) },
     HtmlService: { createHtmlOutput: h => ({ html: h, setTitle() { return this; } }) },
     ScriptApp: { getProjectTriggers: () => triggers, deleteTrigger(t) { const i = triggers.indexOf(t); if (i >= 0) triggers.splice(i, 1); },
-      newTrigger: h => ({ timeBased: () => ({ after: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }), atHour: () => ({ everyDays: () => ({ inTimezone: () => ({ create() {} }) }) }), everyHours: () => ({ create() {} }) }) }) },
+      newTrigger: h => ({ timeBased: () => ({ after: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }), atHour: () => ({ everyDays: () => ({ inTimezone: () => ({ create() {} }) }) }), everyHours: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }) }) }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@test' }) }, MailApp: { sendEmail: (...a) => mails.push(a) },
     UrlFetchApp: { fetch: () => { throw new Error('no network in test'); } },
   };

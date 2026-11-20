@@ -128,7 +128,12 @@ function saveSettings(url, clientId, secret) {
 
 function doGet(e) {
   var p = (e && e.parameter) || {};
-  if (p.state && (p.code || p.error)) return CacheService.getScriptCache().get('oauth_' + p.state) === 'fb' ? fbHandleCallback_(p) : ytHandleCallback_(p);
+  if (p.state && (p.code || p.error)) {
+    var who = CacheService.getScriptCache().get('oauth_' + p.state) || '';
+    if (who === 'fb') return fbHandleCallback_(p);
+    if (who.indexOf('tt:') === 0) return ttHandleCallback_(p, who.slice(3));
+    return ytHandleCallback_(p);
+  }
   if (p.api === 'connect') return json_(ytStartConnect_(p.acc));
   if (p.api === 'fbprobe') { try { return json_(fbProbe_(p.acc || 'fb-eloop', p.m)); } catch (e) { return json_({ ok: false, error: e.message }); } }
   var data;
@@ -163,6 +168,10 @@ function webApi_(b) {
     case 'fbpage': return fbPickPage_(b);
     case 'fbdisconnect': return fbDisconnect_(b.acc);
     case 'syncfb': return syncFbWeb_(b.acc);
+    case 'ttapp': return saveTtApp_(b);
+    case 'ttconnect': return ttStartConnect_(b.acc);
+    case 'synctt': return syncTtWeb_(b.acc);
+    case 'ttdisconnect': return ttDisconnect_(b.acc);
     case 'igdetect': return { ok: true, report: igDetect_() };
     case 'syncig': return syncIgWeb_(b.acc);
     case 'igdisconnect': return igDisconnect_(b.acc);
@@ -300,9 +309,13 @@ function buildData_() {
   ['yt-eloop', 'yt-moov'].forEach(function (id) {
     status[id] = { connected: !!PROPS.getProperty('YT_RT_' + id), channel: PROPS.getProperty('YT_TITLE_' + id) || null, lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
   });
-  ['tt-eloop', 'tt-moov'].forEach(function (id) { status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null }; });
+  ['tt-eloop', 'tt-moov'].forEach(function (id) {
+    status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null, api: !!PROPS.getProperty('TTAPI_RT_' + id), user: PROPS.getProperty('TTAPI_USER_' + id) || null,
+      live: JSON.parse(PROPS.getProperty('TTAPI_LIVE_' + id) || 'null'), lastSync: PROPS.getProperty('TTAPI_OK_' + id) || null, error: PROPS.getProperty('TTAPI_ERR_' + id) || null };
+  });
   status.setup = { pass: !!PROPS.getProperty('ADMIN_HASH'), oauth: !!(PROPS.getProperty('OAUTH_CLIENT_ID') && PROPS.getProperty('OAUTH_CLIENT_SECRET')), redirect: PROPS.getProperty('WEBAPP_URL') || null,
     fbDebug: Object.keys(PROPS.getProperties ? PROPS.getProperties() : {}).filter(function (k) { return k.indexOf('FB_DEBUG_') === 0; }).map(function (k) { return PROPS.getProperty(k); }),
+    tt: !!(PROPS.getProperty('TTAPI_KEY') && PROPS.getProperty('TTAPI_SECRET')),
     fb: !!(PROPS.getProperty('FB_APP_ID') && PROPS.getProperty('FB_APP_SECRET')), fbConfig: !!PROPS.getProperty('FB_CONFIG_ID'),
     fbPages: PROPS.getProperty('FB_UT') ? fbTeamPages_(JSON.parse(PROPS.getProperty('FB_PAGELIST') || '[]')) : [] };
   ['ig-eloop', 'ig-moov'].forEach(function (id) {
@@ -409,7 +422,8 @@ function importTikTok(only) {
       r.clips.forEach(function (c) {
         var key = acc + '|' + c.id, row = cIdx[key];
         if (!row) { row = { account: acc, id: c.id, type: c.type, product: '', boosted: false }; clips.push(row); cIdx[key] = row; }
-        ['title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves'].forEach(function (k) { row[k] = c[k]; });
+        ['title', 'url', 'posted', 'saves'].forEach(function (k) { row[k] = c[k]; });
+        ['views', 'likes', 'comments', 'shares'].forEach(function (k) { row[k] = Math.max(Number(row[k]) || 0, Number(c[k]) || 0); }); // the API may already have newer counts
         if (!row.type) row.type = c.type; // keep the team's own label
         row.source = 'tiktok-file'; row.updated_at = ts; n++;
       });
@@ -448,7 +462,8 @@ function tiktokMonthly_(acc, daily, clips) {
   var year = PROPS.getProperty('YEAR'), out = [];
   for (var m = 1; m <= 12; m++) {
     var ym = year + '-' + (m < 10 ? '0' : '') + m;
-    var rows = daily.filter(function (r) { return r.account === acc && String(r.date).slice(0, 7) === ym; });
+    // only days that came from a file (follower-only snapshots from the TikTok API have no views)
+    var rows = daily.filter(function (r) { return r.account === acc && String(r.date).slice(0, 7) === ym && r.views !== '' && r.views != null; });
     var cl = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; });
     if (rows.length) {
       var s = function (k) { return rows.reduce(function (t, r) { return t + (Number(r[k]) || 0); }, 0); };
@@ -1224,6 +1239,199 @@ function syncInstagram_(acc, full) {
     var msg = e.fbCode === 190 ? 'สิทธิ์ Facebook/Instagram หมดอายุ กดเชื่อม Facebook ใหม่ที่หน้าตั้งค่า' : e.message;
     PROPS.setProperty('LAST_ERR_' + acc, String(msg).slice(0, 300));
     log_('instagram', acc, 'error', msg);
+    throw new Error(msg);
+  }
+}
+
+/* ================================================================== TikTok API (Display API, Login Kit for Web)
+ * The brand account logs in once from the dashboard; the script then pulls followers, total likes and
+ * per-video views/likes/comments/shares every hour. Works in the app's Sandbox for the accounts added as target users.
+ * Needs (set from the dashboard): Client key + Client secret, and the web app /exec URL as Login Kit redirect URI.
+ */
+var TT_API = 'https://open.tiktokapis.com/v2/';
+var TT_SCOPES = 'user.info.basic,user.info.profile,user.info.stats,video.list';
+var TT_NAMES = { 'tt-eloop': 'TikTok Eloop', 'tt-moov': 'TikTok Moov' };
+
+function saveTtApp_(b) {
+  var key = String(b.clientKey || '').trim(), sec = String(b.secret || '').trim(), url = String(b.redirect || '').trim();
+  if (key && !/^[A-Za-z0-9]{8,40}$/.test(key)) throw new Error('Client key ไม่ถูกต้อง');
+  if (!key && !PROPS.getProperty('TTAPI_KEY')) throw new Error('ใส่ Client key');
+  if (!sec && !PROPS.getProperty('TTAPI_SECRET')) throw new Error('ใส่ Client secret');
+  if (/^https:\/\/script\.google\.com\/.+\/exec$/.test(url)) PROPS.setProperty('WEBAPP_URL', url);
+  if (key) PROPS.setProperty('TTAPI_KEY', key);
+  if (sec) PROPS.setProperty('TTAPI_SECRET', sec);
+  log_('settings', '', 'ok', 'บันทึกกุญแจ TikTok จากหน้าเว็บ');
+  return { ok: true };
+}
+
+function ttStartConnect_(acc) {
+  if (!TT_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
+  var key = PROPS.getProperty('TTAPI_KEY'), redirect = PROPS.getProperty('WEBAPP_URL');
+  if (!key || !PROPS.getProperty('TTAPI_SECRET')) throw new Error('ยังไม่ได้ใส่กุญแจ TikTok (Client key และ Client secret)');
+  if (!redirect) throw new Error('ระบบยังไม่รู้ลิงก์เว็บแอป กด บันทึกกุญแจ TikTok อีกครั้ง');
+  var state = Utilities.getUuid();
+  CacheService.getScriptCache().put('oauth_' + state, 'tt:' + acc, 3600);
+  return { ok: true, url: 'https://www.tiktok.com/v2/auth/authorize/?' + qs_({ client_key: key, scope: TT_SCOPES, response_type: 'code', redirect_uri: redirect, state: state }) };
+}
+
+function ttTokenCall_(params) {
+  params.client_key = PROPS.getProperty('TTAPI_KEY'); params.client_secret = PROPS.getProperty('TTAPI_SECRET');
+  var res = UrlFetchApp.fetch(TT_API + 'oauth/token/', { method: 'post', payload: params, muteHttpExceptions: true,
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Cache-Control': 'no-cache' } });
+  var j = {}; try { j = JSON.parse(res.getContentText() || '{}'); } catch (e) { /* not JSON */ }
+  if (!j.access_token) { var err = new Error('TikTok: ' + (j.error_description || j.error || ('HTTP ' + res.getResponseCode()))); err.ttAuth = true; throw err; }
+  return j;
+}
+
+function ttCall_(acc, method, path, body) {
+  var at = CacheService.getScriptCache().get('ttat_' + acc);
+  if (!at) {
+    var rt = PROPS.getProperty('TTAPI_RT_' + acc);
+    if (!rt) throw new Error(TT_NAMES[acc] + ' ยังไม่ได้เชื่อม TikTok API');
+    var t = ttTokenCall_({ grant_type: 'refresh_token', refresh_token: rt });
+    if (t.refresh_token) PROPS.setProperty('TTAPI_RT_' + acc, t.refresh_token); // TikTok rotates refresh tokens
+    at = t.access_token;
+    CacheService.getScriptCache().put('ttat_' + acc, at, Math.max(60, Math.min(21600, (t.expires_in || 3600) - 300)));
+  }
+  var opt = { method: method, muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + at } };
+  if (body) { opt.contentType = 'application/json'; opt.payload = JSON.stringify(body); }
+  var res = UrlFetchApp.fetch(TT_API + path, opt), j = {};
+  try { j = JSON.parse(res.getContentText() || '{}'); } catch (e) { /* not JSON */ }
+  if (res.getResponseCode() >= 400 || (j.error && j.error.code && j.error.code !== 'ok')) {
+    var err = new Error('TikTok: ' + ((j.error && (j.error.message || j.error.code)) || ('HTTP ' + res.getResponseCode())));
+    err.ttAuth = res.getResponseCode() === 401 || /access_token|scope/i.test((j.error && j.error.code) || '');
+    throw err;
+  }
+  return j.data || {};
+}
+
+/** TikTok redirects back to the web app with ?code=...&state=... */
+function ttHandleCallback_(p, acc) {
+  var page = function (ok, msg) {
+    return HtmlService.createHtmlOutput('<div style="font:16px/1.6 \'IBM Plex Sans Thai\',Arial,sans-serif;max-width:520px;margin:48px auto;padding:0 16px">' +
+      '<h2 style="margin:0 0 8px">' + (ok ? 'เชื่อม TikTok สำเร็จ' : 'เชื่อม TikTok ไม่สำเร็จ') + '</h2><p>' + msg + '</p>' +
+      '<p><a href="' + SITE_URL + '" target="_top" style="display:inline-block;padding:9px 16px;border-radius:8px;background:#5b5bd6;color:#fff;text-decoration:none;font-weight:600">กลับไปหน้าแดชบอร์ด</a></p></div>').setTitle('เชื่อม TikTok');
+  };
+  CacheService.getScriptCache().remove('oauth_' + p.state);
+  if (p.error) return page(false, 'TikTok แจ้งว่า: ' + esc_(p.error_description || p.error) + ' (ถ้ากดยกเลิกไป ให้เริ่มใหม่แล้วกดอนุญาต)');
+  try {
+    var t = ttTokenCall_({ grant_type: 'authorization_code', code: p.code, redirect_uri: PROPS.getProperty('WEBAPP_URL') });
+    CacheService.getScriptCache().put('ttat_' + acc, t.access_token, Math.max(60, Math.min(21600, (t.expires_in || 3600) - 300)));
+    var u = ttUserInfo_(acc, t.access_token);
+    var handle = String(u.username || '').toLowerCase(), byHandle = TT_HANDLES[handle];
+    if (byHandle && byHandle !== acc) return page(false, 'บัญชีที่ล็อกอินคือ @' + esc_(u.username) + ' ซึ่งเป็นของ ' + TT_NAMES[byHandle] + ' ลองใหม่แล้วล็อกอินบัญชีของ ' + TT_NAMES[acc]);
+    var locked = PROPS.getProperty('TTAPI_OPENID_' + acc);
+    if (locked && locked !== t.open_id) return page(false, TT_NAMES[acc] + ' เชื่อมไว้กับบัญชีอื่นแล้ว ถ้าจะเปลี่ยน ให้กด ยกเลิกการเชื่อม ที่หน้าตั้งค่าก่อน');
+    var o = {}; o['TTAPI_RT_' + acc] = t.refresh_token; o['TTAPI_OPENID_' + acc] = t.open_id; o['TTAPI_USER_' + acc] = u.username || u.display_name || '';
+    PROPS.setProperties(o);
+    PROPS.deleteProperty('TTAPI_ERR_' + acc);
+    ttEnsureTrigger_();
+    try { syncTikTokApi_(acc); } catch (e) { /* the hourly job retries */ }
+    log_('tiktok-connect', acc, 'ok', 'เชื่อมกับ @' + (u.username || u.display_name));
+    return page(true, TT_NAMES[acc] + ' เชื่อมกับ <b>@' + esc_(u.username || u.display_name || '') + '</b> แล้ว ระบบอัปเดตผู้ติดตาม ถูกใจรวม และยอดรายคลิปให้ทุกชั่วโมง');
+  } catch (e) {
+    log_('tiktok-connect', acc, 'error', e.message);
+    return page(false, esc_(e.message));
+  }
+}
+
+function ttUserInfo_(acc, at) {
+  var fields = 'open_id,display_name,username,follower_count,following_count,likes_count,video_count';
+  if (at) {
+    var res = UrlFetchApp.fetch(TT_API + 'user/info/?fields=' + fields, { muteHttpExceptions: true, headers: { Authorization: 'Bearer ' + at } });
+    var j = JSON.parse(res.getContentText() || '{}');
+    if (j.error && j.error.code && j.error.code !== 'ok') throw new Error('TikTok: ' + (j.error.message || j.error.code));
+    return (j.data && j.data.user) || {};
+  }
+  return (ttCall_(acc, 'get', 'user/info/?fields=' + fields).user) || {};
+}
+
+function ttEnsureTrigger_() {
+  var has = ScriptApp.getProjectTriggers().some(function (t) { return t.getHandlerFunction() === 'syncTikTokApiAll'; });
+  if (!has) ScriptApp.newTrigger('syncTikTokApiAll').timeBased().everyHours(1).create();
+}
+
+/** Hourly job. */
+function syncTikTokApiAll() {
+  var errors = [];
+  Object.keys(TT_NAMES).forEach(function (acc) {
+    if (!PROPS.getProperty('TTAPI_RT_' + acc)) return;
+    try { syncTikTokApi_(acc); } catch (e) { errors.push(TT_NAMES[acc] + ': ' + e.message); }
+  });
+  var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+  if (errors.length && PROPS.getProperty('TTAPI_NOTIFIED') !== today) { // at most one email a day
+    PROPS.setProperty('TTAPI_NOTIFIED', today);
+    notify_('CT Social OKR: ดึงข้อมูล TikTok API ไม่สำเร็จ', errors.join('\n'));
+  }
+}
+
+function syncTtWeb_(acc) {
+  var ids = acc ? [acc] : Object.keys(TT_NAMES), out = [];
+  ids.forEach(function (id) {
+    if (!TT_NAMES[id]) throw new Error('ไม่รู้จักบัญชี ' + id);
+    if (!PROPS.getProperty('TTAPI_RT_' + id)) { out.push(TT_NAMES[id] + ': ยังไม่ได้เชื่อม'); return; }
+    try { syncTikTokApi_(id); out.push(TT_NAMES[id] + ': ดึงสำเร็จ'); } catch (e) { out.push(TT_NAMES[id] + ': ' + e.message); }
+  });
+  return { ok: true, report: out };
+}
+
+function ttDisconnect_(acc) {
+  if (!TT_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
+  ['TTAPI_RT_', 'TTAPI_OPENID_', 'TTAPI_USER_', 'TTAPI_OK_', 'TTAPI_ERR_', 'TTAPI_LIVE_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
+  CacheService.getScriptCache().remove('ttat_' + acc);
+  log_('tiktok-connect', acc, 'ok', 'ยกเลิกการเชื่อม TikTok API');
+  return { ok: true };
+}
+
+/** Followers, total likes and this year's videos (lifetime counts at the time of the call). */
+function syncTikTokApi_(acc) {
+  try {
+    var u = ttUserInfo_(acc), now = now_();
+    PROPS.setProperty('TTAPI_LIVE_' + acc, JSON.stringify({ followers: u.follower_count, likes: u.likes_count, videos: u.video_count, at: now }));
+    if (u.username) PROPS.setProperty('TTAPI_USER_' + acc, u.username);
+
+    // today's follower count → daily table (gives a day-by-day follower history from now on)
+    var daily = readTable_('daily'), dIdx = index_(daily, ['date', 'account']), today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
+    var drow = dIdx[today + '|' + acc];
+    if (!drow) { drow = { date: today, account: acc, source: 'tiktok-api' }; daily.push(drow); }
+    drow.followers = u.follower_count; drow.updated_at = now;
+    writeTable_('daily', daily);
+
+    // videos posted this year
+    var year = +PROPS.getProperty('YEAR'), since = new Date(year, 0, 1).getTime() / 1000, vids = [], cursor = null;
+    for (var guard = 0; guard < 60; guard++) {
+      var d = ttCall_(acc, 'post', 'video/list/?fields=id,title,video_description,create_time,share_url,view_count,like_count,comment_count,share_count,duration',
+        cursor ? { max_count: 20, cursor: cursor } : { max_count: 20 });
+      var older = false;
+      (d.videos || []).forEach(function (v) { if (v.create_time >= since) vids.push(v); else older = true; });
+      if (older || !d.has_more) break;
+      cursor = d.cursor;
+    }
+    var clips = readTable_('clips'), cIdx = index_(clips, ['account', 'id']), handle = PROPS.getProperty('TTAPI_USER_' + acc) || '';
+    vids.forEach(function (v) {
+      var id = String(v.id), key = acc + '|' + id, row = cIdx[key], title = String(v.title || v.video_description || '').split('\n')[0].slice(0, 150) || 'TikTok';
+      if (!row) {
+        row = { account: acc, id: id, type: ttGuessType(title), product: '', boosted: false, saves: '' };
+        row.title = title;
+        row.url = handle ? 'https://www.tiktok.com/@' + handle + '/video/' + id : (v.share_url || '');
+        row.posted = Utilities.formatDate(new Date(v.create_time * 1000), TZ, 'yyyy-MM-dd HH:mm');
+        clips.push(row); cIdx[key] = row;
+      }
+      // counts only grow: keep the larger of the file and the API number
+      [['views', 'view_count'], ['likes', 'like_count'], ['comments', 'comment_count'], ['shares', 'share_count']].forEach(function (f) {
+        if (v[f[1]] != null) row[f[0]] = Math.max(Number(row[f[0]]) || 0, Number(v[f[1]]) || 0);
+      });
+      row.updated_at = now; if (!row.source) row.source = 'tiktok-api';
+    });
+    writeTable_('clips', clips);
+    // clip counts per month follow the new clips
+    replaceMonthly_(acc, 'tiktok-file', tiktokMonthly_(acc, daily, clips));
+    PROPS.setProperty('TTAPI_OK_' + acc, now);
+    PROPS.deleteProperty('TTAPI_ERR_' + acc);
+  } catch (e) {
+    var msg = e.ttAuth ? 'สิทธิ์ TikTok หมดอายุหรือถูกยกเลิก กดเชื่อม TikTok ใหม่ที่หน้าตั้งค่า (' + e.message + ')' : e.message;
+    PROPS.setProperty('TTAPI_ERR_' + acc, String(msg).slice(0, 300));
+    log_('tiktok-api', acc, 'error', msg);
     throw new Error(msg);
   }
 }

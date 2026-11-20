@@ -872,6 +872,12 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 .card-head h3 { display: inline-flex; align-items: center; }
 .seg .blogo { width: 18px; height: 18px; border-radius: 5px; margin-right: 6px; box-shadow: none; }
 .seg button { display: inline-flex; align-items: center; }
+
+/* TikTok API live numbers */
+.live-line { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: 12.5px; color: var(--omnix-fg-muted); background: var(--omnix-surface-2); border-radius: 10px; padding: 8px 10px; }
+.live-line b { color: var(--omnix-fg); }
+.live-line .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--omnix-success-fg); box-shadow: 0 0 0 3px var(--omnix-success-bg); margin-right: 2px; }
+.live-line .at { margin-left: auto; }
 </style>
 </head>
 <body>
@@ -1309,6 +1315,11 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   const pIco = p => PLAT[p] ? `<span class="pico">${PLAT[p].svg}</span>` : '';
   const pPill = (p, label) => `<span class="plat p-${PLAT[p].c}">${PLAT[p].svg}${label || p}</span>`;
   const accName = a => `${pIco(a.platform)}${a.name}`;
+  // TikTok API: followers / total likes right now
+  const liveLine = id => {
+    const x = SYS && SYS[id], l = x && x.live;
+    return l && l.followers != null ? `<div class="live-line"><span class="dot"></span>ตอนนี้ ผู้ติดตาม <b>${fmt(l.followers)}</b> · ถูกใจรวม <b>${fmt(l.likes)}</b> · ${fmt(l.videos)} คลิป<span class="at">อัปเดต ${esc(String(l.at || '').slice(11, 16))}</span></div>` : '';
+  };
   function renderOverview() {
     // overview order: one row per platform (TikTok, Facebook, YouTube, Instagram), Eloop then Moov
     const ORDER = ['TikTok', 'Facebook', 'YouTube', 'Instagram'];
@@ -1342,7 +1353,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       }).join('');
       return `<article class="card p-${PLAT[a.platform].c}">
         <div class="card-head">${pPill(a.platform)}<h3>${bLogo(a.brand)}${a.brand}</h3>${worst ? `<span class="st ${worst.e.status}">${ST_LABEL[worst.e.status]}</span>` : ''}</div>
-        <div class="kpis">${kpis}</div>
+        <div class="kpis">${kpis}</div>${liveLine(a.id)}
         <div class="card-foot"><span>วิวรายเดือน</span>${sparkline(views.data)}<span>${li < 0 ? 'ยังไม่มีข้อมูล' : 'ถึง ' + MONTHS[li]}</span><button class="link" type="button" data-open="${a.id}">ดูรายละเอียด</button></div>
       </article>`;
     }).join('');
@@ -2200,6 +2211,21 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       }
       return `<div class="conn"><span class="name">${accName(accById(id))}</span>${st2}<span class="det">${det}</span>${act ? `<span class="conn-act">${act}</span>` : ''}</div>`;
     };
+    const ttRow = id => {
+      const x = st[id] || {}, s = st.setup || {}, file = `นำเข้าไฟล์ล่าสุด ${esc(x.lastImport || 'ยังไม่มีไฟล์')}`;
+      let st2, det, act = '';
+      if (!s.tt) { st2 = '<span class="st none">อัปโหลดไฟล์</span>'; det = `${file} · ใส่กุญแจ TikTok (ตั้งค่าระบบ ข้อ 6) เพื่อดึงผู้ติดตาม ถูกใจรวม และยอดรายคลิปอัตโนมัติทุกชั่วโมง`; }
+      else if (!x.api) { st2 = '<span class="st warn">ยังไม่ได้เชื่อม API</span>'; det = `${file} · กดปุ่มแล้วล็อกอินบัญชี TikTok ของแบรนด์ครั้งเดียว`; act = `<button class="btn primary" type="button" data-sys="ttconnect" data-sacc="${id}">เชื่อมบัญชี TikTok</button>`; }
+      else {
+        const l = x.live || {};
+        st2 = x.error ? '<span class="st crit">ดึงไม่สำเร็จ</span>' : '<span class="st good">เชื่อมต่อแล้ว</span>';
+        det = `@${esc(x.user || '')}${l.followers != null ? ` · ผู้ติดตาม ${fmt(l.followers)} · ถูกใจรวม ${fmt(l.likes)}` : ''} · ดึงสำเร็จล่าสุด ${esc(x.lastSync || '–')} · ${file}${x.error ? ' · ' + esc(x.error) : ''}`;
+        act = (x.error ? `<button class="btn primary" type="button" data-sys="ttconnect" data-sacc="${id}">เชื่อม TikTok ใหม่</button>` : '')
+          + `<button class="btn" type="button" data-sys="synctt" data-sacc="${id}">ดึงข้อมูลตอนนี้</button><button class="btn" type="button" data-sys="ttdisconnect" data-sacc="${id}">ยกเลิกการเชื่อม API</button>`;
+      }
+      act += `<a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a>`;
+      return `<div class="conn"><span class="name">${accName(accById(id))}</span>${st2}<span class="det">${det}</span><span class="conn-act">${act}</span></div>`;
+    };
     const igRow = id => {
       const x = st[id] || {}, brand = id === 'ig-eloop' ? 'Eloop' : 'Moov', fb = st['fb-' + id.slice(3)] || {};
       const name = `${pIco('Instagram')}Instagram ${brand}`;
@@ -2228,7 +2254,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
         + `<span class="conn-act">${act}</span></div>`;
     };
     $('#conn-list').innerHTML = ''
-      + ['tt-eloop', 'tt-moov'].map(id => `<div class="conn"><span class="name">${accName(accById(id))}</span><span class="st none">อัปโหลดไฟล์</span><span class="det">นำเข้าล่าสุด ${esc((st[id] || {}).lastImport || 'ยังไม่มีไฟล์')}</span><span class="conn-act"><a class="btn" href="#upload">อัปโหลดไฟล์ TikTok</a></span></div>`).join('')
+      + ['tt-eloop', 'tt-moov'].map(ttRow).join('')
       + ['fb-eloop', 'fb-moov'].map(fbRow).join('')
       + ytRow('yt-eloop') + ytRow('yt-moov')
       + ['ig-eloop', 'ig-moov'].map(igRow).join('')
@@ -2290,7 +2316,20 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
           <li>กด <b>Generate Access Token</b> → อนุญาต และเลือกเพจ Eloop กับ Moov → คัดลอก token มาวางด้านล่าง</li></ol>
           <form id="fbtoken-form" autocomplete="off"><label class="fld">Access token<input id="fb-tok" type="password" autocomplete="off"></label><button class="btn" type="submit">เชื่อมด้วย token นี้</button></form>
           <p style="margin-top:6px">ระบบแลกเป็น token แบบไม่หมดอายุให้เอง ไม่ต้องทำซ้ำ</p></details></div>
-      <div class="step"><h3>6. ไฟล์ TikTok</h3><p>ทุกต้นเดือน export จาก TikTok Studio แล้ว${link('#upload', 'อัปโหลดในหน้านี้').replace(' target="_blank" rel="noopener"', '')}</p></div>
+      <div class="step"><h3>6. TikTok ${ok(s.tt)}</h3>
+        <p>กุญแจ TikTok ใช้ดึงผู้ติดตาม ถูกใจรวม และยอดรายคลิปทุกชั่วโมง (โหมด Sandbox ใช้กับบัญชีของทีมได้ทันที) ส่วนข้อมูลเชิงลึกรายวันยังใช้ไฟล์ export ${link('#upload', 'อัปโหลดในหน้านี้').replace(' target="_blank" rel="noopener"', '')} ทุกต้นเดือน</p>
+        <details ${s.tt ? '' : 'open'}><summary>วิธีสร้างกุญแจ TikTok (Sandbox)</summary><ol>
+          <li>เปิด ${link('https://developers.tiktok.com/', 'TikTok for Developers')} ล็อกอินด้วยบัญชี TikTok ของทีม → <b>Manage apps → Connect an app</b> ตั้งชื่อ CT Social OKR</li>
+          <li>ในแอป สลับไปที่แท็บ <b>Sandbox</b> → <b>Create Sandbox</b></li>
+          <li><b>Add products:</b> เพิ่ม <b>Login Kit</b> และ <b>Display API</b> · <b>Scopes:</b> ติ๊ก <code>user.info.basic</code> <code>user.info.profile</code> <code>user.info.stats</code> <code>video.list</code></li>
+          <li>Login Kit → <b>Web</b> → <b>Redirect URI</b> วางลิงก์นี้
+            <div class="copy" style="margin-top:6px"><code id="redir-tt">${esc(DATA_URL)}</code><button class="btn" type="button" data-copy="redir-tt">คัดลอก</button></div></li>
+          <li><b>Sandbox settings → Target users:</b> เพิ่มบัญชี @eloopth และ @moovthailand (แต่ละบัญชีต้องกดยอมรับในแอป TikTok)</li>
+          <li>คัดลอก <b>Client key</b> และ <b>Client secret</b> ของ Sandbox มาวางด้านล่าง แล้วกด <b>เชื่อมบัญชี TikTok</b> ในกล่องการเชื่อมต่อ</li></ol></details>
+        <form id="ttapp-form" autocomplete="off">
+          <label class="fld">Client key<input id="tt-key" placeholder="${s.tt ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : ''}"></label>
+          <label class="fld">Client secret<input id="tt-sec" type="password" placeholder="${s.tt ? 'บันทึกไว้แล้ว เว้นว่างถ้าไม่เปลี่ยน' : ''}" autocomplete="new-password"></label>
+          <button class="btn primary" type="submit">บันทึกกุญแจ TikTok</button></form></div>
       ${(SYS.log || []).length ? `<div class="step"><h3>ปัญหาล่าสุดในระบบ</h3><ul class="kinds">${SYS.log.map(l => `<li><b>${esc(l.time)}</b> ${esc(l.account ? accById(l.account)?.name || l.account : l.job)}: ${esc(l.message)}</li>`).join('')}</ul></div>` : ''}
       <div id="sys-msg"></div>`;
   }
@@ -2323,11 +2362,13 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const where = acc ? '#yt-msg' : '#sys-msg';
     try {
       if (act === 'forget') { passStore.clear(); renderSystem(); return; }
+      if (act === 'ttdisconnect' && !confirm(`ยกเลิกการเชื่อม TikTok API ของ ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วและไฟล์ที่อัปโหลดยังอยู่`)) return;
       if (act === 'igdisconnect' && !confirm(`ยกเลิกการเชื่อม Instagram ${acc === 'ig-eloop' ? 'Eloop' : 'Moov'}? ข้อมูลที่ดึงมาแล้วยังอยู่`)) return;
       if (act === 'fbdisconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่`)) return;
       if (act === 'disconnect' && !confirm(`ยกเลิกการเชื่อม ${accById(acc).name}? ข้อมูลที่ดึงมาแล้วยังอยู่ และเชื่อมช่องใหม่ได้`)) return;
-      b.disabled = true; b.textContent = act === 'syncyt' || act === 'syncfb' || act === 'syncig' ? 'กำลังดึงข้อมูล… (ไม่เกิน 2 นาที)' : 'กำลังบันทึก…';
+      b.disabled = true; b.textContent = act === 'syncyt' || act === 'syncfb' || act === 'syncig' || act === 'synctt' ? 'กำลังดึงข้อมูล… (ไม่เกิน 2 นาที)' : 'กำลังบันทึก…';
       if (act === 'setpass') { await setPass(); renderSystem(); sysMsg('#sys-msg', 'ตั้งรหัสทีมแล้ว'); return; }
+      if (act === 'ttconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน TikTok…'; const r = await admin({ api: 'ttconnect', acc }); location.href = r.url; return; }
       if (act === 'fbconnect') { b.textContent = 'กำลังเปิดหน้าล็อกอิน Facebook…'; const r = await admin({ api: 'fbconnect', business: !!b.dataset.biz, ig: !!b.dataset.ig }); location.href = r.url; return; }
       const body = { api: act, acc };
       if (act === 'fbpage') { body.pageId = $('#fbsel-' + acc).value; if (!body.pageId) { b.disabled = false; b.textContent = label; sysMsg(where, 'ยังไม่ได้เลือกเพจ เลือกจากรายการก่อน หรือกดเชื่อมด้วย Facebook แทน', true); return; } }
@@ -2341,6 +2382,20 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   });
 
   document.addEventListener('submit', async e => {
+    if (e.target.id === 'ttapp-form') {
+      e.preventDefault();
+      const btn = e.target.querySelector('button');
+      btn.disabled = true; btn.textContent = 'กำลังบันทึก…';
+      try {
+        await admin({ api: 'ttapp', clientKey: $('#tt-key').value.trim(), secret: $('#tt-sec').value.trim(), redirect: DATA_URL });
+        await refreshLive();
+        sysMsg('#sys-msg', 'บันทึกกุญแจ TikTok แล้ว ขั้นต่อไป กด เชื่อมบัญชี TikTok ในกล่องการเชื่อมต่อ ทีละบัญชี');
+      } catch (err) {
+        btn.disabled = false; btn.textContent = 'บันทึกกุญแจ TikTok';
+        if (!err.cancel) sysMsg('#sys-msg', 'บันทึกไม่สำเร็จ: ' + esc(err.message), true);
+      }
+      return;
+    }
     if (e.target.id === 'fbapp-form' || e.target.id === 'fbtoken-form') {
       e.preventDefault();
       const btn = e.target.querySelector('button'), label = btn.textContent, isTok = e.target.id === 'fbtoken-form';
