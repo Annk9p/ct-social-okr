@@ -699,7 +699,7 @@ body { background: var(--omnix-bg); color: var(--omnix-fg); }
 /* ---- layout: sidebar | (header + content) ---- */
 .ox-shell { display: flex; min-height: 100vh; align-items: stretch; }
 .main-col { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.ox-main__inner { max-width: 1280px; padding: 8px 32px 48px; gap: var(--gap); }
+.ox-main__inner { max-width: none; width: 100%; padding: 8px 32px 48px; gap: var(--gap); } /* fill the window at any width */
 
 .ox-sidebar {
   width: var(--side-w); position: sticky; top: 0; height: 100vh; align-self: flex-start;

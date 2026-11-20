@@ -171,7 +171,8 @@ function ymd_(d) { return Utilities.formatDate(d, TZ, 'yyyy-MM-dd'); }
  * full = true pulls the whole year (first connect); otherwise the last ~2 months
  * (YouTube revises recent numbers for a few days).
  */
-function syncYouTube_(acc, full) {
+function syncYouTube_(acc, full) { var a = arguments; return locked_(function () { return syncYouTubeImpl_.apply(null, a); }, 240000); }
+function syncYouTubeImpl_(acc, full) {
   try {
     var year = +PROPS.getProperty('YEAR');
     var today = new Date(), end = new Date(today.getTime() - 86400000);

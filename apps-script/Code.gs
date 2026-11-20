@@ -250,7 +250,8 @@ function uploadTikTok_(b) {
   return { ok: true, report: withLock_(function () { return importTikTok([{ f: file, acc: b.acc, upd: file.getLastUpdated().toISOString() }]); }) };
 }
 
-function saveTarget_(b) {
+function saveTarget_(b) { var a = arguments; return locked_(function () { return saveTargetImpl_.apply(null, a); }, 60000); }
+function saveTargetImpl_(b) {
   var field = b.field === 'base' ? 'base' : 'target', year = PROPS.getProperty('YEAR') || String(new Date().getFullYear());
   var v = b.value === '' || b.value == null ? '' : Number(b.value);
   if (v !== '' && !isFinite(v)) throw new Error('ตัวเลขไม่ถูกต้อง');
@@ -261,11 +262,17 @@ function saveTarget_(b) {
   return { ok: true };
 }
 
-function withLock_(fn) {
+/* One writer at a time: every job reads whole tables, changes them and writes them back, so two jobs running
+ * together would overwrite each other's rows. Nested calls inside a job that already holds the lock just run. */
+var LOCK_HELD_ = false;
+function locked_(fn, waitMs) {
+  if (LOCK_HELD_) return fn();
   var lock = LockService.getScriptLock();
-  if (!lock.tryLock(60 * 1000)) throw new Error('ระบบกำลังนำเข้าข้อมูลอยู่ ลองใหม่อีกครั้งใน 1 นาที');
-  try { return fn(); } finally { lock.releaseLock(); }
+  if (!lock.tryLock(waitMs || 60000)) throw new Error('ระบบกำลังดึงหรือนำเข้าข้อมูลอยู่ ลองใหม่อีกครั้งในไม่กี่นาที');
+  LOCK_HELD_ = true;
+  try { return fn(); } finally { LOCK_HELD_ = false; lock.releaseLock(); }
 }
+function withLock_(fn) { return locked_(fn, 120000); }
 
 function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
 
@@ -375,7 +382,8 @@ function ttFolder_(acc) {
 }
 
 /** Read new or changed files in the TikTok folders (or just `only`), upsert rows, recompute monthly totals. */
-function importTikTok(only) {
+function importTikTok(only) { var a = arguments; return locked_(function () { return importTikTokImpl_.apply(null, a); }, 240000); }
+function importTikTokImpl_(only) {
   var known = {};
   readTable_('files').forEach(function (r) { known[r.file_id] = r; });
   var queue = Array.isArray(only) ? only : [];
@@ -882,7 +890,8 @@ function fbPostInter_(pid, pt, start, end, acc) {
   return out;
 }
 
-function syncFacebook_(acc, full) {
+function syncFacebook_(acc, full) { var a = arguments; return locked_(function () { return syncFacebookImpl_.apply(null, a); }, 240000); }
+function syncFacebookImpl_(acc, full) {
   var pt = PROPS.getProperty('FB_PT_' + acc), pid = PROPS.getProperty('FB_PAGE_' + acc);
   if (!pt || !pid) throw new Error(FB_NAMES[acc] + ' ยังไม่ได้เชื่อม');
   if (PROPS.getProperty('FB_FMT_' + acc) !== FB_FMT) full = true;
@@ -1174,7 +1183,8 @@ function igMedia_(acc, ig, pt, start) {
   return items;
 }
 
-function syncInstagram_(acc, full) {
+function syncInstagram_(acc, full) { var a = arguments; return locked_(function () { return syncInstagramImpl_.apply(null, a); }, 240000); }
+function syncInstagramImpl_(acc, full) {
   var fb = IG_OF[acc], pt = PROPS.getProperty('FB_PT_' + fb), ig = PROPS.getProperty('IG_ID_' + acc);
   if (!ig) throw new Error(IG_NAMES[acc] + ' ยังไม่ได้เชื่อม');
   if (!pt) throw new Error('เชื่อม ' + FB_NAMES[fb] + ' ใหม่ก่อน (Instagram ใช้สิทธิ์ของเพจ Facebook)');
@@ -1384,7 +1394,8 @@ function ttDisconnect_(acc) {
 }
 
 /** Followers, total likes and this year's videos (lifetime counts at the time of the call). */
-function syncTikTokApi_(acc) {
+function syncTikTokApi_(acc) { var a = arguments; return locked_(function () { return syncTikTokApiImpl_.apply(null, a); }, 240000); }
+function syncTikTokApiImpl_(acc) {
   try {
     var u = ttUserInfo_(acc), now = now_();
     PROPS.setProperty('TTAPI_LIVE_' + acc, JSON.stringify({ followers: u.follower_count, likes: u.likes_count, videos: u.video_count, at: now }));
