@@ -11,7 +11,7 @@
 var TABS = {
   daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions', 'views_total', 'minutes_total'],
   monthly: ['month', 'account', 'key', 'value', 'source', 'updated_at'],
-  clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at'],
+  clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at', 'format'],
   yt_top: ['month', 'account', 'rank', 'video_id', 'title', 'format', 'views'],
   yt_channel: ['account', 'as_of', 'channel_title', 'channel_id', 'subscribers', 'long_hours_365', 'shorts_views_90'],
   audience: ['account', 'as_of', 'kind', 'label', 'value'],
@@ -305,7 +305,7 @@ function buildData_() {
   });
   var clips = readTable_('clips').filter(function (r) { return String(r.posted).slice(0, 4) === year; }).map(function (r) {
     return { acc: r.account, id: String(r.id), title: r.title, url: r.url, posted: r.posted, views: +r.views, likes: r.likes === '' ? null : +r.likes, comments: r.comments === '' ? null : +r.comments,
-      shares: r.shares === '' ? null : +r.shares, saves: r.saves === '' ? null : +r.saves, type: r.type, product: r.product, boosted: r.boosted === true || r.boosted === 'TRUE' };
+      shares: r.shares === '' ? null : +r.shares, saves: r.saves === '' ? null : +r.saves, format: r.format || '', type: r.type, product: r.product, boosted: r.boosted === true || r.boosted === 'TRUE' };
   });
   var ytTop = {};
   readTable_('yt_top').forEach(function (r) {
@@ -437,7 +437,7 @@ function importTikTokImpl_(only) {
           if (r.weak && row[k] !== '' && row[k] != null) return; // never overwrite standard-export numbers
           row[k] = d[k];
         });
-        row.source = 'tiktok-file'; row.updated_at = ts; n++;
+        row.source = 'tiktok-file'; row.updated_at = ts; row.format = row.format || 'วิดีโอ'; n++;
       });
       r.clips.forEach(function (c) {
         var key = acc + '|' + c.id, row = cIdx[key];
@@ -609,7 +609,7 @@ var FB_METRICS = [
   { key: 'unfollows', names: ['page_daily_unfollows_unique', 'page_fan_removes_unique'] },
   { key: 'eng', names: ['page_post_engagements'] }, // includes clicks; kept for reference only
 ];
-var FB_FMT = '4'; // bump when the way numbers are counted changes: next sync re-pulls the whole year
+var FB_FMT = '5'; // 5: every post format, not only Reels // bump when the way numbers are counted changes: next sync re-pulls the whole year
 var FB_REEL_VIEW_METRICS = ['blue_reels_play_count', 'fb_reels_total_plays', 'total_video_views'];
 
 function fbGraph_(path, params, token) {
@@ -843,7 +843,7 @@ function fbNum_(v) {
 
 /** Reels posted from `start`, with play counts. */
 function fbReels_(pid, pt, start) {
-  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,description,created_time,permalink_url,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)', limit: 100 }, pt);
+  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,post_id,description,created_time,permalink_url,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)', limit: 100 }, pt);
   for (var guard = 0; guard < 30; guard++) {
     var older = false;
     (r.data || []).forEach(function (v) { if (new Date(v.created_time) >= start) reels.push(v); else older = true; });
@@ -902,6 +902,38 @@ function fbPostInter_(pid, pt, start, end, acc) {
   return out;
 }
 
+/** Page posts published from `start` with their format and views (post_media_view, or older names). */
+var FB_POST_VIEW_METRICS = ['post_media_view', 'post_impressions'];
+function fbFeedPosts_(acc, pid, pt, start, end) {
+  var posts = [], r = fbGraph_(pid + '/posts', { fields: 'id,message,created_time,permalink_url,attachments{media_type,type},reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares',
+    since: Math.floor(start.getTime() / 1000), until: Math.floor(end.getTime() / 1000) + 86400, limit: 100 }, pt);
+  for (var guard = 0; guard < 60; guard++) {
+    posts = posts.concat(r.data || []);
+    if (!(r.paging && r.paging.next)) break;
+    r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
+    if (r.error) throw new Error('Facebook: ' + r.error.message);
+  }
+  var FMT = { photo: 'รูปภาพ', album: 'อัลบั้ม', video: 'วิดีโอ', link: 'ลิงก์', share: 'ลิงก์', event: 'อีเวนต์', status: 'ข้อความ' };
+  posts.forEach(function (p) {
+    var a = p.attachments && p.attachments.data && p.attachments.data[0], mt = a ? String(a.media_type || a.type || '').toLowerCase() : '';
+    p.format = !a ? 'ข้อความ' : (FMT[mt] || (/album/.test(mt) ? 'อัลบั้ม' : /video/.test(mt) ? 'วิดีโอ' : /photo/.test(mt) ? 'รูปภาพ' : /link|share/.test(mt) ? 'ลิงก์' : 'อื่นๆ'));
+  });
+  var metric = PROPS.getProperty('FB_POST_METRIC');
+  for (var i = 0; i < posts.length; i += 50) {
+    var batch = posts.slice(i, i + 50), got = null, tries = metric ? [metric] : FB_POST_VIEW_METRICS;
+    for (var t = 0; t < tries.length && !got; t++) {
+      try { got = fbGraph_('', { ids: batch.map(function (p) { return p.id; }).join(','), fields: 'insights.metric(' + tries[t] + '){values}' }, pt); metric = tries[t]; }
+      catch (e) { if (e.fbCode === 190) throw e; igDebug_(acc, 'fbpost_' + tries[t], e.message.slice(0, 200)); }
+    }
+    batch.forEach(function (p) {
+      var d = got && got[p.id] && got[p.id].insights && got[p.id].insights.data;
+      p.views = d && d[0] && d[0].values && d[0].values[0] ? fbNum_(d[0].values[0].value) : '';
+    });
+  }
+  if (metric) PROPS.setProperty('FB_POST_METRIC', metric);
+  return posts;
+}
+
 function syncFacebook_(acc, full) { var a = arguments; return locked_(function () { return syncFacebookImpl_.apply(null, a); }, 240000); }
 function syncFacebookImpl_(acc, full) {
   var pt = PROPS.getProperty('FB_PT_' + acc), pid = PROPS.getProperty('FB_PAGE_' + acc);
@@ -952,7 +984,7 @@ function syncFacebookImpl_(acc, full) {
     writeTable_('daily', daily);
 
     // 2) Reels (count per month, Top 5, views of the month's Reels)
-    var clips = readTable_('clips'), cIdx = index_(clips, ['account', 'id']), reelsOk = clips.some(function (c) { return c.account === acc; });
+    var clips = readTable_('clips'), cIdx = index_(clips, ['account', 'id']), reelsOk = clips.some(function (c) { return c.account === acc; }), reelPosts = {};
     try {
       fbReels_(pid, pt, start).forEach(function (v) {
         var key = acc + '|' + v.id, row = cIdx[key], title = String(v.description || '').split('\n')[0].slice(0, 150) || 'Reel';
@@ -963,12 +995,29 @@ function syncFacebookImpl_(acc, full) {
         if (v.views !== '' && v.views != null) row.views = v.views;
         row.likes = v.likes && v.likes.summary ? v.likes.summary.total_count : '';
         row.comments = v.comments && v.comments.summary ? v.comments.summary.total_count : '';
-        row.shares = ''; row.saves = '';
+        row.shares = ''; row.saves = ''; row.format = 'Reel';
+        if (v.post_id) reelPosts[String(v.post_id)] = true, reelPosts[String(v.post_id).split('_').pop()] = true;
         row.source = 'facebook-api'; row.updated_at = ts;
       });
-      writeTable_('clips', clips);
       reelsOk = true;
     } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึง Reels ไม่ได้: ' + e.message); }
+    // every other post: photos, albums, videos, links, text
+    try {
+      fbFeedPosts_(acc, pid, pt, start, end).forEach(function (p) {
+        if (reelPosts[p.id] || reelPosts[String(p.id).split('_').pop()]) return; // already stored as a Reel
+        var key = acc + '|' + p.id, row = cIdx[key], title = String(p.message || '').split('\n')[0].slice(0, 150) || '(ไม่มีข้อความ)';
+        if (!row) { row = { account: acc, id: p.id, type: ttGuessType(title), product: '', boosted: false }; clips.push(row); cIdx[key] = row; }
+        row.title = title; row.url = p.permalink_url || '';
+        row.posted = Utilities.formatDate(new Date(p.created_time), TZ, 'yyyy-MM-dd HH:mm');
+        if (p.views !== '' && p.views != null) row.views = p.views; else if (row.views == null || row.views === '') row.views = 0;
+        row.likes = p.reactions && p.reactions.summary ? p.reactions.summary.total_count : '';
+        row.comments = p.comments && p.comments.summary ? p.comments.summary.total_count : '';
+        row.shares = p.shares ? p.shares.count : 0; row.saves = '';
+        row.format = p.format;
+        row.source = 'facebook-api'; row.updated_at = ts;
+      });
+    } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึงโพสต์ (รูป/ลิงก์/ข้อความ) ไม่ได้: ' + e.message); }
+    writeTable_('clips', clips);
 
     // 3) content interactions per month, from the posts published that month
     var inter = JSON.parse(PROPS.getProperty('FB_INTER_' + acc) || '{}');
@@ -998,8 +1047,10 @@ function syncFacebookImpl_(acc, full) {
       }
       if (inter[ym] != null) monthly.push([ym, 'inter', inter[ym]]);
       // Reels count; months without Reels count as 0 once Reels could be read at all
-      var n = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; }).length;
+      var n = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym && (c.format || 'Reel') === 'Reel'; }).length;
       if (n || (reelsOk && ym <= ymd_(end).slice(0, 7))) monthly.push([ym, 'output', n]);
+      var np = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; }).length;
+      if (np) monthly.push([ym, 'posts_all', np]);
     }
     replaceMonthly_(acc, 'facebook-api', monthly);
     if (full) PROPS.setProperty('FB_FMT_' + acc, FB_FMT);
@@ -1071,6 +1122,7 @@ function fbProbe_(acc, ym) {
 var IG_OF = { 'ig-eloop': 'fb-eloop', 'ig-moov': 'fb-moov' };
 var IG_NAMES = { 'ig-eloop': 'Instagram Eloop', 'ig-moov': 'Instagram Moov' };
 var IG_SCOPES = 'instagram_basic,instagram_manage_insights';
+var IG_FMT = '2'; // 2: every media type (posts, carousels), not only Reels
 var IG_SUM_METRICS = ['views', 'total_interactions', 'likes', 'comments', 'shares', 'saves'];
 
 function igDebug_(acc, key, obj) {
@@ -1174,7 +1226,7 @@ function igMedia_(acc, ig, pt, start) {
     var older = false;
     (r.data || []).forEach(function (m) {
       if (new Date(m.timestamp) < start) { older = true; return; }
-      if (m.media_type === 'VIDEO' || m.media_product_type === 'REELS') items.push(m);
+      items.push(m);
     });
     if (older || !(r.paging && r.paging.next)) break;
     r = JSON.parse(UrlFetchApp.fetch(r.paging.next, { muteHttpExceptions: true }).getContentText() || '{}');
@@ -1199,6 +1251,7 @@ function syncInstagram_(acc, full) { var a = arguments; return locked_(function 
 function syncInstagramImpl_(acc, full) {
   var fb = IG_OF[acc], pt = PROPS.getProperty('FB_PT_' + fb), ig = PROPS.getProperty('IG_ID_' + acc);
   if (!ig) throw new Error(IG_NAMES[acc] + ' ยังไม่ได้เชื่อม');
+  if (PROPS.getProperty('IG_FMT_' + acc) !== IG_FMT) full = true; // re-pull the year once when what we store changes
   if (!pt) throw new Error('เชื่อม ' + FB_NAMES[fb] + ' ใหม่ก่อน (Instagram ใช้สิทธิ์ของเพจ Facebook)');
   try {
     var year = +PROPS.getProperty('YEAR');
@@ -1234,13 +1287,18 @@ function syncInstagramImpl_(acc, full) {
         row.likes = v.like_count != null ? v.like_count : ''; row.comments = v.comments_count != null ? v.comments_count : '';
         row.shares = v.ins_shares !== undefined ? v.ins_shares : ''; row.saves = v.ins_saved !== undefined ? v.ins_saved : '';
         if (!row.type) row.type = ttGuessType(title);
+        row.format = v.media_product_type === 'REELS' ? 'Reel' : v.media_type === 'CAROUSEL_ALBUM' ? 'อัลบั้ม' : v.media_type === 'IMAGE' ? 'รูปภาพ' : v.media_type === 'VIDEO' ? 'วิดีโอ' : 'อื่นๆ';
         row.source = 'instagram-api'; row.updated_at = ts;
       });
       writeTable_('clips', clips);
       mediaOk = true;
     } catch (e) { if (e.fbCode === 190) throw e; log_('instagram', acc, 'warn', 'ดึงรายคลิปไม่ได้: ' + e.message); }
     if (mediaOk || clips.some(function (c) { return c.account === acc; })) {
-      months.forEach(function (ym) { rows.push([ym, 'output', clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; }).length]); });
+      months.forEach(function (ym) {
+        var inMonth = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; });
+        rows.push([ym, 'output', inMonth.filter(function (c) { return c.format === 'Reel' || c.format === 'วิดีโอ' || !c.format; }).length]); // clips (Reels + videos)
+        rows.push([ym, 'posts_all', inMonth.length]);
+      });
     }
 
     // 3) keep months that were not refreshed this time
@@ -1256,6 +1314,7 @@ function syncInstagramImpl_(acc, full) {
     } catch (e) { if (e.fbCode === 190) throw e; }
     PROPS.setProperty('LAST_OK_' + acc, now_());
     PROPS.deleteProperty('LAST_ERR_' + acc);
+    if (full) PROPS.setProperty('IG_FMT_' + acc, IG_FMT);
     log_('instagram', acc, 'ok', (full ? 'ดึงย้อนหลัง ' : 'ดึงข้อมูล ') + ymd_(start) + ' ถึง ' + ymd_(end));
   } catch (e) {
     var msg = e.fbCode === 190 ? 'สิทธิ์ Facebook/Instagram หมดอายุ กดเชื่อม Facebook ใหม่ที่หน้าตั้งค่า' : e.message;
@@ -1444,7 +1503,7 @@ function syncTikTokApiImpl_(acc) {
       [['views', 'view_count'], ['likes', 'like_count'], ['comments', 'comment_count'], ['shares', 'share_count']].forEach(function (f) {
         if (v[f[1]] != null) row[f[0]] = Math.max(Number(row[f[0]]) || 0, Number(v[f[1]]) || 0);
       });
-      row.updated_at = now; if (!row.source) row.source = 'tiktok-api';
+      row.updated_at = now; if (!row.source) row.source = 'tiktok-api'; row.format = row.format || 'วิดีโอ';
     });
     writeTable_('clips', clips);
     // clip counts per month follow the new clips

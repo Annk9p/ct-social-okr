@@ -302,6 +302,7 @@ function ytSaveClips_(acc, uploads, year, end) {
     row.url = isShort ? 'https://www.youtube.com/shorts/' + u.id : 'https://www.youtube.com/watch?v=' + u.id;
     row.posted = u.postedAt; row.views = u.views; row.likes = u.likes; row.comments = u.comments;
     row.shares = shares[u.id] || 0; row.saves = '';
+    row.format = u.live ? 'Live' : isShort ? 'Shorts' : 'วิดีโอยาว';
     if (!row.type) row.type = ttGuessType(u.title || ''); // keep the team's own label
     row.source = 'youtube-api'; row.updated_at = ts;
   });
@@ -327,12 +328,12 @@ function ytUploads_(acc, playlistId, year) {
 function ytVideoInfo_(acc, ids) {
   var out = {};
   for (var i = 0; i < ids.length; i += 50) {
-    var r = ytGet_(acc, 'https://www.googleapis.com/youtube/v3/videos?' + qs_({ part: 'snippet,contentDetails,statistics', id: ids.slice(i, i + 50).join(','), maxResults: 50 }));
+    var r = ytGet_(acc, 'https://www.googleapis.com/youtube/v3/videos?' + qs_({ part: 'snippet,contentDetails,statistics,liveStreamingDetails', id: ids.slice(i, i + 50).join(','), maxResults: 50 }));
     (r.items || []).forEach(function (v) {
       var st = v.statistics || {}, at = new Date(v.snippet.publishedAt);
       out[v.id] = { title: v.snippet.title, published: Utilities.formatDate(at, TZ, 'yyyy-MM-dd'), postedAt: Utilities.formatDate(at, TZ, 'yyyy-MM-dd HH:mm'),
         seconds: isoSeconds_(v.contentDetails.duration), views: +st.viewCount || 0,
-        likes: st.likeCount == null ? '' : +st.likeCount, comments: st.commentCount == null ? '' : +st.commentCount };
+        likes: st.likeCount == null ? '' : +st.likeCount, comments: st.commentCount == null ? '' : +st.commentCount, live: !!v.liveStreamingDetails };
     });
   }
   return out;

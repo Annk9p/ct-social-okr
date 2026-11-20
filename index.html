@@ -902,6 +902,9 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 #content-src { margin-left: auto; align-self: center; }
 #v-content .panel > h2 { margin-bottom: 4px; }
 #v-content .panel > .desc { margin-bottom: 16px; }
+
+.fmt-pill { display: inline-flex; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; background: var(--omnix-surface-2); color: var(--omnix-fg-muted); }
+.fmt-pill.vid { background: var(--omnix-accent-soft); color: var(--omnix-accent); }
 </style>
 </head>
 <body>
@@ -981,6 +984,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
         <button type="button" data-sort="vpd" aria-pressed="false">วิวต่อวัน</button>
         <button type="button" data-sort="er" aria-pressed="false">ER</button>
       </div></div>
+      <div class="fgroup fwide"><span class="flabel">รูปแบบ <small>เลือกได้หลายรูปแบบ</small></span><div class="chips" id="c-formats"></div></div>
       <div class="fgroup fwide"><span class="flabel">ประเภทคอนเทนต์ <small>เลือกได้หลายประเภท</small></span><div class="chips" id="c-types"></div></div>
       <span class="tag" id="content-src"></span>
     </div>
@@ -1505,7 +1509,8 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   let sortKey = 'views';
   // content page filters: shop, platform, content types (several at once)
   let cBrand = 'all', cPlat = 'all';
-  const cTypes = new Set();
+  const cTypes = new Set(), cFormats = new Set();
+  const FORMAT_ORDER = ['วิดีโอ', 'Reel', 'Shorts', 'วิดีโอยาว', 'Live', 'รูปภาพ', 'อัลบั้ม', 'ลิงก์', 'ข้อความ', 'อีเวนต์', 'อื่นๆ'];
   const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
   let clipQuery = '';
   $('#q').addEventListener('input', e => {
@@ -1525,18 +1530,25 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     if (months.includes(prevM)) $('#f-month').value = prevM;
     const ym = $('#f-month').value, mi = ym ? +ym.slice(5) - 1 : 9, mLabel = ym ? `${MONTHS[mi]} ${ym.slice(0, 4)}` : '';
     const all = CLIPS.filter(c => accIds.has(c.acc) && (!ym || (c.posted.getFullYear() === +ym.slice(0, 4) && c.posted.getMonth() === mi)));
-    // content type chips with counts for the clips in view
+    // format chips (counts over every post in view), then type chips over the chosen formats
+    const fmts = FORMAT_ORDER.filter(f => all.some(c => fmtOf(c) === f));
+    [...cFormats].forEach(f => { if (!fmts.includes(f)) cFormats.delete(f); });
+    const fn = f => all.filter(c => fmtOf(c) === f).length;
+    $('#c-formats').innerHTML = `<button class="chip" type="button" data-cformat="*" aria-pressed="${!cFormats.size}">ทุกรูปแบบ <span class="n">${all.length}</span></button>`
+      + fmts.map(f => `<button class="chip" type="button" data-cformat="${esc(f)}" aria-pressed="${cFormats.has(f)}">${esc(f)} <span class="n">${fn(f)}</span></button>`).join('');
+    const allF = all.filter(c => !cFormats.size || cFormats.has(fmtOf(c)));
+    // content type chips with counts for the posts in view
     const types = [...new Set([...CLIP_TYPES, ...all.map(c => c.type).filter(Boolean)])];
     [...cTypes].forEach(t => { if (!types.includes(t)) cTypes.delete(t); });
-    const tn = t => all.filter(c => c.type === t).length;
-    $('#c-types').innerHTML = `<button class="chip" type="button" data-ctype="*" aria-pressed="${!cTypes.size}">ทุกประเภท <span class="n">${all.length}</span></button>`
+    const tn = t => allF.filter(c => c.type === t).length;
+    $('#c-types').innerHTML = `<button class="chip" type="button" data-ctype="*" aria-pressed="${!cTypes.size}">ทุกประเภท <span class="n">${allF.length}</span></button>`
       + types.map(t => `<button class="chip" type="button" data-ctype="${esc(t)}" aria-pressed="${cTypes.has(t)}"${tn(t) ? '' : ' disabled'}>${esc(t)} <span class="n">${tn(t)}</span></button>`).join('');
     $('#content-body').hidden = !all.length;
     $('#content-empty').hidden = !!all.length;
     const pl = [...new Set(accs.map(a => a.platform))], srcName = pl.length > 1 ? 'หลายแพลตฟอร์ม' : pl[0] === 'TikTok' ? 'ไฟล์ TikTok Studio + TikTok API' : pl[0] + ' API';
     $('#content-src').textContent = all.length ? (LIVE.on ? 'ข้อมูลจริงจากระบบ · ' + srcName : 'ข้อมูลจริง · ' + srcName) : 'ยังไม่มีข้อมูล';
     if (!all.length) return;
-    const rows = all.filter(c => (!cTypes.size || cTypes.has(c.type)) && (!clipQuery || String(c.title).toLowerCase().includes(clipQuery))).sort((p, q) => q[sortKey] - p[sortKey]);
+    const rows = allF.filter(c => (!cTypes.size || cTypes.has(c.type)) && (!clipQuery || String(c.title).toLowerCase().includes(clipQuery))).sort((p, q) => q[sortKey] - p[sortKey]);
     const tv = all.reduce((s, c) => s + c.views, 0);
     const rv = rows.reduce((s, c) => s + c.views, 0);
     const er = rv ? rows.reduce((s, c) => s + c.likes + c.comments + c.shares + c.saves, 0) / rv * 100 : 0;
@@ -1544,7 +1556,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const avs = accs.map(a => a.metrics.find(m => m.key === 'views').data[mi]);
     const accViews = avs.every(v => v != null) ? avs.reduce((x, v) => x + v, 0) : null; // all selected accounts need a monthly total
     $('#content-sum').innerHTML = `
-      <div class="stat"><div class="lbl">คลิปที่โพสต์ (Monthly Output)</div><div class="val">${all.length}</div><div class="sub">${multi ? `${accs.length} บัญชีที่เลือก` : 'นับจากระบบอัตโนมัติ'}</div></div>
+      <div class="stat"><div class="lbl">โพสต์ที่ลง (ทุกรูปแบบ)</div><div class="val">${all.length}</div><div class="sub">${multi ? `${accs.length} บัญชีที่เลือก` : 'นับจากระบบอัตโนมัติ'}</div></div>
       <div class="stat"><div class="lbl">Monthly Upload Views</div><div class="val">${fmtC(tv)}</div><div class="sub">วิวรวมของคลิปที่โพสต์เดือนนี้</div></div>
       <div class="stat"><div class="lbl">ER ของคลิปที่แสดง</div><div class="val">${pct(er, 2)}</div><div class="sub">(ไลก์+คอมเมนต์+แชร์+เซฟ) ÷ วิว</div></div>
       <div class="stat"><div class="lbl">คลิปที่บูสต์</div><div class="val">${boosted}</div><div class="sub">ติ๊กในตารางเพื่อแยกออก</div></div>`;
@@ -1558,9 +1570,10 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const sortLbl = { views: 'วิว', vpd: 'วิวเฉลี่ยต่อวัน', er: 'ER' }[sortKey];
     $('#rank-title').textContent = `Top คลิปประจำเดือน ${mLabel} · เรียงตาม${sortLbl}`;
     $('#rank-desc').textContent = 'วิวเป็นยอดสะสมถึงวันที่ export คลิปที่โพสต์ต้นเดือนจึงได้เปรียบ ดูคอลัมน์วิวต่อวันประกอบ · คลิกชื่อคลิปเพื่อเปิดใน TikTok';
-    $('#content-table').innerHTML = rows.length ? `<table><thead><tr><th>#</th><th style="text-align:left">คลิป</th>${multi ? '<th style="text-align:left">บัญชี</th>' : ''}<th style="text-align:left">โพสต์</th><th style="text-align:left">ประเภท</th><th style="text-align:left">สินค้า</th><th>วิว</th><th>วิว/วัน</th><th>ไลก์</th><th>คอมเมนต์</th><th>แชร์</th><th>เซฟ</th><th>ER</th><th>บูสต์</th></tr></thead><tbody>`
+    $('#content-table').innerHTML = rows.length ? `<table><thead><tr><th>#</th><th style="text-align:left">โพสต์</th>${multi ? '<th style="text-align:left">บัญชี</th>' : ''}<th style="text-align:left">รูปแบบ</th><th style="text-align:left">วันที่</th><th style="text-align:left">ประเภท</th><th style="text-align:left">สินค้า</th><th>วิว</th><th>วิว/วัน</th><th>ไลก์</th><th>คอมเมนต์</th><th>แชร์</th><th>เซฟ</th><th>ER</th><th>บูสต์</th></tr></thead><tbody>`
       + rows.map((c, i) => `<tr><td class="rank">${i + 1}</td>
         <td class="wrap"><a class="clip" href="${clipUrl(c)}" target="_blank" rel="noopener">${esc(c.title.length > 90 ? c.title.slice(0, 88) + '…' : c.title)}</a></td>${multi ? `<td style="text-align:left;white-space:nowrap">${accName(accById(c.acc))}</td>` : ''}
+        <td style="text-align:left"><span class="fmt-pill${isVideo(c) ? ' vid' : ''}">${esc(fmtOf(c))}</span></td>
         <td style="text-align:left">${fmtDate(c.posted)}</td>
         <td style="text-align:left"><select class="tag-sel" id="t-${c.acc}-${c.id}" data-id="${c.id}" data-acc="${c.acc}" aria-label="ประเภทคอนเทนต์">${CLIP_TYPES.map(t => `<option${t === c.type ? ' selected' : ''}>${t}</option>`).join('')}</select></td>
         <td style="text-align:left">${c.product ? `<span class="tag">${c.product}</span>` : '<span class="em">–</span>'}</td>
@@ -1665,7 +1678,11 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   const partial = () => repMonth === AS_OF.getMonth();
   const momOf = (cur, prev) => (partial() || cur == null || prev == null || prev === 0) ? null : (cur - prev) / Math.abs(prev) * 100;
   const momEl = v => v == null ? '' : `<span class="mom ${v >= 0 ? 'up' : 'down'}">${v >= 0 ? ARR_UP : ARR_DN}${Math.abs(v) >= 100 ? Math.abs(v).toFixed(0) : Math.abs(v).toFixed(1)}%</span>`;
-  const clipsFor = (id, mi) => CLIPS.filter(c => c.acc === id && c.posted.getFullYear() === 2026 && c.posted.getMonth() === mi);
+  // Post formats. Sections about "clips" (Short VDO, Reels Top 5, Video Analysis, drafts) use videos only.
+  const VIDEO_FORMATS = ['วิดีโอ', 'Reel', 'Shorts', 'วิดีโอยาว', 'Live'];
+  const fmtOf = c => c.format || ({ TikTok: 'วิดีโอ', Facebook: 'Reel', Instagram: 'Reel', YouTube: 'วิดีโอ' }[(accById(c.acc) || {}).platform] || 'วิดีโอ');
+  const isVideo = c => VIDEO_FORMATS.includes(fmtOf(c));
+  const clipsFor = (id, mi) => CLIPS.filter(c => c.acc === id && c.posted.getFullYear() === 2026 && c.posted.getMonth() === mi && isVideo(c));
   const anyClipMonth = id => { const c = CLIPS.find(x => x.acc === id); return c ? c.posted.getMonth() : null; };
   function uploadViews(id, mi) {
     const sum = m2 => clipsFor(id, m2).reduce((s, c) => s + c.views, 0);
@@ -2153,10 +2170,11 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   });
   $('#f-month').addEventListener('change', renderContent);
   document.addEventListener('click', e => {
-    const b = e.target.closest('[data-cbrand], [data-cplat], [data-ctype]');
+    const b = e.target.closest('[data-cbrand], [data-cplat], [data-ctype], [data-cformat]');
     if (!b || b.disabled) return;
     if (b.dataset.cbrand) cBrand = b.dataset.cbrand;
     if (b.dataset.cplat) cPlat = b.dataset.cplat;
+    if (b.dataset.cformat) { const f = b.dataset.cformat; if (f === '*') cFormats.clear(); else if (cFormats.has(f)) cFormats.delete(f); else cFormats.add(f); }
     if (b.dataset.ctype) { const t = b.dataset.ctype; if (t === '*') cTypes.clear(); else if (cTypes.has(t)) cTypes.delete(t); else cTypes.add(t); }
     renderContent();
   });
@@ -2222,7 +2240,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     });
     const liveClipAccs = new Set((j.clips || []).map(c => c.acc));
     for (let i = CLIPS.length - 1; i >= 0; i--) if (liveClipAccs.has(CLIPS[i].acc)) CLIPS.splice(i, 1);
-    (j.clips || []).forEach(c => { const k = mkClip(c.acc, [c.title, c.id, c.posted, c.views, c.likes, c.comments, c.shares, c.saves, c.type || 'สินค้า', c.product || ''], c.url); k.boosted = !!c.boosted; CLIPS.push(k); });
+    (j.clips || []).forEach(c => { const k = mkClip(c.acc, [c.title, c.id, c.posted, c.views, c.likes, c.comments, c.shares, c.saves, c.type || 'สินค้า', c.product || ''], c.url); k.boosted = !!c.boosted; k.format = c.format || ''; CLIPS.push(k); });
     Object.entries(j.audience || {}).forEach(([id, au]) => {
       const days = {};
       (au.activity || []).forEach(([label, v]) => { const [d, h] = label.split(' '); (days[d] = days[d] || Array(24).fill(null))[+h] = v; });

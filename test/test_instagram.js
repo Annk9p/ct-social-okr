@@ -43,7 +43,9 @@ t('interactions + er', m.inter[0] === 155 && m.er[0] === 5, [m.inter, m.er]);
 t('net follower = follows - unfollows', m.nf[0] === 31, m.nf);
 t('output counts reels only', m.output[9] === 1 && m.output[0] === 0, m.output);
 const c = d.clips.filter(x => x.acc === 'ig-eloop');
-t('reel in clips with insights, image excluded', c.length === 1 && c[0].views === 900 && c[0].likes === 40 && c[0].shares === 6 && c[0].saves === 3 && c[0].title === 'รีวิว Moov ฟิล์ม' && c[0].url === 'https://www.instagram.com/reel/m1/', c);
+t('image kept as a post with its format', c.length === 2 && c.find(x => x.id === 'm2').format === 'รูปภาพ', c);
+t('reel in clips with insights', c.find(x => x.id === 'm1').format === 'Reel' && c.find(x => x.id === 'm1').views === 900 && c.find(x => x.id === 'm1').likes === 40 && c.find(x => x.id === 'm1').shares === 6 && c.find(x => x.id === 'm1').saves === 3 && c.find(x => x.id === 'm1').title === 'รีวิว Moov ฟิล์ม', c);
+t('posts_all counts every format', m.posts_all[9] === 2, m.posts_all);
 t('status connected with followers', d.status['ig-eloop'].connected && d.status['ig-eloop'].username === 'eloopth' && d.status['ig-eloop'].followers === 5100 && d.status['ig-eloop'].lastSync, d.status['ig-eloop']);
 t('moov not connected', d.status['ig-moov'].connected === false);
 // a normal sync refreshes only recent months and keeps January
