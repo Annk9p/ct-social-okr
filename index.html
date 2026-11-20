@@ -884,6 +884,24 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 .note-st { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 4px; font-size: 12px; color: var(--omnix-fg-muted); }
 .note-tag.is-draft { color: var(--omnix-accent); font-weight: 600; }
 .note-st .linkbtn { margin-left: auto; }
+
+/* content page: grouped filters and even spacing between blocks */
+#content-body { display: flex; flex-direction: column; gap: var(--gap); }
+#content-body[hidden] { display: none; }
+.filter-card { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px 28px; }
+.fgroup { display: grid; gap: 8px; min-width: 0; }
+.fgroup.fwide { flex-basis: 100%; padding-top: 16px; border-top: 1px solid var(--omnix-border); }
+.flabel { font-size: 12px; font-weight: 600; color: var(--omnix-fg-muted); letter-spacing: .02em; }
+.flabel small { font-weight: 400; margin-left: 6px; }
+.filter-card .seg { box-shadow: none; background: var(--omnix-surface-2); }
+.filter-card .seg .pico { margin-right: 6px; }
+.filter-card select { min-width: 150px; height: 40px; }
+.filter-card .chips { margin: 0; gap: 8px; }
+.filter-card .chip { box-shadow: none; background: var(--omnix-surface-2); }
+.filter-card .chip[aria-pressed="true"] { background: var(--omnix-accent-soft); }
+#content-src { margin-left: auto; align-self: center; }
+#v-content .panel > h2 { margin-bottom: 4px; }
+#v-content .panel > .desc { margin-bottom: 16px; }
 </style>
 </head>
 <body>
@@ -953,16 +971,17 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   </section>
 
   <section id="v-content" data-v="content" hidden>
-    <div class="view-head"><div><h1>Top Ranking คอนเทนต์</h1><p>จัดอันดับคลิปที่โพสต์ในเดือน จากไฟล์วิดีโอที่ export จาก TikTok Studio</p></div></div>
-    <div class="filters">
-      <select id="f-acc" aria-label="บัญชี"></select>
-      <select id="f-month" aria-label="เดือน"></select>
-      <select id="f-type" aria-label="ประเภทคอนเทนต์"><option value="all">ทุกประเภทคอนเทนต์</option></select>
-      <div class="seg" role="group" aria-label="เรียงตาม" id="sort-seg">
+    <div class="view-head"><div><h1>Top Ranking คอนเทนต์</h1><p>จัดอันดับคลิปที่โพสต์ในเดือน แยกตามร้าน แพลตฟอร์ม และประเภทคอนเทนต์</p></div></div>
+    <div class="panel filter-card" role="group" aria-label="ตัวกรองคอนเทนต์">
+      <div class="fgroup"><span class="flabel">ร้าน</span><div class="seg" id="c-brand"></div></div>
+      <div class="fgroup"><span class="flabel">แพลตฟอร์ม</span><div class="seg" id="c-plat"></div></div>
+      <div class="fgroup"><span class="flabel">เดือน</span><select id="f-month" aria-label="เดือน"></select></div>
+      <div class="fgroup"><span class="flabel">เรียงตาม</span><div class="seg" role="group" aria-label="เรียงตาม" id="sort-seg">
         <button type="button" data-sort="views" aria-pressed="true">วิว</button>
         <button type="button" data-sort="vpd" aria-pressed="false">วิวต่อวัน</button>
         <button type="button" data-sort="er" aria-pressed="false">ER</button>
-      </div>
+      </div></div>
+      <div class="fgroup fwide"><span class="flabel">ประเภทคอนเทนต์ <small>เลือกได้หลายประเภท</small></span><div class="chips" id="c-types"></div></div>
       <span class="tag" id="content-src"></span>
     </div>
     <div id="content-body">
@@ -973,7 +992,7 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       </div>
       <div class="panel"><h2 id="rank-title">Top คลิปประจำเดือน</h2><p class="desc" id="rank-desc"></p><div class="tbl" id="content-table"></div></div>
     </div>
-    <div class="panel" id="content-empty" hidden><h2>ยังไม่มีข้อมูลรายคลิปของบัญชีนี้</h2><p class="desc" style="margin:0">ในระบบจริง YouTube และ Facebook จะดึงรายคลิปอัตโนมัติ ส่วน TikTok อัปโหลดไฟล์วิดีโอจากหน้าอัปโหลด TikTok ตอนนี้มีตัวอย่างข้อมูลจริงเฉพาะ TikTok Eloop เดือน ต.ค. 2026</p></div>
+    <div class="panel" id="content-empty" hidden><h2>ยังไม่มีคลิปของตัวเลือกนี้</h2><p class="desc" style="margin:0">ลองเปลี่ยนร้าน แพลตฟอร์ม หรือเดือน · TikTok ดึงจาก TikTok API ทุกชั่วโมงและไฟล์ export ส่วน Facebook, YouTube และ Instagram ดึงอัตโนมัติทุกเช้า</p></div>
   </section>
 
   <section id="v-report" data-v="report" hidden>
@@ -1484,8 +1503,9 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
   }
   const CLIPS = TT_CLIPS.map(r => mkClip('tt-eloop', r));
   let sortKey = 'views';
-  $('#f-acc').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
-  $('#f-type').insertAdjacentHTML('beforeend', CLIP_TYPES.map(t => `<option>${t}</option>`).join(''));
+  // content page filters: shop, platform, content types (several at once)
+  let cBrand = 'all', cPlat = 'all';
+  const cTypes = new Set();
   const fmtDate = d => `${d.getDate()} ${MONTHS[d.getMonth()]}`;
   let clipQuery = '';
   $('#q').addEventListener('input', e => {
@@ -1493,54 +1513,67 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     if (location.hash !== '#content' && clipQuery) location.hash = 'content'; else renderContent();
   });
   function renderContent() {
-    const acc = $('#f-acc').value, ft = $('#f-type').value;
-    const months = [...new Set(CLIPS.filter(c => c.acc === acc).map(c => c.posted.getFullYear() + '-' + String(c.posted.getMonth() + 1).padStart(2, '0')))].sort().reverse();
+    const brands = ['Eloop', 'Moov'], plats = ['TikTok', 'Facebook', 'YouTube', 'Instagram'].filter(p => ACCOUNTS.some(a => a.platform === p));
+    if (cPlat !== 'all' && !plats.includes(cPlat)) cPlat = 'all';
+    $('#c-brand').innerHTML = [['all', 'ทุกร้าน'], ...brands.map(b => [b, b])].map(([v, l]) => `<button type="button" data-cbrand="${v}" aria-pressed="${cBrand === v}">${v === 'all' ? '' : `<img class="blogo" src="assets/brand-${v.toLowerCase()}.png" alt="" width="18" height="18">`}${l}</button>`).join('');
+    $('#c-plat').innerHTML = [['all', 'ทุกแพลตฟอร์ม'], ...plats.map(p => [p, p])].map(([v, l]) => `<button type="button" data-cplat="${v}" aria-pressed="${cPlat === v}">${v === 'all' ? '' : pIco(v)}${l}</button>`).join('');
+    const accs = ACCOUNTS.filter(a => (cBrand === 'all' || a.brand === cBrand) && (cPlat === 'all' || a.platform === cPlat));
+    const accIds = new Set(accs.map(a => a.id)), multi = accs.length > 1;
+    const months = [...new Set(CLIPS.filter(c => accIds.has(c.acc)).map(c => c.posted.getFullYear() + '-' + String(c.posted.getMonth() + 1).padStart(2, '0')))].sort().reverse();
     const prevM = $('#f-month').value;
     $('#f-month').innerHTML = months.length ? months.map(m => `<option value="${m}">${MONTHS[+m.slice(5) - 1]} ${m.slice(0, 4)}</option>`).join('') : '<option value="">–</option>';
     if (months.includes(prevM)) $('#f-month').value = prevM;
     const ym = $('#f-month').value, mi = ym ? +ym.slice(5) - 1 : 9, mLabel = ym ? `${MONTHS[mi]} ${ym.slice(0, 4)}` : '';
-    const all = CLIPS.filter(c => c.acc === acc && (!ym || (c.posted.getFullYear() === +ym.slice(0, 4) && c.posted.getMonth() === mi)));
+    const all = CLIPS.filter(c => accIds.has(c.acc) && (!ym || (c.posted.getFullYear() === +ym.slice(0, 4) && c.posted.getMonth() === mi)));
+    // content type chips with counts for the clips in view
+    const types = [...new Set([...CLIP_TYPES, ...all.map(c => c.type).filter(Boolean)])];
+    [...cTypes].forEach(t => { if (!types.includes(t)) cTypes.delete(t); });
+    const tn = t => all.filter(c => c.type === t).length;
+    $('#c-types').innerHTML = `<button class="chip" type="button" data-ctype="*" aria-pressed="${!cTypes.size}">ทุกประเภท <span class="n">${all.length}</span></button>`
+      + types.map(t => `<button class="chip" type="button" data-ctype="${esc(t)}" aria-pressed="${cTypes.has(t)}"${tn(t) ? '' : ' disabled'}>${esc(t)} <span class="n">${tn(t)}</span></button>`).join('');
     $('#content-body').hidden = !all.length;
     $('#content-empty').hidden = !!all.length;
-    const plat = accById(acc).platform, srcName = plat === 'TikTok' ? 'ไฟล์วิดีโอ TikTok Studio' : plat + ' API';
+    const pl = [...new Set(accs.map(a => a.platform))], srcName = pl.length > 1 ? 'หลายแพลตฟอร์ม' : pl[0] === 'TikTok' ? 'ไฟล์ TikTok Studio + TikTok API' : pl[0] + ' API';
     $('#content-src').textContent = all.length ? (LIVE.on ? 'ข้อมูลจริงจากระบบ · ' + srcName : 'ข้อมูลจริง · ' + srcName) : 'ยังไม่มีข้อมูล';
     if (!all.length) return;
-    const rows = all.filter(c => (ft === 'all' || c.type === ft) && (!clipQuery || String(c.title).toLowerCase().includes(clipQuery))).sort((p, q) => q[sortKey] - p[sortKey]);
+    const rows = all.filter(c => (!cTypes.size || cTypes.has(c.type)) && (!clipQuery || String(c.title).toLowerCase().includes(clipQuery))).sort((p, q) => q[sortKey] - p[sortKey]);
     const tv = all.reduce((s, c) => s + c.views, 0);
     const rv = rows.reduce((s, c) => s + c.views, 0);
     const er = rv ? rows.reduce((s, c) => s + c.likes + c.comments + c.shares + c.saves, 0) / rv * 100 : 0;
     const boosted = all.filter(c => c.boosted).length;
-    const accViews = accById(acc).metrics.find(m => m.key === 'views').data[mi];
+    const avs = accs.map(a => a.metrics.find(m => m.key === 'views').data[mi]);
+    const accViews = avs.every(v => v != null) ? avs.reduce((x, v) => x + v, 0) : null; // all selected accounts need a monthly total
     $('#content-sum').innerHTML = `
-      <div class="stat"><div class="lbl">คลิปที่โพสต์ (Monthly Output)</div><div class="val">${all.length}</div><div class="sub">นับจากไฟล์อัตโนมัติ</div></div>
+      <div class="stat"><div class="lbl">คลิปที่โพสต์ (Monthly Output)</div><div class="val">${all.length}</div><div class="sub">${multi ? `${accs.length} บัญชีที่เลือก` : 'นับจากระบบอัตโนมัติ'}</div></div>
       <div class="stat"><div class="lbl">Monthly Upload Views</div><div class="val">${fmtC(tv)}</div><div class="sub">วิวรวมของคลิปที่โพสต์เดือนนี้</div></div>
       <div class="stat"><div class="lbl">ER ของคลิปที่แสดง</div><div class="val">${pct(er, 2)}</div><div class="sub">(ไลก์+คอมเมนต์+แชร์+เซฟ) ÷ วิว</div></div>
       <div class="stat"><div class="lbl">คลิปที่บูสต์</div><div class="val">${boosted}</div><div class="sub">ติ๊กในตารางเพื่อแยกออก</div></div>`;
+    if (!accViews) { $('#share-desc').textContent = 'ยังไม่มีวิวรวมรายเดือนของบางบัญชีที่เลือก'; $('#share-bar').innerHTML = ''; }
     if (accViews) {
       const sh = tv / accViews * 100;
-      $('#share-desc').textContent = `คลิปที่โพสต์เดือนนี้ได้ ${fmt(tv)} วิว จากวิวทั้งบัญชี ${fmt(accViews)} วิว ที่เหลือมาจากคลิปเก่าและช่องทางอื่น เช่น LIVE`;
+      $('#share-desc').textContent = `คลิปที่โพสต์เดือนนี้ได้ ${fmt(tv)} วิว จากวิวทั้ง${multi ? ` ${accs.length} บัญชี` : 'บัญชี'} ${fmt(accViews)} วิว ที่เหลือมาจากคลิปเก่าและช่องทางอื่น เช่น LIVE`;
       $('#share-bar').innerHTML = `<div class="segbar" role="img" aria-label="คลิปใหม่ ${pct(sh, 1)} ของวิวทั้งบัญชี"><span class="s1" style="width:${sh}%"></span><span class="s2" style="width:${100 - sh}%"></span></div>
         <div class="legend-line" style="margin:10px 0 0"><span class="item"><span class="sw-sq s1"></span>คลิปที่โพสต์เดือนนี้ <b>${pct(sh, 1)}</b></span><span class="item"><span class="sw-sq s2"></span>คลิปเก่าและอื่นๆ <b>${pct(100 - sh, 1)}</b></span></div>`;
     }
     const sortLbl = { views: 'วิว', vpd: 'วิวเฉลี่ยต่อวัน', er: 'ER' }[sortKey];
     $('#rank-title').textContent = `Top คลิปประจำเดือน ${mLabel} · เรียงตาม${sortLbl}`;
     $('#rank-desc').textContent = 'วิวเป็นยอดสะสมถึงวันที่ export คลิปที่โพสต์ต้นเดือนจึงได้เปรียบ ดูคอลัมน์วิวต่อวันประกอบ · คลิกชื่อคลิปเพื่อเปิดใน TikTok';
-    $('#content-table').innerHTML = rows.length ? `<table><thead><tr><th>#</th><th style="text-align:left">คลิป</th><th style="text-align:left">โพสต์</th><th style="text-align:left">ประเภท</th><th style="text-align:left">สินค้า</th><th>วิว</th><th>วิว/วัน</th><th>ไลก์</th><th>คอมเมนต์</th><th>แชร์</th><th>เซฟ</th><th>ER</th><th>บูสต์</th></tr></thead><tbody>`
+    $('#content-table').innerHTML = rows.length ? `<table><thead><tr><th>#</th><th style="text-align:left">คลิป</th>${multi ? '<th style="text-align:left">บัญชี</th>' : ''}<th style="text-align:left">โพสต์</th><th style="text-align:left">ประเภท</th><th style="text-align:left">สินค้า</th><th>วิว</th><th>วิว/วัน</th><th>ไลก์</th><th>คอมเมนต์</th><th>แชร์</th><th>เซฟ</th><th>ER</th><th>บูสต์</th></tr></thead><tbody>`
       + rows.map((c, i) => `<tr><td class="rank">${i + 1}</td>
-        <td class="wrap"><a class="clip" href="${clipUrl(c)}" target="_blank" rel="noopener">${esc(c.title.length > 90 ? c.title.slice(0, 88) + '…' : c.title)}</a></td>
+        <td class="wrap"><a class="clip" href="${clipUrl(c)}" target="_blank" rel="noopener">${esc(c.title.length > 90 ? c.title.slice(0, 88) + '…' : c.title)}</a></td>${multi ? `<td style="text-align:left;white-space:nowrap">${accName(accById(c.acc))}</td>` : ''}
         <td style="text-align:left">${fmtDate(c.posted)}</td>
-        <td style="text-align:left"><select class="tag-sel" id="t-${c.id}" data-id="${c.id}" aria-label="ประเภทคอนเทนต์">${CLIP_TYPES.map(t => `<option${t === c.type ? ' selected' : ''}>${t}</option>`).join('')}</select></td>
+        <td style="text-align:left"><select class="tag-sel" id="t-${c.acc}-${c.id}" data-id="${c.id}" data-acc="${c.acc}" aria-label="ประเภทคอนเทนต์">${CLIP_TYPES.map(t => `<option${t === c.type ? ' selected' : ''}>${t}</option>`).join('')}</select></td>
         <td style="text-align:left">${c.product ? `<span class="tag">${c.product}</span>` : '<span class="em">–</span>'}</td>
         <td><b>${fmt(c.views)}</b></td><td>${fmt(c.vpd)}</td><td>${fmt(c.likes)}</td><td>${fmt(c.comments)}</td><td>${fmt(c.shares)}</td><td>${fmt(c.saves)}</td><td>${pct(c.er, 2)}</td>
-        <td><input type="checkbox" class="boost-cb" id="b-${c.id}" data-id="${c.id}" ${c.boosted ? 'checked' : ''} aria-label="คลิปนี้ถูกบูสต์"></td></tr>`).join('')
-      + `</tbody></table>` : `<p style="padding:16px;margin:0;color:var(--ink-2)">ไม่มีคลิปประเภทนี้ในเดือนนี้</p>`;
+        <td> <input type="checkbox" class="boost-cb" id="b-${c.acc}-${c.id}" data-id="${c.id}" data-acc="${c.acc}" ${c.boosted ? 'checked' : ''} aria-label="คลิปนี้ถูกบูสต์"></td></tr>`).join('')
+      + `</tbody></table>` : `<p style="padding:16px;margin:0;color:var(--ink-2)">ไม่มีคลิปประเภทที่เลือกในเดือนนี้</p>`;
     typeChart($('#chart-type'), all);
   }
   document.addEventListener('change', e => {
     const sel = e.target.closest('.tag-sel');
-    if (sel) { CLIPS.find(c => c.id === sel.dataset.id).type = sel.value; renderContent(); }
+    if (sel) { CLIPS.find(c => c.id === sel.dataset.id && c.acc === sel.dataset.acc).type = sel.value; renderContent(); }
     const cb = e.target.closest('.boost-cb');
-    if (cb) { CLIPS.find(c => c.id === cb.dataset.id).boosted = cb.checked; renderContent(); }
+    if (cb) { CLIPS.find(c => c.id === cb.dataset.id && c.acc === cb.dataset.acc).boosted = cb.checked; renderContent(); }
   });
 
   function typeChart(el, rows) {
@@ -2118,7 +2151,15 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
     const mm = e.target.closest('[data-metric]');
     if (mm) { curMetric = mm.dataset.metric; renderAccount(); }
   });
-  ['f-acc', 'f-month', 'f-type'].forEach(id => $('#' + id).addEventListener('change', renderContent));
+  $('#f-month').addEventListener('change', renderContent);
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-cbrand], [data-cplat], [data-ctype]');
+    if (!b || b.disabled) return;
+    if (b.dataset.cbrand) cBrand = b.dataset.cbrand;
+    if (b.dataset.cplat) cPlat = b.dataset.cplat;
+    if (b.dataset.ctype) { const t = b.dataset.ctype; if (t === '*') cTypes.clear(); else if (cTypes.has(t)) cTypes.delete(t); else cTypes.add(t); }
+    renderContent();
+  });
   let rt; window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { document.querySelectorAll('.tip').forEach(t => t.hidden = true); }, 100); });
   $('#btn-theme').addEventListener('click', () => {
     const r = document.documentElement, dark = r.getAttribute('data-theme') === 'dark' || (!r.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
@@ -2154,7 +2195,6 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
       const has = j.accounts && j.accounts[id] && Object.keys(j.accounts[id].monthly || {}).length;
       if (has && !accById(id)) ACCOUNTS.push(igAccount(id, brand)); // after YouTube: TikTok, Facebook, YouTube, Instagram
     });
-    $('#f-acc').innerHTML = ACCOUNTS.map(a => `<option value="${a.id}">${a.name}</option>`).join('');
     if (j.generatedAt) { const d = new Date(String(j.generatedAt).replace(' ', 'T') + ':00+07:00'); if (!isNaN(d)) AS_OF = d; }
     (j.targets || []).forEach(t => { const a = accById(t.account), m = a && a.metrics.find(x => x.key === t.key); if (m) { m.target = t.target; m.base = t.base; } });
     Object.entries(j.accounts || {}).forEach(([id, la]) => {
