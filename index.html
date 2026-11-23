@@ -920,6 +920,12 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
 .acc-picker .chip .pico { margin-right: 6px; }
 .acc-picker .chip:disabled { opacity: .45; cursor: default; }
 @media (max-width: 600px) { .acc-picker .fgroup { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
+
+.acc-picker .seg { box-shadow: none; background: var(--omnix-surface-2); }
+.acc-picker .seg .blogo { width: 20px; height: 20px; border-radius: 5px; margin-right: 6px; box-shadow: none; }
+.acc-picker .seg .pico { margin-right: 6px; }
+.acc-picker .seg button:disabled { opacity: .4; cursor: default; }
+h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 </style>
 </head>
 <body>
@@ -1408,16 +1414,45 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
 
   /* ---------- account view ---------- */
   let curAcc = 'tt-eloop', curMetric = 'views';
+  // Account page selection: one brand or all × one platform or all. Several accounts → a combined view.
+  let accBrand = null, accPlat = null;
+  const GENERIC_LABEL = { views: 'Views', nf: 'Net Follower', likes: 'Like', comments: 'Comment', shares: 'Share', saves: 'Save', output: 'จำนวนคลิป', inter: 'Interactions', pv: 'Profile Views', watch: 'Watch time (นาที)' };
+  function comboAccount(list, brand, plat) {
+    const samePlat = new Set(list.map(x => x.platform)).size === 1;
+    const keys = list[0].metrics.map(m => m.key).filter(k => list.every(x => x.metrics.some(m => m.key === k)));
+    const metrics = keys.map(k => {
+      const ms = list.map(x => x.metrics.find(m => m.key === k)), kind = ms[0].kind;
+      if (kind === 'rate' && !samePlat) return null; // rates of different platforms are not comparable
+      const agg = vs => kind === 'sum' ? vs.reduce((t, v) => t + v, 0) : Math.round(vs.reduce((t, v) => t + v, 0) / vs.length * 100) / 100;
+      const data = MONTHS.map((_, i) => { const vs = ms.map(m => m.data[i]); return vs.some(v => v == null) ? null : agg(vs); });
+      const allT = ms.every(m => m.target != null), allB = ms.every(m => m.base != null);
+      return { key: k, kind, unit: ms[0].unit, data,
+        label: (samePlat ? ms[0].label : (GENERIC_LABEL[k] || ms[0].label)) + (kind === 'rate' ? ' (เฉลี่ยของบัญชี)' : ''),
+        target: allT ? agg(ms.map(m => m.target)) : null, base: allB ? agg(ms.map(m => m.base)) : null,
+        pending: allT ? undefined : 'ไม่มีเป้ารวม เพราะบางบัญชีไม่มีเป้าของตัวชี้วัดนี้' };
+    }).filter(Boolean);
+    return { id: 'combo', brand, platform: plat === 'all' ? null : plat, name: `${brand === 'all' ? 'ทุกแบรนด์' : brand} · ${plat === 'all' ? 'ทุกแพลตฟอร์ม' : plat}`, metrics, notes: [], combo: list };
+  }
+  function currentAccountView() {
+    const cur = accById(curAcc) || ACCOUNTS[0];
+    if (accBrand == null) accBrand = cur.brand;
+    if (accPlat == null) accPlat = cur.platform;
+    if (accPlat !== 'all' && !ACCOUNTS.some(x => x.platform === accPlat)) accPlat = 'all';
+    const list = ACCOUNTS.filter(x => (accBrand === 'all' || x.brand === accBrand) && (accPlat === 'all' || x.platform === accPlat));
+    if (list.length === 1) { curAcc = list[0].id; return list[0]; }
+    return comboAccount(list.length ? list : [cur], accBrand, accPlat);
+  }
   function renderAccount() {
-    const a = accById(curAcc);
+    const a = currentAccountView();
     if (!a.metrics.find(m => m.key === curMetric && m.kind === 'sum')) curMetric = 'views';
-    $('#acc-title').innerHTML = accName(a);
+    $('#acc-title').innerHTML = a.combo ? `${a.brand !== 'all' ? bLogo(a.brand) : ''}${a.platform ? pIco(a.platform) : ''}${esc(a.name)}` : accName(a);
     const lastV = lastIdx(a.metrics[0].data);
-    const lm = LIVE.months[a.id] || [];
+    const lm = a.combo ? [] : LIVE.months[a.id] || [];
     $('#acc-sub').textContent = `ข้อมูลถึงเดือน ${MONTHS[lastV]} 2026 · ` + (lm.length ? (lm.length >= lastV + 1 ? 'ที่มา: ระบบ (ดึงอัตโนมัติ)' : `ที่มา: ระบบ เดือน ${lm.map(i => MONTHS[i]).join(', ')} · เดือนอื่นจากชีต Data OKR 2026`) : 'ที่มา: ชีต Data OKR 2026 (ตัวอย่าง)');
     // row 1: brand · row 2: platform (the account is the pair)
-    $('#acc-brands').innerHTML = ['Eloop', 'Moov'].map(b => `<button class="chip" type="button" data-abrand="${b}" aria-pressed="${a.brand === b}">${bLogo(b)}${b}</button>`).join('');
-    $('#acc-plats').innerHTML = platforms().map(p => { const x = ACCOUNTS.find(y => y.brand === a.brand && y.platform === p); return `<button class="chip" type="button" data-aplat="${p}" aria-pressed="${a.platform === p}"${x ? '' : ' disabled'}>${pIco(p)}${p}</button>`; }).join('');
+    $('#acc-brands').innerHTML = `<div class="seg">${[['all', 'ทุกแบรนด์'], ['Eloop', 'Eloop'], ['Moov', 'Moov']].map(([v, l]) => `<button type="button" data-abrand="${v}" aria-pressed="${accBrand === v}">${v === 'all' ? '' : bLogo(v)}${l}</button>`).join('')}</div>`;
+    $('#acc-plats').innerHTML = `<div class="seg">${[['all', 'ทุกแพลตฟอร์ม'], ...platforms().map(p => [p, p])].map(([v, l]) => { const ok = v === 'all' || ACCOUNTS.some(y => y.platform === v && (accBrand === 'all' || y.brand === accBrand)); return `<button type="button" data-aplat="${v}" aria-pressed="${accPlat === v}"${ok ? '' : ' disabled'}>${v === 'all' ? '' : pIco(v)}${l}</button>`; }).join('')}</div>`;
+    if (a.combo) $('#acc-sub').textContent = `รวม ${a.combo.length} บัญชี: ${a.combo.map(x => x.name).join(', ')} · เดือนที่บางบัญชียังไม่มีข้อมูลจะเว้นว่าง`;
     const sumMetrics = a.metrics.filter(m => m.kind === 'sum');
     $('#metric-chips').innerHTML = sumMetrics.map(m => `<button class="chip" type="button" data-metric="${m.key}" aria-pressed="${m.key === curMetric}">${m.label}</button>`).join('');
 
@@ -2174,14 +2209,16 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
     const b = e.target.closest('[data-brand]');
     if (b) { brandFilter = b.dataset.brand; document.querySelectorAll('#brand-seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderOverview(); }
     const o = e.target.closest('[data-open]');
-    if (o) { curAcc = o.dataset.open; curMetric = 'views'; if (location.hash === '#account') renderAccount(); else location.hash = 'account'; }
+    if (o) { curAcc = o.dataset.open; accBrand = accPlat = null; curMetric = 'views'; if (location.hash === '#account') renderAccount(); else location.hash = 'account'; }
     const c = e.target.closest('[data-acc]');
     if (c) { curAcc = c.dataset.acc; renderAccount(); }
     const ab = e.target.closest('[data-abrand], [data-aplat]');
     if (ab && !ab.disabled) {
-      const cur = accById(curAcc), brand = ab.dataset.abrand || cur.brand, plat = ab.dataset.aplat || cur.platform;
-      const next = ACCOUNTS.find(x => x.brand === brand && x.platform === plat) || ACCOUNTS.find(x => x.brand === brand);
-      if (next) { curAcc = next.id; renderAccount(); }
+      if (ab.dataset.abrand) accBrand = ab.dataset.abrand;
+      if (ab.dataset.aplat) accPlat = ab.dataset.aplat;
+      // a brand without that platform → keep the brand, fall back to all platforms
+      if (accPlat !== 'all' && !ACCOUNTS.some(x => x.platform === accPlat && (accBrand === 'all' || x.brand === accBrand))) accPlat = 'all';
+      renderAccount();
     }
     const so = e.target.closest('[data-sort]');
     if (so) { sortKey = so.dataset.sort; document.querySelectorAll('#sort-seg button').forEach(x => x.setAttribute('aria-pressed', x === so)); renderContent(); }
