@@ -910,6 +910,16 @@ h1 .pico { margin-right: 10px; } h1 .pico svg { width: 30px; height: 30px; verti
 .plat img.pimg { width: 18px; height: 18px; flex: 0 0 auto; }
 .pico img.pimg { width: 1.15em; height: 1.15em; }
 h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
+
+/* account page picker: brand row, platform row, metric row */
+.acc-picker { gap: 14px; }
+.acc-picker .fgroup { grid-template-columns: 84px minmax(0, 1fr); align-items: center; gap: 12px; flex-basis: 100%; }
+.acc-picker .fgroup + .fgroup { padding-top: 14px; border-top: 1px solid var(--omnix-border); }
+.acc-picker .chips { margin: 0; gap: 8px; }
+.acc-picker .chip .blogo { width: 20px; height: 20px; border-radius: 5px; margin-right: 6px; box-shadow: none; }
+.acc-picker .chip .pico { margin-right: 6px; }
+.acc-picker .chip:disabled { opacity: .45; cursor: default; }
+@media (max-width: 600px) { .acc-picker .fgroup { grid-template-columns: minmax(0, 1fr); gap: 6px; } }
 </style>
 </head>
 <body>
@@ -965,8 +975,11 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
 
   <section id="v-account" data-v="account" hidden>
     <div class="view-head"><div><h1 id="acc-title">รายบัญชี</h1><p id="acc-sub"></p></div></div>
-    <div class="chips" id="acc-chips" role="group" aria-label="เลือกบัญชี"></div>
-    <div class="chips" id="metric-chips" role="group" aria-label="เลือกตัวชี้วัด"></div>
+    <div class="panel filter-card acc-picker">
+      <div class="fgroup fwide-row"><span class="flabel">แบรนด์</span><div class="chips" id="acc-brands" role="group" aria-label="เลือกแบรนด์"></div></div>
+      <div class="fgroup fwide-row"><span class="flabel">แพลตฟอร์ม</span><div class="chips" id="acc-plats" role="group" aria-label="เลือกแพลตฟอร์ม"></div></div>
+      <div class="fgroup fwide-row"><span class="flabel">ตัวชี้วัด</span><div class="chips" id="metric-chips" role="group" aria-label="เลือกตัวชี้วัด"></div></div>
+    </div>
     <div class="grid2">
       <div class="panel"><h2>ยอดสะสมเทียบเป้า</h2><p class="desc" id="cum-desc"></p><div class="ox-legend chart-legend" id="cum-legend"></div><div class="chart" id="chart-cum"></div></div>
       <div class="panel"><h2>รายเดือน</h2><p class="desc" id="mon-desc"></p><div class="chart" id="chart-mon"></div><ul class="notes" id="notes"></ul></div>
@@ -1402,7 +1415,9 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
     const lastV = lastIdx(a.metrics[0].data);
     const lm = LIVE.months[a.id] || [];
     $('#acc-sub').textContent = `ข้อมูลถึงเดือน ${MONTHS[lastV]} 2026 · ` + (lm.length ? (lm.length >= lastV + 1 ? 'ที่มา: ระบบ (ดึงอัตโนมัติ)' : `ที่มา: ระบบ เดือน ${lm.map(i => MONTHS[i]).join(', ')} · เดือนอื่นจากชีต Data OKR 2026`) : 'ที่มา: ชีต Data OKR 2026 (ตัวอย่าง)');
-    $('#acc-chips').innerHTML = ACCOUNTS.map(x => `<button class="chip" type="button" data-acc="${x.id}" aria-pressed="${x.id === curAcc}">${accName(x)}</button>`).join('');
+    // row 1: brand · row 2: platform (the account is the pair)
+    $('#acc-brands').innerHTML = ['Eloop', 'Moov'].map(b => `<button class="chip" type="button" data-abrand="${b}" aria-pressed="${a.brand === b}">${bLogo(b)}${b}</button>`).join('');
+    $('#acc-plats').innerHTML = platforms().map(p => { const x = ACCOUNTS.find(y => y.brand === a.brand && y.platform === p); return `<button class="chip" type="button" data-aplat="${p}" aria-pressed="${a.platform === p}"${x ? '' : ' disabled'}>${pIco(p)}${p}</button>`; }).join('');
     const sumMetrics = a.metrics.filter(m => m.kind === 'sum');
     $('#metric-chips').innerHTML = sumMetrics.map(m => `<button class="chip" type="button" data-metric="${m.key}" aria-pressed="${m.key === curMetric}">${m.label}</button>`).join('');
 
@@ -2162,6 +2177,12 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
     if (o) { curAcc = o.dataset.open; curMetric = 'views'; if (location.hash === '#account') renderAccount(); else location.hash = 'account'; }
     const c = e.target.closest('[data-acc]');
     if (c) { curAcc = c.dataset.acc; renderAccount(); }
+    const ab = e.target.closest('[data-abrand], [data-aplat]');
+    if (ab && !ab.disabled) {
+      const cur = accById(curAcc), brand = ab.dataset.abrand || cur.brand, plat = ab.dataset.aplat || cur.platform;
+      const next = ACCOUNTS.find(x => x.brand === brand && x.platform === plat) || ACCOUNTS.find(x => x.brand === brand);
+      if (next) { curAcc = next.id; renderAccount(); }
+    }
     const so = e.target.closest('[data-sort]');
     if (so) { sortKey = so.dataset.sort; document.querySelectorAll('#sort-seg button').forEach(x => x.setAttribute('aria-pressed', x === so)); renderContent(); }
     const rb = e.target.closest('[data-rbrand]');
