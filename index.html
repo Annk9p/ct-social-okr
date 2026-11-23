@@ -927,7 +927,7 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
 .acc-picker .seg button:disabled { opacity: .4; cursor: default; }
 h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 /* ---------- Top Ranking: modern SaaS look (this page only) ---------- */
-#v-content { --rk: var(--omnix-accent); --rk-soft: var(--omnix-accent-soft); --rk-ink: var(--omnix-accent);
+#v-content, #v-home { --rk: var(--omnix-accent); --rk-soft: var(--omnix-accent-soft); --rk-ink: var(--omnix-accent);
   --rk-indigo: var(--omnix-accent); --rk-pink: #EC4899; --rk-orange: #F59E0B; --rk-teal: #14B8A6; display: flex; flex-direction: column; gap: 20px; }
 #v-content[hidden] { display: none; }
 #v-content .panel { border-radius: 20px; border: 0; box-shadow: var(--shadow-card); padding: 20px 22px; }
@@ -967,7 +967,7 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 .rk-chip:disabled { opacity: .4; cursor: default; }
 .rk-month { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .rk-month svg { width: 16px; height: 16px; color: var(--muted); }
-#v-content #f-month { height: 38px; min-width: 170px; border-radius: 12px; padding: 0 12px; font-weight: 600; color: var(--omnix-fg); }
+#v-content #f-month, #v-home #h-month { height: 38px; min-width: 170px; border-radius: 12px; padding: 0 12px; font-weight: 600; color: var(--omnix-fg); }
 .rk-reset { font: inherit; font-size: 13.5px; font-weight: 600; color: var(--rk-ink); background: none; border: 0; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border-radius: 10px; cursor: pointer; }
 .rk-reset:hover { background: var(--rk-soft); }
 .rk-reset svg { width: 16px; height: 16px; }
@@ -1090,6 +1090,33 @@ section[data-v] > * { margin-top: 0; margin-bottom: 0; }
 .filter-card .chip, .acc-picker .chip { background: var(--omnix-surface); border: 1px solid var(--omnix-border); }
 .filter-card .chip[aria-pressed="true"], .acc-picker .chip[aria-pressed="true"] { background: var(--omnix-accent-soft); border-color: var(--omnix-accent); }
 select, input[type="text"], input[type="month"], input[type="number"], input[type="password"], .fld input { border-radius: 10px; }
+/* ---------- all-accounts list (ภาพรวมทั้งหมด) ---------- */
+#v-home .rk-ftitle svg { color: var(--omnix-accent); }
+#v-home .rk-panehead .btn svg { width: 16px; height: 16px; }
+.h-list table { min-width: 980px; }
+.h-list th { white-space: nowrap; }
+.h-list tbody tr { cursor: pointer; }
+.h-list tbody tr:hover td { background: var(--omnix-surface-2); }
+.h-list td { vertical-align: middle; }
+.h-acc { display: flex; align-items: center; gap: 10px; min-width: 0; background: none; border: 0; padding: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; }
+.h-acc .blogo { width: 32px; height: 32px; border-radius: 9px; margin: 0; }
+.h-acc b { display: flex; align-items: center; gap: 6px; font-weight: 600; white-space: nowrap; }
+.h-acc small { display: block; color: var(--muted); font-size: 12px; font-weight: 400; white-space: nowrap; }
+.h-acc:focus-visible { outline: 2px solid var(--omnix-accent); outline-offset: 3px; border-radius: 6px; }
+.h-num { font-variant-numeric: tabular-nums; font-weight: 600; white-space: nowrap; }
+.h-num small { display: block; font-weight: 400; font-size: 11.5px; color: var(--muted); }
+.h-list .rk-delta { font-size: 12px; }
+.h-list .rk-vs:empty { display: none; }
+.h-spark { width: 110px; }
+.h-spark .rk-spark { height: 34px; margin: 0; }
+.h-okr { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; }
+.h-okr small { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+.h-go { color: var(--muted); }
+.h-go svg { width: 18px; height: 18px; display: block; }
+.h-list tfoot td { font-weight: 700; border-top: 2px solid var(--omnix-border); background: var(--omnix-surface); }
+.h-okrbar { grid-column: 1 / -1; display: flex; height: 10px; border-radius: 999px; overflow: hidden; margin-top: 14px; background: var(--omnix-surface-2); }
+.h-okrbar span { display: block; height: 100%; }
+.h-okrbar .g { background: var(--good); } .h-okrbar .w { background: var(--warn); } .h-okrbar .c { background: var(--crit); }
 </style>
 </head>
 <body>
@@ -1099,7 +1126,8 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 <nav class="ox-sidebar" id="nav" aria-label="เมนูหลัก">
   <div class="side-brand"><span class="ox-brand__mark">CT</span><div>CT Social OKR<small>ปี 2026</small></div></div>
   <div class="ox-label-caps ox-nav-group__label">แดชบอร์ด</div>
-  <a class="ox-nav-item" href="#overview" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg>ภาพรวม</a>
+  <a class="ox-nav-item" href="#home" data-view="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></svg>ภาพรวมทั้งหมด</a>
+  <a class="ox-nav-item" href="#overview" data-view="overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>ภาพรวม OKR</a>
   <a class="ox-nav-item" href="#report" data-view="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>สรุปรายเดือน</a>
   <a class="ox-nav-item" href="#account" data-view="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>รายบัญชี</a>
   <a class="ox-nav-item" href="#content" data-view="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>คอนเทนต์</a>
@@ -1124,9 +1152,25 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 <main class="ox-main"><div class="ox-main__inner">
   <div class="ox-alert ox-alert--info" id="live-state" hidden></div>
   <div class="ox-alert ox-alert--warning proto-alert" id="data-banner"><span><b>หน้าตัวอย่าง</b>TikTok Eloop เดือน ต.ค. ใช้ไฟล์ export จริงจาก TikTok Studio (ภาพรวม, ผู้ติดตาม, วิดีโอ) ตัวเลขเดือนอื่นเป็นตัวอย่างจากชีตเดิม ระบบจริงจะดึงจากแพลตฟอร์มโดยตรง สถานะการเชื่อมต่อเป็นข้อมูลสมมติ และปุ่มต่างๆ ยังไม่บันทึกข้อมูลจริง</span></div>
+  <section id="v-home" data-v="home" hidden>
+    <div class="view-head"><div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/></svg></span><div><h1>ภาพรวมทั้งหมด</h1><p>ทุกบัญชีในรายการเดียว ตัวเลขประจำเดือนเทียบเดือนก่อน · คลิกแถวเพื่อดูรายละเอียดบัญชี</p></div></div></div>
+    <div class="panel rk-filters" role="group" aria-label="ตัวกรองข้อมูล">
+      <div class="rk-ftitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/></svg>ตัวกรองข้อมูล<span class="rk-sp"></span><label class="rk-month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>เดือน</span><select id="h-month" aria-label="เดือนของข้อมูล"></select></label></div>
+      <div class="rk-row">
+        <div class="rk-g"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/></svg>แบรนด์</div><div class="rk-chips" id="h-brand"></div></div>
+        <div class="rk-g"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>แพลตฟอร์ม</div><div class="rk-chips" id="h-plat"></div></div>
+      </div>
+    </div>
+    <div class="rk-kpis" id="h-kpis"></div>
+    <div class="panel">
+      <div class="rk-panehead"><div><h2 id="h-title">ทุกบัญชี</h2><p class="desc" id="h-desc"></p></div><a class="btn" href="#overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg>ดูภาพรวม OKR</a></div>
+      <div class="tbl h-list" id="h-table"></div>
+    </div>
+  </section>
+
   <section id="v-overview" data-v="overview">
     <div class="view-head">
-      <div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></span><div><h1>ภาพรวม OKR</h1><p>เทียบยอดสะสมกับเป้าทั้งปี และดูว่าแต่ละบัญชีเร็วหรือช้ากว่าแผน</p></div></div>
+      <div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/></svg></span><div><h1>ภาพรวม OKR</h1><p>เทียบยอดสะสมกับเป้าทั้งปี และดูว่าแต่ละบัญชีเร็วหรือช้ากว่าแผน</p></div></div>
       <div class="right"><div class="seg" role="group" aria-label="กรองแบรนด์" id="brand-seg">
         <button type="button" data-brand="all" aria-pressed="true">ทุกแบรนด์</button>
         <button type="button" data-brand="Eloop" aria-pressed="false"><img class="blogo" src="assets/brand-eloop.png" alt="" width="18" height="18">Eloop</button>
@@ -2457,12 +2501,102 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
   document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
   $('#dr-go').addEventListener('click', () => { $('#dr-msg').innerHTML = `<div class="msg" style="margin:0 0 12px">หน้าตัวอย่าง: ในระบบจริงจะได้ลิงก์ Google Slides ไฟล์ใหม่ "Content OKR ${MONTHS[repMonth]} 2026" ในโฟลเดอร์ของทีม</div>`; });
 
+  /* ---------- all-accounts list (ภาพรวมทั้งหมด) ---------- */
+  let hBrand = 'all', hPlat = 'all', hMonthPicked = false;
+  const mData = (a, key) => (a.metrics.find(m => m.key === key) || { data: [] }).data;
+  const sumAt = (accs, key, i) => { const v = accs.map(a => mData(a, key)[i]).filter(x => x != null); return v.length ? v.reduce((p, q) => p + q, 0) : null; };
+  function connPill(id) {
+    const x = SYS && SYS[id];
+    if (!x) return '<span class="st none">ข้อมูลตัวอย่าง</span>';
+    const tt = id.startsWith('tt-');
+    if (x.error) return '<span class="st crit">ดึงไม่สำเร็จ</span>';
+    if (tt) return x.api ? '<span class="st good">เชื่อมต่อแล้ว</span>' : '<span class="st none">ไฟล์ TikTok</span>';
+    return x.connected ? '<span class="st good">เชื่อมต่อแล้ว</span>' : '<span class="st warn">ยังไม่ได้เชื่อม</span>';
+  }
+  const absDelta = (cur, prev, vs = '') => {
+    if (cur == null || prev == null) return '<span class="rk-delta none">ไม่มีข้อมูลเดือนก่อน</span>';
+    const d = cur - prev, up = d >= 0;
+    return `<span class="rk-delta ${up ? 'up' : 'down'}">${up ? '▲ +' : '▼ '}${fmt(d)}</span><span class="rk-vs">${vs}</span>`;
+  };
+  const followersOf = id => { const x = SYS && SYS[id]; if (!x) return null; if (x.live && x.live.followers != null) return x.live.followers; return x.followers || null; };
+  function renderHome() {
+    const ORDER = ['TikTok', 'Facebook', 'YouTube', 'Instagram'];
+    const plats = ORDER.filter(p => ACCOUNTS.some(a => a.platform === p));
+    if (hPlat !== 'all' && !plats.includes(hPlat)) hPlat = 'all';
+    const ok = (a, b, p) => (b === 'all' || a.brand === b) && (p === 'all' || a.platform === p);
+    const accs = ACCOUNTS.filter(a => ok(a, hBrand, hPlat))
+      .sort((p, q) => ORDER.indexOf(p.platform) - ORDER.indexOf(q.platform) || (p.brand === 'Eloop' ? 0 : 1) - (q.brand === 'Eloop' ? 0 : 1));
+    const grid = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+    const chip = (attr, v, on, label, n, ic) => `<button class="rk-chip" type="button" ${attr}="${v}" aria-pressed="${on}">${ic}<span>${label}</span><span class="n">${n}</span></button>`;
+    $('#h-brand').innerHTML = chip('data-hbrand', 'all', hBrand === 'all', 'ทั้งหมด', ACCOUNTS.filter(a => ok(a, 'all', hPlat)).length, grid)
+      + ['Eloop', 'Moov'].map(b => chip('data-hbrand', b, hBrand === b, b, ACCOUNTS.filter(a => ok(a, b, hPlat)).length, bLogo(b))).join('');
+    $('#h-plat').innerHTML = chip('data-hplat', 'all', hPlat === 'all', 'ทั้งหมด', ACCOUNTS.filter(a => ok(a, hBrand, 'all')).length, grid)
+      + plats.map(p => chip('data-hplat', p, hPlat === p, p, ACCOUNTS.filter(a => ok(a, hBrand, p)).length, pIco(p))).join('');
+
+    // months with any views; default = newest month that every listed account has
+    const last = Math.max(-1, ...accs.map(a => lastIdx(mData(a, 'views'))));
+    const common = Math.min(...accs.map(a => lastIdx(mData(a, 'views'))).filter(i => i >= 0));
+    const yr = AS_OF.getFullYear(), prevSel = $('#h-month').value;
+    $('#h-month').innerHTML = last < 0 ? '<option value="">–</option>' : Array.from({ length: last + 1 }, (_, i) => last - i).map(i => `<option value="${i}">${MONTHS[i]} ${yr}</option>`).join('');
+    if (hMonthPicked && prevSel !== '' && +prevSel <= last) $('#h-month').value = prevSel;
+    else if (isFinite(common) && common >= 0) $('#h-month').value = String(common);
+    const mi = +$('#h-month').value || 0, partial = yr === AS_OF.getFullYear() && mi === AS_OF.getMonth();
+    const mLabel = `${MONTHS[mi]} ${yr}`, prevLabel = mi ? MONTHS[mi - 1] : '';
+    const span = [-5, -4, -3, -2, -1, 0].map(k => mi + k).filter(i => i >= 0);
+
+    // KPI cards
+    const kc = (cls, ic, label, val, sub, spark) => `<div class="rk-kpi ${cls}"><span class="rk-kic">${ic}</span><div class="rk-ktxt"><div class="rk-klabel">${label}</div><div class="rk-kval">${val}</div><div class="rk-ksub">${sub}</div></div>${spark}</div>`;
+    const vs = partial ? `เทียบทั้งเดือน ${prevLabel} · เดือนนี้ยังไม่จบ` : `เทียบ ${prevLabel}`;
+    const kpi = (key) => { const cur = sumAt(accs, key, mi), prev = mi ? sumAt(accs, key, mi - 1) : null; return { cur, sub: mi ? rkDelta(cur, prev, false, vs) : '<span class="rk-delta none">ไม่มีเดือนก่อนหน้า</span>', series: span.map(i => sumAt(accs, key, i)) }; };
+    const V = kpi('views'), NF = kpi('nf'), OUT = kpi('output');
+    if (mi) NF.sub = absDelta(NF.cur, sumAt(accs, 'nf', mi - 1), vs);
+    const counts = { good: 0, warn: 0, crit: 0 };
+    accs.forEach(a => a.metrics.forEach(m => { const e = evalMetric(m); if (counts[e.status] != null) counts[e.status]++; }));
+    const tot = counts.good + counts.warn + counts.crit, w = n => tot ? n / tot * 100 : 0;
+    const I = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+    $('#h-kpis').innerHTML =
+      kc('indigo', I('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), 'ยอดวิวรวม', fmtC(V.cur), V.sub, rkSpark(V.series, 'var(--rk-indigo)'))
+      + kc('pink', I('<circle cx="9" cy="8" r="4"/><path d="M2 21a7 7 0 0 1 14 0"/><path d="M19 8v6M16 11h6"/>'), 'ผู้ติดตามเพิ่มสุทธิ', NF.cur == null ? '–' : (NF.cur > 0 ? '+' : '') + fmt(NF.cur), NF.sub, rkSpark(NF.series, 'var(--rk-pink)'))
+      + kc('orange', I('<path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/>'), 'คอนเทนต์ที่ลง', fmt(OUT.cur), OUT.sub, rkSpark(OUT.series, 'var(--rk-orange)'))
+      + kc('teal', I('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/>'), 'OKR ตามแผน', `${counts.good}<small style="font-size:16px;color:var(--muted);font-weight:600"> / ${tot}</small>`,
+          `<span class="rk-vs">เสี่ยง ${counts.warn} · ช้ากว่าแผน ${counts.crit} · ทั้งปีถึงตอนนี้</span>`,
+          `<div class="h-okrbar" role="img" aria-label="ตามแผน ${counts.good} เสี่ยง ${counts.warn} ช้ากว่าแผน ${counts.crit}"><span class="g" style="width:${w(counts.good)}%"></span><span class="w" style="width:${w(counts.warn)}%"></span><span class="c" style="width:${w(counts.crit)}%"></span></div>`);
+
+    $('#h-title').textContent = `${accs.length} บัญชี · ${mLabel}${partial ? ` (ถึง ${AS_OF.getDate()} ${MONTHS[mi]})` : ''}`;
+    $('#h-desc').textContent = 'วิว ผู้ติดตามเพิ่มสุทธิ และจำนวนคอนเทนต์ของเดือนที่เลือก เทียบเดือนก่อน · ผู้ติดตามปัจจุบันมีเฉพาะบัญชีที่ API ส่งมา (TikTok, Instagram) · OKR นับทั้งปีถึงตอนนี้';
+    const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
+    const num = (cur, prev, signed) => `<span class="h-num">${cur == null ? '–' : (signed && cur > 0 ? '+' : '') + fmt(cur)}</span>`;
+    const dl = (cur, prev) => cur == null || prev == null ? '' : rkDelta(cur, prev, false, '');
+    const rows = accs.map(a => {
+      const v = mData(a, 'views'), nf = mData(a, 'nf'), er = mData(a, 'er'), out = mData(a, 'output');
+      const evals = a.metrics.map(m => evalMetric(m)).filter(e => e.status !== 'none');
+      const good = evals.filter(e => e.status === 'good').length, worst = evals.sort((p, q) => RANK[p.status] - RANK[q.status])[0];
+      const f = followersOf(a.id), viewsLbl = (a.metrics.find(m => m.key === 'views') || {}).label || 'Views';
+      return `<tr data-open="${a.id}">
+        <td><button class="h-acc" type="button" data-open="${a.id}" aria-label="เปิดรายละเอียด ${esc(a.name)}">${bLogo(a.brand)}<span><b>${pIco(a.platform)}${esc(a.name)}</b><small>${esc(viewsLbl)}</small></span></button></td>
+        <td>${connPill(a.id)}</td>
+        <td><span class="h-num">${f == null ? '–' : fmt(f)}</span></td>
+        <td>${num(v[mi])}<div>${dl(v[mi], mi ? v[mi - 1] : null)}</div></td>
+        <td>${num(nf[mi], null, true)}<div>${nf[mi] == null || !mi || nf[mi - 1] == null ? '' : absDelta(nf[mi], nf[mi - 1])}</div></td>
+        <td><span class="h-num">${er[mi] == null ? '–' : pct(er[mi], 2)}</span></td>
+        <td><span class="h-num">${out[mi] == null ? '–' : fmt(out[mi])}</span></td>
+        <td><div class="h-okr">${worst ? `<span class="st ${worst.status}">${ST_LABEL[worst.status]}</span><small>ตามแผน ${good}/${evals.length} ตัวชี้วัด</small>` : '<span class="st none">ไม่มีเป้า</span>'}</div></td>
+        <td class="h-spark">${rkSpark(span.map(i => v[i] ?? null), 'var(--rk-indigo)')}</td>
+        <td class="h-go">${arrow}</td></tr>`;
+    }).join('');
+    const tv = sumAt(accs, 'views', mi), tn = sumAt(accs, 'nf', mi), to = sumAt(accs, 'output', mi);
+    $('#h-table').innerHTML = accs.length ? `<table><thead><tr><th style="text-align:left">บัญชี</th><th style="text-align:left">การเชื่อมต่อ</th><th>ผู้ติดตามตอนนี้</th><th>วิว ${MONTHS[mi]}</th><th>ผู้ติดตามเพิ่มสุทธิ</th><th>ER</th><th>คอนเทนต์</th><th style="text-align:left">OKR ทั้งปี</th><th style="text-align:left">วิว 6 เดือน</th><th aria-label="เปิด"></th></tr></thead><tbody>${rows}</tbody>
+      <tfoot><tr><td>รวม ${accs.length} บัญชี</td><td></td><td></td><td><span class="h-num">${fmt(tv)}</span></td><td><span class="h-num">${tn == null ? '–' : (tn > 0 ? '+' : '') + fmt(tn)}</span></td><td></td><td><span class="h-num">${fmt(to)}</span></td><td></td><td></td><td></td></tr></tfoot></table>`
+      : '<p style="padding:16px;margin:0;color:var(--muted)">ไม่มีบัญชีตามตัวกรองที่เลือก</p>';
+  }
+
   /* ---------- routing & events ---------- */
-  const VIEWS = ['overview', 'report', 'account', 'content', 'upload', 'setup'];
+  const VIEWS = ['home', 'overview', 'report', 'account', 'content', 'upload', 'setup'];
   function route() {
-    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'overview';
+    const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home';
     document.querySelectorAll('[data-v]').forEach(s => { s.hidden = s.dataset.v !== v; });
     document.querySelectorAll('#nav a').forEach(a => { const on = a.dataset.view === v; a.classList.toggle('is-active', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+    if (v === 'home') renderHome();
     if (v === 'overview') renderOverview();
     if (v === 'account') renderAccount();
     if (v === 'content') renderContent();
@@ -2498,6 +2632,14 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     if (mm) { curMetric = mm.dataset.metric; renderAccount(); }
   });
   $('#f-month').addEventListener('change', () => { cMonthPicked = true; renderContent(); });
+  $('#h-month').addEventListener('change', () => { hMonthPicked = true; renderHome(); });
+  document.addEventListener('click', e => {
+    const hb = e.target.closest('[data-hbrand], [data-hplat]');
+    if (!hb) return;
+    if (hb.dataset.hbrand) hBrand = hb.dataset.hbrand;
+    if (hb.dataset.hplat) hPlat = hb.dataset.hplat;
+    renderHome();
+  });
   document.addEventListener('click', e => {
     const b = e.target.closest('[data-cbrand], [data-cplat], [data-ctype], [data-cformat]');
     if (!b || b.disabled) return;
