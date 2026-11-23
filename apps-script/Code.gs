@@ -9,7 +9,7 @@
  */
 
 var TABS = {
-  daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions', 'views_total', 'minutes_total'],
+  daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions', 'views_total', 'minutes_total', 'net_growth'],
   monthly: ['month', 'account', 'key', 'value', 'source', 'updated_at'],
   clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at', 'format'],
   yt_top: ['month', 'account', 'rank', 'video_id', 'title', 'format', 'views'],
@@ -434,10 +434,12 @@ function importTikTokImpl_(only) {
         if (!row) { row = { date: d.date, account: acc }; daily.push(row); dIdx[key] = row; }
         Object.keys(d).forEach(function (k) {
           if (k === 'date' || d[k] == null) return;
+          // "การเติบโตสุทธิ" from TikTok Studio's overview is the team's Net Follower: keep it in its own column
+          if (r.weak && k === 'net_followers') row.net_growth = d[k];
           if (r.weak && row[k] !== '' && row[k] != null) return; // never overwrite standard-export numbers
           row[k] = d[k];
         });
-        row.source = 'tiktok-file'; row.updated_at = ts; row.format = row.format || 'วิดีโอ'; n++;
+        row.source = 'tiktok-file'; row.updated_at = ts; n++;
       });
       r.clips.forEach(function (c) {
         var key = acc + '|' + c.id, row = cIdx[key];
@@ -445,7 +447,7 @@ function importTikTokImpl_(only) {
         ['title', 'url', 'posted', 'saves'].forEach(function (k) { row[k] = c[k]; });
         ['views', 'likes', 'comments', 'shares'].forEach(function (k) { row[k] = Math.max(Number(row[k]) || 0, Number(c[k]) || 0); }); // the API may already have newer counts
         if (!row.type) row.type = c.type; // keep the team's own label
-        row.source = 'tiktok-file'; row.updated_at = ts; n++;
+        row.source = 'tiktok-file'; row.updated_at = ts; row.format = row.format || 'วิดีโอ'; n++;
       });
       if (r.audience.length) {
         var kind = r.audience[0].kind, asOf = Utilities.formatDate(q.f.getDateCreated(), TZ, 'yyyy-MM-dd');
@@ -487,12 +489,14 @@ function tiktokMonthly_(acc, daily, clips) {
     var cl = clips.filter(function (c) { return c.account === acc && String(c.posted).slice(0, 7) === ym; });
     if (rows.length) {
       var s = function (k) { return rows.reduce(function (t, r) { return t + (Number(r[k]) || 0); }, 0); };
-      var hasNet = rows.some(function (r) { return r.net_followers !== '' && r.net_followers != null; });
+      // Net Follower: "การเติบโตสุทธิ" (overview) per day; days without it use the FollowerHistory change
+      var netOf = function (r) { return r.net_growth !== '' && r.net_growth != null ? Number(r.net_growth) : (r.net_followers !== '' && r.net_followers != null ? Number(r.net_followers) : null); };
+      var hasNet = rows.some(function (r) { return netOf(r) != null; });
       var hasPv = rows.some(function (r) { return r.pv !== '' && r.pv != null; });
       var v = s('views');
       out.push([ym, 'views', v], [ym, 'likes', s('likes')], [ym, 'comments', s('comments')], [ym, 'shares', s('shares')]);
       if (hasPv) out.push([ym, 'pv', s('pv')]);
-      if (hasNet) out.push([ym, 'nf', s('net_followers')]);
+      if (hasNet) out.push([ym, 'nf', rows.reduce(function (t, r) { return t + (netOf(r) || 0); }, 0)]);
       if (v) out.push([ym, 'er', Math.round((s('likes') + s('comments') + s('shares')) / v * 10000) / 100]);
     }
     if (cl.length) out.push([ym, 'output', cl.length]);
