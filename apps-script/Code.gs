@@ -326,7 +326,7 @@ function buildData_() {
   readTable_('notes').forEach(function (r) { (notes[r.month] = notes[r.month] || {})[r.key] = r.text; });
   var status = {};
   ['yt-eloop', 'yt-moov'].forEach(function (id) {
-    status[id] = { connected: !!PROPS.getProperty('YT_RT_' + id), channel: PROPS.getProperty('YT_TITLE_' + id) || null, lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
+    status[id] = { connected: !!PROPS.getProperty('YT_RT_' + id), channel: PROPS.getProperty('YT_TITLE_' + id) || null, followers: +PROPS.getProperty('YT_SUBS_' + id) || null, lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
   });
   ['tt-eloop', 'tt-moov'].forEach(function (id) {
     status[id] = { lastImport: PROPS.getProperty('LAST_OK_' + id) || null, api: !!PROPS.getProperty('TTAPI_RT_' + id), user: PROPS.getProperty('TTAPI_USER_' + id) || null,
@@ -343,7 +343,7 @@ function buildData_() {
   });
   ['fb-eloop', 'fb-moov'].forEach(function (id) {
     status[id] = { connected: !!PROPS.getProperty('FB_PT_' + id), page: PROPS.getProperty('FB_TITLE_' + id) || null, pageId: PROPS.getProperty('FB_PAGE_' + id) || null,
-      lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
+      followers: +PROPS.getProperty('FB_FOLLOWERS_' + id) || null, lastSync: PROPS.getProperty('LAST_OK_' + id) || null, error: PROPS.getProperty('LAST_ERR_' + id) || null };
   });
   status.log = readTable_('sync_log').filter(function (r) { return r.status !== 'ok'; }).slice(-8).reverse().map(function (r) {
     return { time: r.time, job: r.job, account: r.account, status: r.status, message: String(r.message).slice(0, 200) };
@@ -755,7 +755,7 @@ function fbPickPage_(b) {
 function fbDisconnect_(acc) {
   if (!FB_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
   var title = PROPS.getProperty('FB_TITLE_' + acc) || '';
-  ['FB_PAGE_', 'FB_PT_', 'FB_TITLE_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
+  ['FB_PAGE_', 'FB_PT_', 'FB_TITLE_', 'FB_FOLLOWERS_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
   if (!PROPS.getProperty('FB_PAGE_fb-eloop') && !PROPS.getProperty('FB_PAGE_fb-moov')) { PROPS.deleteProperty('FB_UT'); PROPS.deleteProperty('FB_PAGELIST'); }
   log_('facebook-connect', acc, 'ok', 'ยกเลิกการเชื่อม (เดิม: ' + title + ')');
   return { ok: true };
@@ -943,6 +943,12 @@ function syncFacebookImpl_(acc, full) {
   var pt = PROPS.getProperty('FB_PT_' + acc), pid = PROPS.getProperty('FB_PAGE_' + acc);
   if (!pt || !pid) throw new Error(FB_NAMES[acc] + ' ยังไม่ได้เชื่อม');
   if (PROPS.getProperty('FB_FMT_' + acc) !== FB_FMT) full = true;
+  // current page followers for the all-accounts list (a failure here never stops the sync)
+  try {
+    var pf = fbGraph_(pid, { fields: 'followers_count,fan_count' }, pt);
+    var pfN = pf.followers_count != null ? pf.followers_count : pf.fan_count;
+    if (pfN != null) PROPS.setProperty('FB_FOLLOWERS_' + acc, String(pfN));
+  } catch (e) { log_('facebook', acc, 'warn', 'อ่านจำนวนผู้ติดตามเพจไม่ได้: ' + e.message); }
   try {
     var year = +PROPS.getProperty('YEAR');
     var end = new Date(Date.now() - 86400000);

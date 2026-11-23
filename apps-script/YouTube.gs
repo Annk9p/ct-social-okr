@@ -28,7 +28,7 @@ function ytDisconnect_(acc) {
 function ytDisconnectCore_(acc) {
   if (!YT_NAMES[acc]) throw new Error('ไม่รู้จักบัญชี ' + acc);
   var title = PROPS.getProperty('YT_TITLE_' + acc) || '';
-  ['YT_RT_', 'YT_CHANNEL_', 'YT_TITLE_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
+  ['YT_RT_', 'YT_CHANNEL_', 'YT_TITLE_', 'YT_SUBS_', 'LAST_OK_', 'LAST_ERR_'].forEach(function (k) { PROPS.deleteProperty(k + acc); });
   CacheService.getScriptCache().remove('yt_at_' + acc);
   log_('youtube-connect', acc, 'ok', 'ยกเลิกการเชื่อม (เดิม: ' + title + ')');
 }
@@ -195,6 +195,8 @@ function syncYouTubeImpl_(acc, full) {
 
     // 2) channel info + uploads this year (for long/Shorts counts)
     var ch = ytGet_(acc, 'https://www.googleapis.com/youtube/v3/channels?part=snippet,statistics,contentDetails&mine=true').items[0];
+    // current subscribers for the all-accounts list (hidden counts are left empty)
+    if (ch.statistics && !ch.statistics.hiddenSubscriberCount && ch.statistics.subscriberCount != null) PROPS.setProperty('YT_SUBS_' + acc, String(ch.statistics.subscriberCount));
     var uploads = ytUploads_(acc, ch.contentDetails.relatedPlaylists.uploads, year);
     try { ytSaveClips_(acc, uploads, year, end); } catch (e) { log_('youtube', acc, 'warn', 'บันทึกรายคลิปไม่ได้: ' + e.message); }
 

@@ -2563,7 +2563,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
           `<div class="h-okrbar" role="img" aria-label="ตามแผน ${counts.good} เสี่ยง ${counts.warn} ช้ากว่าแผน ${counts.crit}"><span class="g" style="width:${w(counts.good)}%"></span><span class="w" style="width:${w(counts.warn)}%"></span><span class="c" style="width:${w(counts.crit)}%"></span></div>`);
 
     $('#h-title').textContent = `${accs.length} บัญชี · ${mLabel}${partial ? ` (ถึง ${AS_OF.getDate()} ${MONTHS[mi]})` : ''}`;
-    $('#h-desc').textContent = 'วิว ผู้ติดตามเพิ่มสุทธิ และจำนวนคอนเทนต์ของเดือนที่เลือก เทียบเดือนก่อน · ผู้ติดตามปัจจุบันมีเฉพาะบัญชีที่ API ส่งมา (TikTok, Instagram) · OKR นับทั้งปีถึงตอนนี้';
+    $('#h-desc').textContent = 'วิว ผู้ติดตามเพิ่มสุทธิ และจำนวนคอนเทนต์ของเดือนที่เลือก เทียบเดือนก่อน · ผู้ติดตามตอนนี้: TikTok อัปเดตทุกชั่วโมง ส่วน Facebook, YouTube (Subscriber) และ Instagram อัปเดตทุกเช้า · OKR นับทั้งปีถึงตอนนี้';
     const arrow = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg>';
     const num = (cur, prev, signed) => `<span class="h-num">${cur == null ? '–' : (signed && cur > 0 ? '+' : '') + fmt(cur)}</span>`;
     const dl = (cur, prev) => cur == null || prev == null ? '' : rkDelta(cur, prev, false, '');
