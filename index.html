@@ -927,16 +927,14 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
 .acc-picker .seg button:disabled { opacity: .4; cursor: default; }
 h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 /* ---------- Top Ranking: modern SaaS look (this page only) ---------- */
-#v-content { --rk: #D92D3A; --rk-soft: #FDECEE; --rk-ink: #B4232F; --rk-bg: #F5F7FA;
-  --rk-red: #E5303F; --rk-violet: #7C5CFC; --rk-orange: #F59E0B; --rk-blue: #3B82F6; display: flex; flex-direction: column; gap: 20px; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) #v-content { --rk: #F0525E; --rk-soft: rgb(240 82 94 / .16); --rk-ink: #FF8A93; } }
-:root[data-theme="dark"] #v-content, :root.dark #v-content { --rk: #F0525E; --rk-soft: rgb(240 82 94 / .16); --rk-ink: #FF8A93; }
+#v-content { --rk: var(--omnix-accent); --rk-soft: var(--omnix-accent-soft); --rk-ink: var(--omnix-accent);
+  --rk-indigo: var(--omnix-accent); --rk-pink: #EC4899; --rk-orange: #F59E0B; --rk-teal: #14B8A6; display: flex; flex-direction: column; gap: 20px; }
 #v-content[hidden] { display: none; }
 #v-content .panel { border-radius: 20px; border: 0; box-shadow: var(--shadow-card); padding: 20px 22px; }
 :root[data-theme="dark"] #v-content .panel, :root.dark #v-content .panel { box-shadow: inset 0 0 0 1px var(--omnix-border); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) #v-content .panel { box-shadow: inset 0 0 0 1px var(--omnix-border); } }
 .rk-hero { display: flex; align-items: center; gap: 16px; }
-.rk-hero-ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #F0525E, #C21F2C); box-shadow: 0 8px 20px rgb(217 45 58 / .28); }
+.rk-hero-ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; flex: 0 0 auto; color: #fff; background: linear-gradient(135deg, #818CF8, #4F46E5); box-shadow: 0 8px 20px rgb(99 102 241 / .28); }
 .rk-hero-ic svg { width: 26px; height: 26px; }
 .rk-hero h1 { margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -.01em; line-height: 1.25; }
 .rk-hero p { margin: 2px 0 0; color: var(--muted); }
@@ -945,7 +943,13 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 .rk-ftitle svg { width: 18px; height: 18px; color: var(--rk); }
 .rk-sp { flex: 1; }
 .rk-row { display: flex; flex-direction: column; gap: 12px; }
-.rk-row + .rk-row { border-top: 1px dashed var(--omnix-border); padding-top: 16px; }
+.rk-row + .rk-row { border-top: 1px solid var(--omnix-border); padding-top: 16px; }
+.rk-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0; }
+.rk-g.rk-stack { grid-template-columns: 1fr; gap: 8px; }
+.rk-g.rk-stack .rk-gl { min-height: 0; }
+.rk-split > .rk-g { padding-right: 20px; }
+.rk-split > .rk-sep { padding: 0 0 0 20px; border-left: 1px solid var(--omnix-border); }
+@media (max-width: 900px) { .rk-split { grid-template-columns: 1fr; gap: 16px; } .rk-split > .rk-g, .rk-split > .rk-sep { padding: 0; border-left: 0; } }
 .rk-g { display: grid; grid-template-columns: 150px minmax(0, 1fr); align-items: start; gap: 8px 16px; min-width: 0; }
 .rk-gl { display: flex; align-items: center; min-height: 36px; gap: 6px; font-size: 12.5px; font-weight: 600; color: var(--muted); text-transform: none; }
 .rk-gl svg { width: 15px; height: 15px; }
@@ -969,10 +973,10 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 .rk-reset svg { width: 16px; height: 16px; }
 .rk-reset[hidden] { display: none; }
 .rk-kpis { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-.rk-kpi { --c: var(--rk-red); position: relative; background: var(--omnix-surface); border-radius: 20px; box-shadow: var(--shadow-card); padding: 18px 18px 16px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; min-width: 0; overflow: hidden; }
+.rk-kpi { --c: var(--rk-indigo); position: relative; background: var(--omnix-surface); border-radius: 20px; box-shadow: var(--shadow-card); padding: 18px 18px 16px; display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; min-width: 0; overflow: hidden; }
 :root[data-theme="dark"] .rk-kpi, :root.dark .rk-kpi { box-shadow: inset 0 0 0 1px var(--omnix-border); }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) .rk-kpi { box-shadow: inset 0 0 0 1px var(--omnix-border); } }
-.rk-kpi.violet { --c: var(--rk-violet); } .rk-kpi.orange { --c: var(--rk-orange); } .rk-kpi.blue { --c: var(--rk-blue); }
+.rk-kpi.pink { --c: var(--rk-pink); } .rk-kpi.orange { --c: var(--rk-orange); } .rk-kpi.teal { --c: var(--rk-teal); }
 .rk-kic { width: 44px; height: 44px; border-radius: 14px; display: grid; place-items: center; color: var(--c); background: color-mix(in srgb, var(--c) 13%, transparent); }
 .rk-kic svg { width: 22px; height: 22px; }
 .rk-ktxt { min-width: 0; }
@@ -991,7 +995,7 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 .rk-tabs button { font: inherit; font-size: 14px; font-weight: 600; height: 40px; padding: 0 16px; border: 0; border-radius: 14px; background: none; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
 .rk-tabs button svg { width: 17px; height: 17px; }
 .rk-tabs button:hover { color: var(--omnix-fg); background: var(--omnix-surface-2); }
-.rk-tabs button[aria-selected="true"] { background: var(--rk); color: #fff; box-shadow: 0 6px 14px rgb(217 45 58 / .25); }
+.rk-tabs button[aria-selected="true"] { background: var(--rk); color: #fff; box-shadow: 0 6px 14px rgb(99 102 241 / .28); }
 .rk-tools { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
 .rk-tools .seg { background: var(--omnix-surface-2); box-shadow: none; }
 .rk-tools .seg button[aria-pressed="true"] { background: var(--omnix-surface); color: var(--rk-ink); box-shadow: 0 1px 3px rgb(15 23 42 / .1); }
@@ -1011,9 +1015,9 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 #v-content #content-table tbody tr:hover td { background: var(--omnix-surface-2); }
 .rk-rank { display: inline-grid; place-items: center; min-width: 26px; height: 26px; font-weight: 600; color: var(--muted); font-variant-numeric: tabular-nums; }
 .rk-medal { display: inline-grid; place-items: center; width: 26px; height: 26px; border-radius: 9px; font-weight: 700; font-size: 13px; color: #fff; }
-.rk-medal.m1 { background: linear-gradient(135deg, #F0525E, #C21F2C); }
-.rk-medal.m2 { background: linear-gradient(135deg, #FF8A65, #F4511E); }
-.rk-medal.m3 { background: linear-gradient(135deg, #FFB74D, #F59E0B); }
+.rk-medal.m1 { background: linear-gradient(135deg, #FBBF24, #D97706); }
+.rk-medal.m2 { background: linear-gradient(135deg, #CBD5E1, #64748B); }
+.rk-medal.m3 { background: linear-gradient(135deg, #FDBA74, #C2410C); }
 .rk-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
 .rk-card { display: flex; flex-direction: column; gap: 8px; padding: 16px; border-radius: 16px; background: var(--omnix-surface-2); color: inherit; text-decoration: none; transition: transform .15s, box-shadow .15s; min-width: 0; }
 .rk-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-card); }
@@ -1117,13 +1121,12 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
     <div class="panel rk-filters" role="group" aria-label="ตัวกรองข้อมูล">
       <div class="rk-ftitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/></svg>ตัวกรองข้อมูล<span class="rk-sp"></span><button class="rk-reset" type="button" id="c-reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>ล้างตัวกรองทั้งหมด</button><label class="rk-month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>ช่วงเวลา</span><select id="f-month" aria-label="ช่วงเวลา (เดือนที่โพสต์)"></select></label></div>
       <div class="rk-row">
-        <div class="rk-g rk-grow rk-wide"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>แพลตฟอร์ม</div><div class="rk-chips" id="c-plat"></div></div>
-        
-        <div class="rk-g rk-sep"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/></svg>ร้าน</div><div class="rk-chips" id="c-brand"></div></div>
+        <div class="rk-g"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/></svg>ร้าน</div><div class="rk-chips" id="c-brand"></div></div>
+        <div class="rk-g"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>แพลตฟอร์ม</div><div class="rk-chips" id="c-plat"></div></div>
       </div>
-      <div class="rk-row">
-        <div class="rk-g rk-grow"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>รูปแบบคอนเทนต์</div><div class="rk-chips" id="c-formats"></div></div>
-        <div class="rk-g rk-sep rk-grow"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>แท็ก / หมวดหมู่</div><div class="rk-chips" id="c-types"></div></div>
+      <div class="rk-row rk-split">
+        <div class="rk-g rk-stack"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/></svg>รูปแบบคอนเทนต์</div><div class="rk-chips" id="c-formats"></div></div>
+        <div class="rk-g rk-stack rk-sep"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg>แท็ก / หมวดหมู่</div><div class="rk-chips" id="c-types"></div></div>
       </div>
     </div>
 
@@ -1786,10 +1789,10 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
     const vsLbl = partial ? `เทียบ 1–${cutDay} ${MONTHS[+span[4].slice(5) - 1]}` : 'เทียบเดือนก่อน';
     const card = (cls, ic, label, val, sub, key, isPct) => `<div class="rk-kpi ${cls}"><span class="rk-kic">${ic}</span><div class="rk-ktxt"><div class="rk-klabel">${label}</div><div class="rk-kval">${val}</div><div class="rk-ksub">${prev ? rkDelta(now[key], prev[key], isPct, vsLbl) : sub}</div></div>${rkSpark(series.map(s => s[key]), `var(--rk-${cls})`)}</div>`;
     $('#content-sum').innerHTML =
-      card('red', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5" opacity=".5"/></svg>', 'จำนวนคอนเทนต์', fmt(now.n), 'รายการ', 'n')
-      + card('violet', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>', 'ยอดการเข้าถึงรวม', fmtC(now.v), 'วิวรวม', 'v')
+      card('indigo', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5z"/><path d="m3 13 9 5 9-5"/><path d="m3 17.5 9 5 9-5" opacity=".5"/></svg>', 'จำนวนคอนเทนต์', fmt(now.n), 'รายการ', 'n')
+      + card('pink', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>', 'ยอดการเข้าถึงรวม', fmtC(now.v), 'วิวรวม', 'v')
       + card('orange', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 9l11 4-4.5 1.5L14 19z"/><path d="M5 3v2M3 5h2M9.5 3.5 8.6 5M3.5 9.5 5 8.6"/></svg>', 'อัตราการมีส่วนร่วม', now.er == null ? '–' : pct(now.er, 2), '(ไลก์+คอมเมนต์+แชร์+เซฟ) ÷ วิว', 'er', true)
-      + card('blue', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16l4-5 3 3 5-7"/></svg>', 'วิวเฉลี่ยต่อโพสต์', now.avg == null ? '–' : fmtC(now.avg), 'ต่อโพสต์', 'avg');
+      + card('teal', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16l4-5 3 3 5-7"/></svg>', 'วิวเฉลี่ยต่อโพสต์', now.avg == null ? '–' : fmtC(now.avg), 'ต่อโพสต์', 'avg');
 
     // tabs and view toggle
     document.querySelectorAll('[data-ctab]').forEach(b => b.setAttribute('aria-selected', b.dataset.ctab === cTab));
@@ -1833,8 +1836,8 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
     const data = span.map(m => { const r = monthRows(m); return { m, n: r.length, v: r.reduce((s, c) => s + (c.views || 0), 0) }; });
     drawChart($('#chart-trend'), 'วิวรวมและจำนวนโพสต์', { type: 'bar',
       data: { labels: data.map(d => ymLabel(d.m)), datasets: [
-        { type: 'bar', label: 'วิวรวม', data: data.map(d => d.v), backgroundColor: '#F0525E', borderRadius: 8, maxBarThickness: 36, yAxisID: 'y' },
-        { type: 'line', label: 'จำนวนโพสต์', data: data.map(d => d.n), borderColor: '#7C5CFC', backgroundColor: '#7C5CFC', tension: .35, pointRadius: 3, yAxisID: 'y2' }] },
+        { type: 'bar', label: 'วิวรวม', data: data.map(d => d.v), backgroundColor: tok('--omnix-accent'), borderRadius: 8, maxBarThickness: 36, yAxisID: 'y' },
+        { type: 'line', label: 'จำนวนโพสต์', data: data.map(d => d.n), borderColor: '#F59E0B', backgroundColor: '#F59E0B', tension: .35, pointRadius: 3, yAxisID: 'y2' }] },
       options: { scales: { x: { grid: noGrid }, y: yAxis(v => fmtC(v)), y2: Object.assign(yAxis(v => fmt(v)), { position: 'right', grid: noGrid }) },
         plugins: { legend: { display: true, position: 'bottom' }, tooltip: { mode: 'index', intersect: false, callbacks: { label: i => ` ${i.dataset.label}: ${fmt(i.parsed.y)}` } } } } }, 260);
     // share of the accounts' monthly views that came from this month's posts
