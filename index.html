@@ -1041,6 +1041,55 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
   .rk-kpi { padding: 16px; } .rk-kval { font-size: 24px; }
 }
 @media (max-width: 480px) { .rk-kpis { grid-template-columns: 1fr; } }
+/* ---------- one look for every page (taken from Top Ranking) ---------- */
+section[data-v] { display: flex; flex-direction: column; gap: 20px; }
+section[data-v][hidden] { display: none; }
+section[data-v] > * { margin-top: 0; margin-bottom: 0; }
+.view-head { margin: 0; align-items: center; }
+.rk-hero h1 { display: flex; align-items: center; flex-wrap: wrap; }
+/* chips and segmented brand pickers share one chip style */
+.chip, .seg button { font: inherit; font-size: 13.5px; font-weight: 500; height: 36px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--omnix-border); background: var(--omnix-surface); color: var(--omnix-fg); box-shadow: none; display: inline-flex; align-items: center; gap: 7px; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.chip:hover:not(:disabled), .seg button:hover:not(:disabled) { border-color: var(--omnix-accent); background: var(--omnix-surface); }
+.chip:focus-visible, .seg button:focus-visible { outline: 2px solid var(--omnix-accent); outline-offset: 2px; }
+.chip[aria-pressed="true"], .seg button[aria-pressed="true"] { background: var(--omnix-accent-soft); border-color: var(--omnix-accent); color: var(--omnix-accent); font-weight: 600; box-shadow: none; }
+.chip .n { font-size: 11.5px; font-weight: 600; min-width: 22px; height: 20px; padding: 0 7px; border-radius: 999px; background: var(--omnix-surface-2); color: var(--muted); }
+.chip[aria-pressed="true"] .n { background: var(--omnix-accent); color: #fff; }
+.seg, .filter-card .seg, .acc-picker .seg { background: none; box-shadow: none; padding: 0; border-radius: 0; display: inline-flex; flex-wrap: wrap; gap: 8px; }
+.seg .blogo, .chip .blogo, .acc-picker .seg .blogo, .acc-picker .chip .blogo { width: 20px; height: 20px; border-radius: 6px; margin: 0; box-shadow: none; }
+.seg .pico, .chip .pico, .acc-picker .seg .pico, .acc-picker .chip .pico, .filter-card .seg .pico { margin: 0; }
+.chips { gap: 8px; }
+/* sort control on Top Ranking stays a compact switch */
+.rk-tools .seg { background: var(--omnix-surface-2); padding: 3px; border-radius: 999px; gap: 0; flex-wrap: nowrap; }
+.rk-tools .seg button { border: 0; height: 32px; border-radius: 999px; padding: 0 14px; background: none; color: var(--muted); font-weight: 600; }
+.rk-tools .seg button[aria-pressed="true"] { background: var(--omnix-surface); color: var(--omnix-accent); box-shadow: 0 1px 3px rgb(15 23 42 / .1); }
+/* filter cards: title row, labels with icons on the left */
+.acc-picker { display: flex; flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 14px; }
+.acc-picker .rk-ftitle { flex-basis: auto; }
+.acc-picker .fgroup { grid-template-columns: 150px minmax(0, 1fr); align-items: start; gap: 8px 16px; }
+.acc-picker .fgroup + .fgroup { border-top: 0; padding-top: 0; }
+.acc-picker .fgroup:first-of-type { border-top: 1px solid var(--omnix-border); padding-top: 16px; }
+.flabel { display: flex; align-items: center; gap: 6px; min-height: 36px; font-size: 12.5px; font-weight: 600; color: var(--muted); letter-spacing: 0; }
+.flabel svg { width: 15px; height: 15px; flex: 0 0 auto; }
+@media (max-width: 760px) { .acc-picker .fgroup { grid-template-columns: minmax(0, 1fr); gap: 8px; } .flabel { min-height: 0; } }
+/* KPI tiles: rounded-square icon like the Top Ranking cards */
+.stat .ic { width: 44px; height: 44px; border-radius: 14px; }
+.stat .val { letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+/* report: section jump bar looks like the Top Ranking tab bar */
+.toc { background: var(--omnix-surface); border-radius: 20px; box-shadow: var(--shadow-card); padding: 8px; gap: 4px; margin: 0; }
+:root[data-theme="dark"] .toc, :root.dark .toc { box-shadow: inset 0 0 0 1px var(--omnix-border); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]):not(.light) .toc { box-shadow: inset 0 0 0 1px var(--omnix-border); } }
+.toc .chip { border: 0; height: 40px; border-radius: 14px; padding: 0 16px; font-size: 14px; font-weight: 600; color: var(--muted); background: none; }
+.toc .chip:hover { background: var(--omnix-surface-2); color: var(--omnix-fg); }
+.view-head select, .rep-tools select { height: 38px; border-radius: 12px; padding: 0 12px; font-weight: 600; }
+.rep-tools .btn { height: 38px; }
+.ox-alert { flex-wrap: wrap; }
+.step ol, .step ul { grid-template-columns: minmax(0, 1fr); }
+.step li, .step code { min-width: 0; overflow-wrap: anywhere; }
+.step code { white-space: normal; }
+.ox-alert > span:first-child { flex: 1 1 220px; min-width: 0; overflow-wrap: anywhere; }
+.filter-card .chip, .acc-picker .chip { background: var(--omnix-surface); border: 1px solid var(--omnix-border); }
+.filter-card .chip[aria-pressed="true"], .acc-picker .chip[aria-pressed="true"] { background: var(--omnix-accent-soft); border-color: var(--omnix-accent); }
+select, input[type="text"], input[type="month"], input[type="number"], input[type="password"], .fld input { border-radius: 10px; }
 </style>
 </head>
 <body>
@@ -1077,7 +1126,7 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
   <div class="ox-alert ox-alert--warning proto-alert" id="data-banner"><span><b>หน้าตัวอย่าง</b>TikTok Eloop เดือน ต.ค. ใช้ไฟล์ export จริงจาก TikTok Studio (ภาพรวม, ผู้ติดตาม, วิดีโอ) ตัวเลขเดือนอื่นเป็นตัวอย่างจากชีตเดิม ระบบจริงจะดึงจากแพลตฟอร์มโดยตรง สถานะการเชื่อมต่อเป็นข้อมูลสมมติ และปุ่มต่างๆ ยังไม่บันทึกข้อมูลจริง</span></div>
   <section id="v-overview" data-v="overview">
     <div class="view-head">
-      <div><h1>ภาพรวม OKR</h1><p>เทียบยอดสะสมกับเป้าทั้งปี และดูว่าแต่ละบัญชีเร็วหรือช้ากว่าแผน</p></div>
+      <div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z"/></svg></span><div><h1>ภาพรวม OKR</h1><p>เทียบยอดสะสมกับเป้าทั้งปี และดูว่าแต่ละบัญชีเร็วหรือช้ากว่าแผน</p></div></div>
       <div class="right"><div class="seg" role="group" aria-label="กรองแบรนด์" id="brand-seg">
         <button type="button" data-brand="all" aria-pressed="true">ทุกแบรนด์</button>
         <button type="button" data-brand="Eloop" aria-pressed="false"><img class="blogo" src="assets/brand-eloop.png" alt="" width="18" height="18">Eloop</button>
@@ -1095,11 +1144,12 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
   </section>
 
   <section id="v-account" data-v="account" hidden>
-    <div class="view-head"><div><h1 id="acc-title">รายบัญชี</h1><p id="acc-sub"></p></div></div>
+    <div class="view-head"><div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><div><h1 id="acc-title">รายบัญชี</h1><p id="acc-sub"></p></div></div></div>
     <div class="panel filter-card acc-picker">
-      <div class="fgroup fwide-row"><span class="flabel">แบรนด์</span><div class="chips" id="acc-brands" role="group" aria-label="เลือกแบรนด์"></div></div>
-      <div class="fgroup fwide-row"><span class="flabel">แพลตฟอร์ม</span><div class="chips" id="acc-plats" role="group" aria-label="เลือกแพลตฟอร์ม"></div></div>
-      <div class="fgroup fwide-row"><span class="flabel">ตัวชี้วัด</span><div class="chips" id="metric-chips" role="group" aria-label="เลือกตัวชี้วัด"></div></div>
+      <div class="rk-ftitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/></svg>ตัวกรองข้อมูล</div>
+      <div class="fgroup fwide-row"><span class="flabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/></svg>แบรนด์</span><div class="chips" id="acc-brands" role="group" aria-label="เลือกแบรนด์"></div></div>
+      <div class="fgroup fwide-row"><span class="flabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>แพลตฟอร์ม</span><div class="chips" id="acc-plats" role="group" aria-label="เลือกแพลตฟอร์ม"></div></div>
+      <div class="fgroup fwide-row"><span class="flabel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 20h18"/><path d="M6 16l4-5 3 3 5-7"/></svg>ตัวชี้วัด</span><div class="chips" id="metric-chips" role="group" aria-label="เลือกตัวชี้วัด"></div></div>
     </div>
     <div class="grid2">
       <div class="panel"><h2>ยอดสะสมเทียบเป้า</h2><p class="desc" id="cum-desc"></p><div class="ox-legend chart-legend" id="cum-legend"></div><div class="chart" id="chart-cum"></div></div>
@@ -1113,10 +1163,10 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
   </section>
 
   <section id="v-content" data-v="content" hidden>
-    <div class="rk-hero">
+    <div class="view-head"><div class="rk-hero">
       <span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="3" y="13" width="4.5" height="8" rx="1.6"/><rect x="9.75" y="8" width="4.5" height="13" rx="1.6"/><rect x="16.5" y="3" width="4.5" height="18" rx="1.6"/></svg></span>
       <div><h1>Top Ranking คอนเทนต์</h1><p>จัดอันดับคอนเทนต์ตามการเข้าถึง การมีส่วนร่วม และประสิทธิภาพโดยรวม</p></div>
-    </div>
+    </div></div>
 
     <div class="panel rk-filters" role="group" aria-label="ตัวกรองข้อมูล">
       <div class="rk-ftitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/></svg>ตัวกรองข้อมูล<span class="rk-sp"></span><button class="rk-reset" type="button" id="c-reset"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>ล้างตัวกรองทั้งหมด</button><label class="rk-month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>ช่วงเวลา</span><select id="f-month" aria-label="ช่วงเวลา (เดือนที่โพสต์)"></select></label></div>
@@ -1169,7 +1219,7 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 
   <section id="v-report" data-v="report" hidden>
     <div class="view-head">
-      <div><h1 id="rep-title">สรุปประจำเดือน</h1><p id="rep-sub"></p></div>
+      <div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span><div><h1 id="rep-title">สรุปประจำเดือน</h1><p id="rep-sub"></p></div></div>
       <div class="right rep-tools">
         <select id="rep-month" aria-label="เดือนของรายงาน"></select>
         <div class="seg" role="group" aria-label="กรองแบรนด์" id="rep-brand">
@@ -1222,8 +1272,8 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
   </section>
 
   <section id="v-upload" data-v="upload" hidden>
-    <div class="ox-alert ox-alert--info" id="upload-live" hidden style="margin-bottom:var(--omnix-space-5)"><span><b>ส่งเข้าระบบจริง:</b> ลากไฟล์มาวาง ตรวจผล แล้วกด <b>บันทึกเข้าระบบ</b> ตัวเลขทุกหน้าอัปเดตทันที (ใช้รหัสทีม)</span></div>
-    <div class="view-head"><div><h1>อัปโหลดข้อมูล TikTok</h1><p>Export ไฟล์จาก TikTok Studio แล้วลากมาวางพร้อมกันทั้งหมด ระบบแยกให้เองว่าไฟล์ไหนเป็นข้อมูลอะไร</p></div></div>
+    <div class="view-head"><div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg></span><div><h1>อัปโหลดข้อมูล TikTok</h1><p>Export ไฟล์จาก TikTok Studio แล้วลากมาวางพร้อมกันทั้งหมด ระบบแยกให้เองว่าไฟล์ไหนเป็นข้อมูลอะไร</p></div></div></div>
+    <div class="ox-alert ox-alert--info" id="upload-live" hidden><span><b>ส่งเข้าระบบจริง:</b> ลากไฟล์มาวาง ตรวจผล แล้วกด <b>บันทึกเข้าระบบ</b> ตัวเลขทุกหน้าอัปเดตทันที (ใช้รหัสทีม)</span></div>
     <div class="grid2">
       <div class="panel">
         <h2>อัปโหลดไฟล์</h2><p class="desc">รองรับไฟล์ .csv หรือ .zip ที่ดาวน์โหลดจาก TikTok Studio: ภาพรวม (Overview), ผู้ติดตาม และวิดีโอ</p>
@@ -1251,7 +1301,7 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
   </section>
 
   <section id="v-setup" data-v="setup" hidden>
-    <div class="view-head"><div><h1>ตั้งค่า</h1><p>เชื่อมต่อทุกบัญชีและตั้งค่าระบบได้จากหน้านี้ ไม่ต้องเปิดชีตหรือ Apps Script</p></div></div>
+    <div class="view-head"><div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></span><div><h1>ตั้งค่า</h1><p>เชื่อมต่อทุกบัญชีและตั้งค่าระบบได้จากหน้านี้ ไม่ต้องเปิดชีตหรือ Apps Script</p></div></div></div>
     <div class="grid2">
       <div class="panel"><h2>การเชื่อมต่อ</h2><p class="desc">ดึงข้อมูลอัตโนมัติทุกวันเวลา 06:00 น.</p>
         <div id="conn-list"><div class="conn"><span class="name">YouTube Eloop</span><span class="st good">เชื่อมต่อแล้ว</span><span class="det">ดึงสำเร็จล่าสุด 5 พ.ย. 06:02 · ข้อมูลถึง 3 พ.ย.</span></div>
