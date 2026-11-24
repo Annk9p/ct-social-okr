@@ -2159,7 +2159,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
         const e = evalMetric(Object.assign({}, m, { data: m.data.slice(0, mi + 1) }));
         if (e.li < 0 || e.status === 'good') return;
         if (m.kind === 'sum') {
-          if (e.needPerMonth > 0) lines.push(`- ${a.name} ${m.label}: ต้องทำเฉลี่ย ${fmtC(e.needPerMonth)}/เดือน ในเดือนที่เหลือ (เดือนนี้ได้ ${fmtC(m.data[mi])}) เพื่อให้ถึงเป้า ${fmtC(m.target)}`);
+          if (e.needPerMonth > 0) lines.push(`- ${a.name} ${m.label}: ต้องทำเฉลี่ย ${fmtC(e.needPerMonth)}/เดือน ในเดือนที่เหลือ (${m.data[mi] == null ? 'เดือนนี้ยังไม่มีข้อมูล' : 'เดือนนี้ได้ ' + fmtC(m.data[mi])}) เพื่อให้ถึงเป้า ${fmtC(m.target)}`);
         } else {
           const best = typeStats(clipsFor(a.id, mi)).sort((x, y) => y.er - x.er)[0];
           lines.push(`- ${a.name} ${m.label} เฉลี่ย ${pct(e.avg, 2)} ต่ำกว่าเป้า ${pct(m.target, 2)}${best ? ` · เพิ่มคอนเทนต์ประเภท "${best.t}" ที่ ER เฉลี่ยสูงสุดเดือนนี้ (${pct(best.er, 2)})` : ' · เพิ่มคลิปที่ชวนคอมเมนต์และแชร์'}`);
@@ -2603,7 +2603,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       if (IMG.ai) s.addImage({ data: IMG.ai, x: 0, y: 0, w: 10.66, h: 7.54 });
       if (IMG.net) s.addImage({ data: IMG.net, x: 4.06, y: 0.34, w: 10.66, h: 7.5 });
       if (IMG.nine) s.addImage({ data: IMG.nine, x: 11.7, y: 0.24, w: 1.35, h: 0.75 });
-      s.addText('Update KPI & OKR', H({ x: 6.1, y: 2.7, w: 6.8, h: 0.85, fontSize: 38, bold: true, italic: true, color: SL.red, align: 'center', valign: 'middle' }));
+      s.addText('Update KPI & OKR', H({ x: 6.1, y: 2.65, w: 6.8, h: 0.95, fontSize: 42, bold: true, italic: true, color: SL.red, align: 'center', valign: 'middle' }));
       s.addText(`1-${lastDay} ${EN_M[mi]}`, H({ x: 6.1, y: 3.5, w: 6.8, h: 0.6, fontSize: 24, bold: true, italic: true, color: '595959', align: 'center', valign: 'middle' }));
     }
 
