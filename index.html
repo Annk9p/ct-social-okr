@@ -932,7 +932,7 @@ h1 .pico img.pimg { width: 30px; height: 30px; vertical-align: -4px; }
 .acc-picker .seg button:disabled { opacity: .4; cursor: default; }
 h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 /* ---------- Top Ranking: modern SaaS look (this page only) ---------- */
-#v-content, #v-home { --rk: var(--omnix-accent); --rk-soft: var(--omnix-accent-soft); --rk-ink: var(--omnix-accent);
+#v-content, #v-home, #v-cal { --rk: var(--omnix-accent); --rk-soft: var(--omnix-accent-soft); --rk-ink: var(--omnix-accent);
   --rk-indigo: var(--omnix-accent); --rk-pink: #EC4899; --rk-orange: #F59E0B; --rk-teal: #14B8A6; display: flex; flex-direction: column; gap: 20px; }
 #v-content[hidden] { display: none; }
 #v-content .panel { border-radius: 20px; border: 0; box-shadow: var(--shadow-card); padding: 20px 22px; }
@@ -972,7 +972,7 @@ h1 .blogo { width: 30px; height: 30px; margin-right: 10px; }
 .rk-chip:disabled { opacity: .4; cursor: default; }
 .rk-month { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: var(--muted); }
 .rk-month svg { width: 16px; height: 16px; color: var(--muted); }
-#v-content #f-month, #v-home #h-month { height: 38px; min-width: 170px; border-radius: 12px; padding: 0 38px 0 14px; background-position: right 12px center; font-weight: 600; color: var(--omnix-fg); }
+#v-content #f-month, #v-home #h-month, #v-cal #cal-month { height: 38px; min-width: 170px; border-radius: 12px; padding: 0 38px 0 14px; background-position: right 12px center; font-weight: 600; color: var(--omnix-fg); }
 .rk-reset { font: inherit; font-size: 13.5px; font-weight: 600; color: var(--rk-ink); background: none; border: 0; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 10px; border-radius: 10px; cursor: pointer; }
 .rk-reset:hover { background: var(--rk-soft); }
 .rk-reset svg { width: 16px; height: 16px; }
@@ -1099,7 +1099,67 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 /* the passcode box always opens above other dialogs (e.g. the slides dialog) */
 #pass-dlg { z-index: 100; }
 /* ---------- all-accounts list (ภาพรวมทั้งหมด) ---------- */
-#v-home .rk-ftitle svg { color: var(--omnix-accent); }
+#v-home .rk-ftitle svg, #v-cal .rk-ftitle svg { color: var(--omnix-accent); }
+/* Calendar page */
+#v-cal { --cal-eloop: #4F46E5; --cal-moov: #F97316; }
+.cal-head { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+.cal-head h2 { margin: 0; min-width: 120px; text-align: center; }
+.cal-head .rk-sp { flex: 1; }
+.cal-nav { width: 38px; height: 38px; border-radius: 12px; border: 1px solid var(--omnix-border); background: var(--omnix-surface); color: var(--omnix-fg); display: grid; place-items: center; cursor: pointer; }
+.cal-nav:hover:not(:disabled) { border-color: var(--rk); color: var(--rk); }
+.cal-nav:disabled { opacity: .35; cursor: default; }
+.cal-nav svg { width: 18px; height: 18px; }
+.cal-legend { display: flex; gap: 14px; font-size: 12.5px; color: var(--muted); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-sw { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.cal-sw.eloop { background: var(--cal-eloop); } .cal-sw.moov { background: var(--cal-moov); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal-dow { font-size: 12px; font-weight: 600; color: var(--muted); text-align: center; padding: 2px 0 4px; }
+.cal-blank { min-height: 0; }
+.cal-cell { font: inherit; color: inherit; text-align: left; min-height: 118px; min-width: 0; padding: 6px; border-radius: 14px; border: 1px solid var(--omnix-border); background: var(--omnix-surface); display: flex; flex-direction: column; gap: 4px; cursor: pointer; }
+.cal-cell:hover { border-color: var(--rk); }
+.cal-cell:focus-visible { outline: 2px solid var(--rk); outline-offset: 2px; }
+.cal-cell[aria-pressed="true"] { border-color: var(--rk); box-shadow: 0 0 0 3px var(--rk-soft); }
+.cal-cell.wknd { background: var(--omnix-surface-2); }
+.cal-cell.future { opacity: .5; cursor: default; }
+.cal-cell.gap .cal-dn { color: #C2410C; }
+.cal-top { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+.cal-dn { font-size: 12.5px; font-weight: 700; width: 26px; height: 26px; border-radius: 999px; display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+.cal-cell.today .cal-dn { background: var(--rk); color: #fff; }
+.cal-n { font-size: 11px; font-weight: 600; color: var(--muted); }
+.cal-ev { display: flex; align-items: center; gap: 5px; font-size: 11.5px; line-height: 1.25; padding: 3px 6px 3px 5px; border-radius: 7px; background: var(--omnix-surface-2); box-shadow: inset 3px 0 0 var(--cal-eloop); white-space: nowrap; overflow: hidden; min-width: 0; }
+.cal-ev.moov { box-shadow: inset 3px 0 0 var(--cal-moov); }
+.cal-cell.wknd .cal-ev { background: var(--omnix-surface); }
+.cal-ev .pico { margin: 0 0 0 2px; flex: 0 0 auto; }
+.cal-ev .pico svg, .cal-ev .pico img { width: 13px; height: 13px; display: block; }
+.cal-ev .t { overflow: hidden; text-overflow: ellipsis; }
+.cal-more { font-size: 11px; font-weight: 600; color: var(--rk); padding: 0 6px; }
+.cal-dots { display: none; gap: 3px; flex-wrap: wrap; }
+.cal-dots i { width: 6px; height: 6px; border-radius: 999px; background: var(--cal-eloop); }
+.cal-dots i.moov { background: var(--cal-moov); }
+.cal-rows { display: flex; flex-direction: column; }
+.cal-row { display: grid; grid-template-columns: 52px auto minmax(0, 1fr) auto auto; align-items: center; gap: 12px; padding: 10px 4px; border-top: 1px solid var(--omnix-border); color: inherit; text-decoration: none; }
+.cal-row:first-child { border-top: 0; }
+a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
+.cal-time { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cal-who { display: inline-flex; align-items: center; gap: 6px; }
+.cal-who .blogo { width: 24px; height: 24px; border-radius: 7px; margin: 0; }
+.cal-who .pico { margin: 0; }
+.cal-rt { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.cal-tag { font-size: 11.5px; padding: 2px 8px; border-radius: 999px; background: var(--omnix-surface-2); color: var(--muted); white-space: nowrap; }
+.cal-v { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; min-width: 64px; }
+.cal-v small { display: block; font-size: 11px; font-weight: 400; color: var(--muted); }
+.cal-empty { color: var(--muted); padding: 18px 4px; }
+@media (max-width: 760px) {
+  .cal-grid { gap: 4px; }
+  .cal-cell { min-height: 56px; padding: 4px; border-radius: 10px; align-items: center; }
+  .cal-top { flex-direction: column; gap: 2px; }
+  .cal-n, .cal-ev, .cal-more { display: none; }
+  .cal-dots { display: flex; justify-content: center; }
+  .cal-legend { width: 100%; justify-content: center; }
+  .cal-row { grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; }
+  .cal-time, .cal-tag { display: none; }
+}
 #v-home .rk-panehead .btn svg { width: 16px; height: 16px; }
 .h-list table { min-width: 980px; }
 .h-list th { white-space: nowrap; }
@@ -1139,6 +1199,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
   <a class="ox-nav-item" href="#report" data-view="report"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg>สรุปรายเดือน</a>
   <a class="ox-nav-item" href="#account" data-view="account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>รายบัญชี</a>
   <a class="ox-nav-item" href="#content" data-view="content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/></svg>คอนเทนต์</a>
+  <a class="ox-nav-item" href="#cal" data-view="cal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" stroke-width="2.6"/></svg>Calendar</a>
   <div class="ox-label-caps ox-nav-group__label">ข้อมูล</div>
   <a class="ox-nav-item" href="#upload" data-view="upload"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 16V4M7 9l5-5 5 5M4 20h16"/></svg>อัปโหลด TikTok</a>
   <a class="ox-nav-item" href="#setup" data-view="setup"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>ตั้งค่า</a>
@@ -1267,6 +1328,23 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       </div>
     </div>
     <div class="panel" id="content-empty" hidden><h2>ยังไม่มีคอนเทนต์ของตัวเลือกนี้</h2><p class="desc" style="margin:0">ลองเปลี่ยนแพลตฟอร์ม ร้าน หรือช่วงเวลา · TikTok ดึงจาก TikTok API ทุกชั่วโมงและไฟล์ export ส่วน Facebook, YouTube และ Instagram ดึงอัตโนมัติทุกเช้า</p></div>
+  </section>
+
+  <section id="v-cal" data-v="cal" hidden>
+    <div class="view-head"><div class="rk-hero"><span class="rk-hero-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/><path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" stroke-width="2.6"/></svg></span><div><h1>Calendar คอนเทนต์</h1><p>คอนเทนต์ที่เผยแพร่แล้วในแต่ละวัน ทุกแบรนด์ทุกแพลตฟอร์ม · คลิกวันที่เพื่อดูรายการ</p></div></div></div>
+    <div class="panel rk-filters" role="group" aria-label="ตัวกรองข้อมูล">
+      <div class="rk-ftitle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8.5V20l-4-2v-5.5z"/></svg>ตัวกรองข้อมูล<span class="rk-sp"></span><label class="rk-month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span>เดือน</span><select id="cal-month" aria-label="เดือนของปฏิทิน"></select></label></div>
+      <div class="rk-row">
+        <div class="rk-g"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9l1.5-5h13L20 9"/><path d="M4 9v11h16V9"/><path d="M4 9a2.7 2.7 0 0 0 5.3 0 2.7 2.7 0 0 0 5.4 0 2.7 2.7 0 0 0 5.3 0"/></svg>แบรนด์</div><div class="rk-chips" id="cal-brand"></div></div>
+        <div class="rk-g"><div class="rk-gl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="3"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>แพลตฟอร์ม</div><div class="rk-chips" id="cal-plat"></div></div>
+      </div>
+    </div>
+    <div class="rk-kpis" id="cal-kpis"></div>
+    <div class="panel">
+      <div class="cal-head"><button class="cal-nav" type="button" data-calnav="-1" aria-label="เดือนก่อน"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button><h2 id="cal-title"></h2><button class="cal-nav" type="button" data-calnav="1" aria-label="เดือนถัดไป"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button><span class="rk-sp"></span><div class="cal-legend"><span><i class="cal-sw eloop"></i>Eloop</span><span><i class="cal-sw moov"></i>Moov</span></div></div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+    <div class="panel" id="cal-day"></div>
   </section>
 
   <section id="v-report" data-v="report" hidden>
@@ -3033,7 +3111,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
   }
 
   /* ---------- routing & events ---------- */
-  const VIEWS = ['home', 'overview', 'report', 'account', 'content', 'upload', 'setup'];
+  const VIEWS = ['home', 'overview', 'report', 'account', 'content', 'cal', 'upload', 'setup'];
   function route() {
     const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : 'home';
     document.querySelectorAll('[data-v]').forEach(s => { s.hidden = s.dataset.v !== v; });
@@ -3042,6 +3120,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     if (v === 'overview') renderOverview();
     if (v === 'account') renderAccount();
     if (v === 'content') renderContent();
+    if (v === 'cal') renderCal();
     if (v === 'report') renderReport();
     if (v === 'upload') renderCoverage();
     if (v === 'setup') renderTargets();
@@ -3075,6 +3154,109 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
   });
   $('#f-month').addEventListener('change', () => { cMonthPicked = true; renderContent(); });
   $('#h-month').addEventListener('change', () => { hMonthPicked = true; renderHome(); });
+
+  /* ---------- calendar view: published content per day ---------- */
+  let calBrand = 'all', calPlat = 'all', calYm = null, calDay = null;
+  const DOW_TH = ['จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.', 'อา.'];
+  function renderCal() {
+    const ORDER = ['TikTok', 'Facebook', 'YouTube', 'Instagram'];
+    const plats = ORDER.filter(p => ACCOUNTS.some(a => a.platform === p));
+    if (calPlat !== 'all' && !plats.includes(calPlat)) calPlat = 'all';
+    const nowYm = ymOf({ posted: AS_OF });
+    const yms = [...new Set(CLIPS.map(ymOf))].filter(x => x <= nowYm && x >= '2026-01');
+    if (!yms.includes(nowYm)) yms.push(nowYm);
+    yms.sort().reverse();
+    if (!calYm || !yms.includes(calYm)) calYm = nowYm;
+    $('#cal-month').innerHTML = yms.map(x => `<option value="${x}">${ymLabel(x)}</option>`).join('');
+    $('#cal-month').value = calYm;
+
+    const acc = c => accById(c.acc);
+    const ok = (c, b, p) => { const a = acc(c); return !!a && (b === 'all' || a.brand === b) && (p === 'all' || a.platform === p); };
+    const inYm = CLIPS.filter(c => ymOf(c) === calYm);
+    const grid = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>';
+    const chip = (attr, v, on, label, n, ic) => `<button class="rk-chip" type="button" ${attr}="${v}" aria-pressed="${on}">${ic}<span>${label}</span><span class="n">${n}</span></button>`;
+    const cnt = (b, p) => inYm.filter(c => ok(c, b, p)).length;
+    $('#cal-brand').innerHTML = chip('data-calbrand', 'all', calBrand === 'all', 'ทั้งหมด', cnt('all', calPlat), grid)
+      + ['Eloop', 'Moov'].map(b => chip('data-calbrand', b, calBrand === b, b, cnt(b, calPlat), bLogo(b))).join('');
+    $('#cal-plat').innerHTML = chip('data-calplat', 'all', calPlat === 'all', 'ทั้งหมด', cnt(calBrand, 'all'), grid)
+      + plats.map(p => chip('data-calplat', p, calPlat === p, p, cnt(calBrand, p), pIco(p))).join('');
+
+    const list = inYm.filter(c => ok(c, calBrand, calPlat)).sort((x, y) => x.posted - y.posted);
+    const y = +calYm.slice(0, 4), m = +calYm.slice(5) - 1, nd = new Date(y, m + 1, 0).getDate();
+    const lead = (new Date(y, m, 1).getDay() + 6) % 7;
+    const isNow = calYm === nowYm, upTo = isNow ? AS_OF.getDate() : nd;
+    const byDay = {};
+    list.forEach(c => { (byDay[c.posted.getDate()] = byDay[c.posted.getDate()] || []).push(c); });
+    const activeDays = Object.keys(byDay).length;
+    const gapDays = Array.from({ length: upTo }, (_, i) => i + 1).filter(d => !byDay[d]);
+
+    // KPI cards
+    const prevYm = ymAdd(calYm, -1);
+    const prevList = CLIPS.filter(c => ymOf(c) === prevYm && ok(c, calBrand, calPlat) && (!isNow || c.posted.getDate() <= upTo));
+    const vs = isNow ? `เทียบ 1–${upTo} ${ymLabel(prevYm).split(' ')[0]}` : `เทียบ ${ymLabel(prevYm).split(' ')[0]}`;
+    const views = list.reduce((t, c) => t + (c.views || 0), 0);
+    const I = p => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+    const kc = (cls, ic, label, val, sub) => `<div class="rk-kpi ${cls}"><span class="rk-kic">${ic}</span><div class="rk-ktxt"><div class="rk-klabel">${label}</div><div class="rk-kval">${val}</div><div class="rk-ksub">${sub}</div></div></div>`;
+    const hasPrev = yms.includes(prevYm) || CLIPS.some(c => ymOf(c) === prevYm);
+    const busiest = Object.entries(byDay).sort((a, b) => b[1].length - a[1].length)[0];
+    $('#cal-kpis').innerHTML =
+      kc('indigo', I('<rect x="3" y="5" width="18" height="14" rx="3"/><path d="m10 9 5 3-5 3z"/>'), 'โพสต์ทั้งหมด', fmt(list.length), hasPrev ? rkDelta(list.length, prevList.length, false, vs) : '<span class="rk-delta none">ไม่มีเดือนก่อนหน้า</span>')
+      + kc('teal', I('<path d="M20 6 9 17l-5-5"/>'), 'วันที่มีโพสต์', `${activeDays}<small style="font-size:16px;color:var(--muted);font-weight:600"> / ${upTo} วัน</small>`, busiest ? `<span>วันที่โพสต์มากสุด ${busiest[0]} ${MONTHS[m]} (${busiest[1].length} โพสต์)</span>` : '<span>ยังไม่มีโพสต์</span>')
+      + kc('orange', I('<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'), 'วันที่ไม่มีโพสต์', fmt(gapDays.length), gapDays.length ? `<span>${gapDays.length > 8 ? gapDays.slice(0, 8).join(', ') + ' …' : gapDays.join(', ')}</span>` : '<span>โพสต์ครบทุกวัน</span>')
+      + kc('pink', I('<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>'), 'วิวรวมของโพสต์เดือนนี้', fmtC(views), `<span>เฉลี่ย ${fmtC(list.length ? views / list.length : 0)} วิวต่อโพสต์ · นับวิวสะสมถึงวันนี้</span>`);
+
+    // month grid
+    $('#cal-title').textContent = ymLabel(calYm);
+    document.querySelector('[data-calnav="1"]').disabled = calYm >= yms[0];
+    document.querySelector('[data-calnav="-1"]').disabled = calYm <= yms[yms.length - 1];
+    if (calDay == null || calDay > nd || (isNow && calDay > upTo)) {
+      const days = Object.keys(byDay).map(Number);
+      calDay = isNow && byDay[upTo] ? upTo : (days.length ? Math.max(...days) : null);
+    }
+    const brandCls = c => (acc(c).brand === 'Moov' ? 'moov' : 'eloop');
+    const cells = DOW_TH.map((d, i) => `<div class="cal-dow"${i > 4 ? ' style="color:var(--omnix-fg)"' : ''}>${d}</div>`);
+    for (let i = 0; i < lead; i++) cells.push('<div class="cal-blank" aria-hidden="true"></div>');
+    for (let d = 1; d <= nd; d++) {
+      const items = byDay[d] || [], dow = (lead + d - 1) % 7, future = d > upTo;
+      const cls = ['cal-cell', dow > 4 ? 'wknd' : '', future ? 'future' : '', isNow && d === upTo ? 'today' : '', !future && !items.length ? 'gap' : ''].filter(Boolean).join(' ');
+      const evs = items.slice(0, 3).map(c => `<span class="cal-ev ${brandCls(c)}" title="${esc(acc(c).name + ' · ' + (c.title || ''))}">${pIco(acc(c).platform)}<span class="t">${esc(c.title || '(ไม่มีชื่อ)')}</span></span>`).join('');
+      const more = items.length > 3 ? `<span class="cal-more">+${items.length - 3} เพิ่มเติม</span>` : '';
+      const dots = items.slice(0, 6).map(c => `<i class="${brandCls(c)}"></i>`).join('');
+      const label = `${d} ${MONTHS[m]} ${items.length ? items.length + ' โพสต์' : 'ไม่มีโพสต์'}`;
+      cells.push(future
+        ? `<div class="${cls}" aria-label="${d} ${MONTHS[m]} ยังไม่ถึง"><div class="cal-top"><span class="cal-dn">${d}</span></div></div>`
+        : `<button type="button" class="${cls}" data-calday="${d}" aria-pressed="${calDay === d}" aria-label="${label}"><div class="cal-top"><span class="cal-dn">${d}</span>${items.length ? `<span class="cal-n">${items.length} โพสต์</span>` : ''}<span class="cal-dots">${dots}</span></div>${evs}${more}</button>`);
+    }
+    $('#cal-grid').innerHTML = cells.join('');
+
+    // selected day
+    const dayItems = calDay ? (byDay[calDay] || []) : [];
+    const dayViews = dayItems.reduce((t, c) => t + (c.views || 0), 0);
+    const hm = d => (d.getHours() || d.getMinutes()) ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '–';
+    const row = c => {
+      const a = acc(c), tag = c.format || c.type || '';
+      const inner = `<span class="cal-time">${hm(c.posted)}</span><span class="cal-who">${bLogo(a.brand)}${pIco(a.platform)}</span><span class="cal-rt">${esc(c.title || '(ไม่มีชื่อ)')}</span>${tag ? `<span class="cal-tag">${esc(tag)}</span>` : '<span></span>'}<span class="cal-v">${fmtC(c.views || 0)}<small>วิว</small></span>`;
+      return c.url ? `<a class="cal-row" href="${esc(c.url)}" target="_blank" rel="noopener" title="${esc(a.name)}">${inner}</a>` : `<div class="cal-row" title="${esc(a.name)}">${inner}</div>`;
+    };
+    $('#cal-day').innerHTML = calDay
+      ? `<div class="rk-panehead"><div><h2>โพสต์วันที่ ${calDay} ${ymLabel(calYm)}</h2><p class="desc">${dayItems.length ? `${dayItems.length} โพสต์ · วิวรวม ${fmtC(dayViews)} · คลิกเพื่อเปิดโพสต์` : 'วันนี้ไม่มีโพสต์ตามตัวกรองที่เลือก'}</p></div></div>`
+        + (dayItems.length ? `<div class="cal-rows">${dayItems.map(row).join('')}</div>` : '')
+      : `<p class="cal-empty">ยังไม่มีโพสต์ในเดือนนี้ตามตัวกรองที่เลือก</p>`;
+  }
+  $('#cal-month').addEventListener('change', e => { calYm = e.target.value; calDay = null; renderCal(); });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-calbrand], [data-calplat], [data-calnav], [data-calday]');
+    if (!b || b.disabled) return;
+    if (b.dataset.calbrand) calBrand = b.dataset.calbrand;
+    if (b.dataset.calplat) calPlat = b.dataset.calplat;
+    if (b.dataset.calnav) { calYm = ymAdd(calYm, +b.dataset.calnav); calDay = null; }
+    if (b.dataset.calday) {
+      calDay = +b.dataset.calday; renderCal();
+      if (matchMedia('(max-width: 760px)').matches) $('#cal-day').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    renderCal();
+  });
   document.addEventListener('click', e => {
     const hb = e.target.closest('[data-hbrand], [data-hplat]');
     if (!hb) return;
