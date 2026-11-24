@@ -2841,35 +2841,49 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
         T({ x: x3 + 0.22, y: py + 0.68, w: pw - 0.44, h: phh - 0.85, fontSize: 10 }));
     };
 
-    // YouTube Partner Program
+    // YouTube Partner Program: same look as the other pages (white panels, dark header bars, grey rows)
     const yppSlide = () => {
       if (!sel('YouTube')) return;
       const yts = brands.map(b => acc(b, 'YouTube')).filter(a => a && YPP[a.id]);
       if (!yts.length) return;
       const s = slide();
-      s.addText([{ text: 'สถานะ ' }, { text: 'YouTube', options: { color: 'FF0000' } }, { text: ' Partner Program (YPP)' }], H({ x: 0.5, y: 0.3, w: 11.5, h: 0.6, fontSize: 26, bold: true, valign: 'middle' }));
-      s.addText(`สถานะปัจจุบัน: ยังไม่ผ่านเกณฑ์การสมัครสร้างรายได้ (Ineligible to Apply) · ข้อมูล ณ ${YPP.asOf}`, T({ x: 0.5, y: 0.9, w: 11.5, h: 0.35, fontSize: 12, bold: true, color: SL.red, valign: 'middle' }));
+      s.addShape(p.ShapeType.roundRect, { x: 0.5, y: 0.36, w: 0.72, h: 0.5, fill: { color: 'FF0000' }, line: { color: 'FF0000' }, rectRadius: 0.12 });
+      s.addShape(p.ShapeType.triangle, { x: 0.76, y: 0.47, w: 0.26, h: 0.28, rotate: 90, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF' } });
+      s.addText([{ text: 'สถานะ ' }, { text: 'YouTube', options: { color: 'FF0000' } }, { text: ' Partner Program (YPP)' }], H({ x: 1.35, y: 0.3, w: 10.5, h: 0.62, fontSize: 26, bold: true, valign: 'middle' }));
+      s.addText([{ text: 'สถานะปัจจุบัน: ', options: { bold: true } }, { text: 'ยังไม่ผ่านเกณฑ์การสมัครสร้างรายได้ (Ineligible to Apply)', options: { bold: true, color: SL.red } }, { text: `   ·   ข้อมูล ณ ${YPP.asOf}`, options: { color: SL.muted } }],
+        T({ x: 0.5, y: 0.98, w: 12, h: 0.34, fontSize: 12, valign: 'middle' }));
       const w = (12.45 - 0.2 * (yts.length - 1)) / yts.length;
       yts.forEach((a, i) => {
-        const y0 = YPP[a.id], x = 0.45 + i * (w + 0.2);
-        s.addShape(p.ShapeType.roundRect, { x, y: 1.45, w, h: 5.7, fill: { color: SL.navy }, line: { color: SL.navy }, rectRadius: 0.14 });
-        s.addText(`${a.brand}TH`, H({ x: x + w / 2 - 0.9, y: 1.62, w: 1.8, h: 0.42, fontSize: 15, bold: true, color: '052E16', align: 'center', valign: 'middle', fill: { color: '4ADE80' }, shape: p.ShapeType.roundRect, rectRadius: 0.21 }));
-        const gap = (have, need) => have >= need ? 'ครบแล้ว ✅' : `ขาดอีก ~${fmtC(need - have)}`;
-        const lines = [
-          [y0.subs >= 1000 ? `ผู้ติดตามครบแล้ว ✅ (${fmt(y0.subs)} คน)` : `ผู้ติดตาม ${fmt(y0.subs)} / 1,000 คน · ขาดอีก ${fmt(1000 - y0.subs)} คน`, '4ADE80', true],
-          ['1. เพื่อเปิดรับเงินสนับสนุน (สมาชิก, Supers)', 'FFFFFF', true],
-          [`เวลาดูคลิปยาว: ${gap(y0.hours, 3000)} ชม. (มี ${fmt(y0.hours)} / 3,000 ชม.)`, 'CBD5E1', false],
-          [`ยอดดู Shorts: ${gap(y0.shorts, 3e6)} ครั้ง (มี ${fmtC(y0.shorts)} / 3M)`, 'CBD5E1', false],
-          ['2. เพื่อเปิดโฆษณาเต็มรูปแบบ (รายได้จากโฆษณา)', 'FFFFFF', true],
-          [`เวลาดูคลิปยาว: ${gap(y0.hours, 4000)} ชม. (มี ${fmt(y0.hours)} / 4,000 ชม.)`, 'CBD5E1', false],
-          [`ยอดดู Shorts: ${gap(y0.shorts, 1e7)} ครั้ง (มี ${fmtC(y0.shorts)} / 10M)`, 'CBD5E1', false],
-          ['*เลือกสะสมชั่วโมงคลิปยาวหรือยอดดู Shorts อย่างใดอย่างหนึ่ง', '94A3B8', false]];
-        s.addText(lines.map(([t, c, b2]) => ({ text: t, options: { color: c, bold: b2, breakLine: true, paraSpaceAfter: 5 } })), T({ x: x + 0.35, y: 2.25, w: w - 0.7, h: 3.0, fontSize: 11.5 }));
+        const y0 = YPP[a.id], x = 0.45 + i * (w + 0.2), sys = SYS && SYS[a.id];
+        const subs = (sys && sys.followers) || y0.subs;
+        panel(s, x, 1.45, w, 5.65, `▶  ${a.brand}TH`, { pill: subs >= 1000 ? `ผู้ติดตาม ${fmt(subs)} ✅` : `ผู้ติดตาม ${fmt(subs)} / 1,000` });
+        // one grey row with a progress bar
+        const row = (label, have, need, unit, y) => {
+          const met = have >= need, pr = Math.min(1, have / need);
+          s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y, w: w - 0.4, h: 0.66, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
+          s.addText(label, T({ x: x + 0.35, y: y + 0.05, w: w - 2.6, h: 0.26, fontSize: 10.5, bold: true, valign: 'middle' }));
+          s.addText(met ? 'ครบแล้ว ✅' : `ขาดอีก ~${fmtC(need - have)} ${unit}`, T({ x: x + 0.35, y: y + 0.29, w: w - 2.6, h: 0.22, fontSize: 9, bold: true, color: met ? SL.good : SL.red, valign: 'middle' }));
+          s.addText([{ text: fmtC(have), options: { bold: true, fontFace: SL.head, fontSize: 13 } }, { text: ` / ${fmtC(need)} ${unit}`, options: { fontSize: 9, color: SL.muted } }],
+            T({ x: x + w - 2.3, y: y + 0.05, w: 1.95, h: 0.45, align: 'right', valign: 'middle' }));
+          s.addShape(p.ShapeType.roundRect, { x: x + 0.35, y: y + 0.53, w: w - 0.7, h: 0.07, fill: { color: 'E5E7EB' }, line: { color: 'E5E7EB' }, rectRadius: 0.035 });
+          s.addShape(p.ShapeType.roundRect, { x: x + 0.35, y: y + 0.53, w: Math.max(0.07, (w - 0.7) * pr), h: 0.07, fill: { color: met ? '16A34A' : 'FF0000' }, line: { color: met ? '16A34A' : 'FF0000' }, rectRadius: 0.035 });
+        };
+        const head = (t, y) => s.addText(t, H({ x: x + 0.22, y, w: w - 0.44, h: 0.3, fontSize: 12, bold: true, valign: 'middle' }));
+        head('1. เพื่อเปิดรับเงินสนับสนุน (สมาชิก, Supers)', 2.07);
+        row('เวลาดูคลิปยาว (365 วัน)', y0.hours, 3000, 'ชม.', 2.4);
+        row('ยอดดู Shorts (90 วัน)', y0.shorts, 3e6, 'ครั้ง', 3.1);
+        head('2. เพื่อเปิดโฆษณาเต็มรูปแบบ (รายได้จากโฆษณา)', 3.84);
+        row('เวลาดูคลิปยาว (365 วัน)', y0.hours, 4000, 'ชม.', 4.17);
+        row('ยอดดู Shorts (90 วัน)', y0.shorts, 1e7, 'ครั้ง', 4.87);
+        s.addText('*เลือกสะสมชั่วโมงคลิปยาวหรือยอดดู Shorts อย่างใดอย่างหนึ่ง', T({ x: x + 0.22, y: 5.56, w: w - 0.44, h: 0.24, fontSize: 8.5, color: SL.muted, valign: 'middle' }));
+        // recommendation box with a red edge
         const ph = y0.hours / 4000 * 100, ps = y0.shorts / 1e7 * 100;
-        s.addText([{ text: 'ข้อเสนอแนะ: ทำแบบไหนง่ายและเร็วที่สุด?', options: { bold: true, color: SL.red, breakLine: true } },
-          { text: ph >= ps ? `โฟกัส "คลิปยาว" เป็นหลัก: ทำได้แล้ว ${pct(ph, 1)} ของ 4,000 ชม. ขาดอีก ${fmt(4000 - y0.hours)} ชม. ขณะที่ Shorts ยังไม่ถึง ${Math.max(1, Math.ceil(ps))}% ของ 10 ล้านครั้ง` : `โฟกัส "Shorts": ทำได้แล้ว ${pct(ps, 1)} ของ 10 ล้านครั้ง`, options: { breakLine: true } },
-          { text: 'วิธีแก้: เน้นคลิปแก้ปัญหา / เปรียบเทียบสินค้า / วิธีใช้งาน / คลิปสอนการใช้งานที่คนเข้าถึงได้ง่าย', options: { color: '374151' } }],
-          T({ x: x + 0.25, y: 5.35, w: w - 0.5, h: 1.6, fontSize: 10.5, fill: { color: 'F8FAFC' }, margin: [6, 10, 6, 10], valign: 'middle' }));
+        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: 5.86, w: w - 0.4, h: 1.08, fill: { color: 'FEF2F2' }, line: { color: 'FECACA', width: 0.75 }, rectRadius: 0.08 });
+        s.addShape(p.ShapeType.rect, { x: x + 0.2, y: 5.94, w: 0.07, h: 0.92, fill: { color: SL.red }, line: { color: SL.red } });
+        s.addText([{ text: '💡 ข้อเสนอแนะ: ทำแบบไหนง่ายและเร็วที่สุด?', options: { bold: true, color: SL.red, breakLine: true } },
+          { text: ph >= ps ? `โฟกัส "คลิปยาว" เป็นหลัก ทำได้แล้ว ${pct(ph, 1)} ของ 4,000 ชม. ขณะที่ Shorts ยังไม่ถึง ${Math.max(1, Math.ceil(ps))}% ของ 10 ล้านครั้ง` : `โฟกัส "Shorts" ทำได้แล้ว ${pct(ps, 1)} ของ 10 ล้านครั้ง`, options: { breakLine: true } },
+          { text: 'เน้นคลิปแก้ปัญหา / เปรียบเทียบสินค้า / วิธีใช้งาน / คลิปสอนการใช้งานที่คนเข้าถึงง่าย', options: { color: '4B5563' } }],
+          T({ x: x + 0.4, y: 5.92, w: w - 0.75, h: 0.96, fontSize: 9.5, valign: 'middle' }));
       });
     };
 
