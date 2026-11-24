@@ -1400,7 +1400,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       <p class="sl-pick-note" id="sl-types-note"></p>
     </div>
     <ol class="slide-list">
-      <li><span>ปก "Pro Content" และหน้าคั่น Update KPI &amp; OKR<small>หน้าตาเดียวกับไฟล์ Content OKR 2026 ของทีม</small></span></li>
+      <li><span>หน้าเปิด Update KPI &amp; OKR<small>ธีมเดียวกับไฟล์ CT OKR 2026 ของทีม: แถบดำแดง ลายวงจร และโลโก้ 9+ ทุกหน้า</small></span></li>
       <li><span>KPI Short VDO แยกแบรนด์<small>จำนวนคลิป วิวรวม เทียบเดือนก่อน และ Top 5 ของ TikTok, Facebook Reels, Instagram Reels</small></span></li>
       <li><span>Objective &amp; Key Result แยกแพลตฟอร์ม<small>เป้า (เดิม) = ทำได้ พร้อม % เทียบเป้า และ Key Insights (Monthly Update / Next Step)</small></span></li>
       <li><span>Video Analysis (บัญชีละ 1 หน้า)<small>คลิป TOP และ Lowest-Viewed พร้อม Creator และบทวิเคราะห์ 4 ด้านที่ทีมเขียน</small></span></li>
@@ -2604,7 +2604,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     const acc = (b, p) => ACCOUNTS.find(a => a.brand === b && a.platform === p);
     const sel = pl => !slPlats || slPlats.has(pl);
     const IMG = {};
-    await Promise.all([['bg', 'assets/deck/cover-bg.png'], ['face', 'assets/deck/cover-face.png'], ['ai', 'assets/deck/section-ai.png'], ['net', 'assets/deck/section-network.png'], ['nine', 'assets/deck/logo-9plus.png']]
+    await Promise.all([['frame', 'assets/deck/frame-bg.png'], ['circuit', 'assets/deck/circuit.png'], ['ai', 'assets/deck/section-ai.png'], ['net', 'assets/deck/section-network.png'], ['nine', 'assets/deck/logo-9plus.png']]
       .map(async ([k, src]) => { IMG[k] = await imgRaw(src); }));
     for (const b of brands) IMG[b] = await imgData(`assets/brand-${b.toLowerCase()}.png`);
     for (const p of platforms()) IMG[p] = await iconPng(p);
@@ -2616,43 +2616,50 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     let count = 0;
     const T = o => Object.assign({ fontFace: SL.body, color: SL.ink, fontSize: 12, valign: 'top', margin: 0 }, o);
     const H = o => T(Object.assign({ fontFace: SL.head }, o));
-    const slide = () => { count++; const s = p.addSlide(); if (IMG.bg) s.addImage({ data: IMG.bg, x: 0, y: 0, w: 13.333, h: 7.5 }); return s; };
-    const brandLogo = (s, b) => { if (IMG[b]) s.addImage({ data: IMG[b], x: 12.05, y: 0.28, w: 0.85, h: 0.85 }); };
+    // page frame from the team theme: wave lines at the bottom, black/red bands under the title and at the foot,
+    // red circuit lines and the 9+ logo top right, red bar beside the title
+    const band = (s, x, y, w, h, color) => s.addShape(p.ShapeType.parallelogram, { x, y, w, h, fill: { color }, line: { color }, adjustments: [0.4] });
+    const frame = s => {
+      if (IMG.frame) s.addImage({ data: IMG.frame, x: 0.01, y: 0.04, w: 13.31, h: 7.49 });
+      for (let i = 0; i < 7; i++) band(s, 0.01 + i * 0.24, 1.21, 0.22, 0.13, 'EEEEEE');
+      band(s, 1.76, 1.21, 8.12, 0.13, '212121');
+      band(s, 9.75, 1.21, 3.62, 0.25, 'D90429');
+      band(s, -0.05, 7.27, 3.62, 0.25, 'D90429');
+      band(s, 3.45, 7.39, 8.12, 0.13, '212121');
+      for (let i = 0; i < 7; i++) band(s, 11.65 + i * 0.24, 7.39, 0.22, 0.13, 'EEEEEE');
+      if (IMG.circuit) s.addImage({ data: IMG.circuit, x: 9.6, y: 0.23, w: 3.35, h: 0.84 });
+      if (IMG.nine) s.addImage({ data: IMG.nine, x: 11.68, y: 0.25, w: 1.35, h: 0.75 });
+      s.addShape(p.ShapeType.rect, { x: 0.44, y: 0.26, w: 0.06, h: 0.66, fill: { color: 'D32F2F' }, line: { color: 'D32F2F' } });
+    };
+    const slide = (kind = 'content') => { count++; const s = p.addSlide(); s.background = { color: 'FFFFFF' }; if (kind === 'content') frame(s); return s; };
+    const brandLogo = (s, b) => { if (IMG[b]) s.addImage({ data: IMG[b], x: 8.55, y: 0.11, w: 1.0, h: 1.0 }); };
+    const sub = (s, t) => s.addText(t, H({ x: 0.66, y: 0.72, w: 7.8, h: 0.34, fontSize: 13, color: '333333', valign: 'middle' }));
     const icon = (s, pl, x, y, size = 0.3) => { if (IMG[pl]) s.addImage({ data: IMG[pl], x, y, w: size, h: size }); };
     // title with one red part, e.g. "KPI " + "2026" + " | สรุปผลเดือน ต.ค."
-    const title = (s, parts, y = 0.3, size = 26) => s.addText(parts.map(([t, red]) => ({ text: t, options: { color: red ? SL.red : SL.ink } })), H({ x: 0.5, y, w: 11.3, h: 0.6, fontSize: size, bold: true, valign: 'middle' }));
+    const title = (s, parts, size = 26) => s.addText(parts.map(([t, red]) => ({ text: t, options: { color: red ? SL.red : SL.ink } })), H({ x: 0.66, y: 0.2, w: 7.8, h: 0.56, fontSize: size, bold: true, valign: 'middle' }));
     // white panel with a dark (or red) header bar
     const panel = (s, x, y, w, h, head, o = {}) => {
-      const hc = o.color || SL.dark;
+      const hc = o.color || '010101';
       s.addShape(p.ShapeType.roundRect, { x, y, w, h, fill: { color: 'FFFFFF' }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.12, shadow: { type: 'outer', blur: 4, offset: 1.5, angle: 90, color: '000000', opacity: 0.12 } });
       s.addShape(p.ShapeType.roundRect, { x, y, w, h: 0.5, fill: { color: hc }, line: { color: hc }, rectRadius: 0.12 });
       s.addShape(p.ShapeType.rect, { x, y: 0.3 + y, w, h: 0.2, fill: { color: hc }, line: { color: hc } });
       s.addText(head, H({ x: x + 0.2, y, w: w - 0.4 - (o.pill ? 2.2 : 0), h: 0.5, fontSize: 14, bold: true, color: 'FFFFFF', valign: 'middle' }));
       if (o.pill) s.addText(o.pill, H({ x: x + w - 2.35, y: y + 0.08, w: 2.2, h: 0.34, fontSize: 11.5, bold: true, color: SL.ink, align: 'center', valign: 'middle', fill: { color: 'FFFFFF' }, shape: p.ShapeType.roundRect, rectRadius: 0.17 }));
+      if (o.link) s.addText('Link >>', H({ x: x + w - 3.3, y: y + 0.1, w: 0.85, h: 0.3, fontSize: 11, bold: true, color: '0F172A', align: 'center', valign: 'middle', fill: { color: '00FFFF' }, hyperlink: { url: o.link } }));
     };
     const bullets = (arr, o = {}) => arr.map(l => ({ text: l.replace(/^\s*[-•]\s*/, ''), options: Object.assign({ bullet: /^\s*[-•]/.test(l) ? { indent: 12 } : false, breakLine: true, paraSpaceAfter: 2 }, o) }));
     const evalAt = m => evalMetric(Object.assign({}, m, { data: m.data.slice(0, mi + 1) }));
     const ytExtra = id => (YT_EXTRA[id] && YT_EXTRA[id][mi]) || null;
     const short = n => n == null ? '–' : fmtC(n);
 
-    // 1) cover, as in the team file
+    // section page (first page, as in the team theme)
     {
-      const s = slide();
-      if (IMG.face) s.addImage({ data: IMG.face, x: 13.333 - 6.37, y: 0, w: 6.37, h: 7.5 });
-      if (IMG.nine) s.addImage({ data: IMG.nine, x: 2.35, y: 1.35, w: 1.8, h: 1.0 });
-      s.addText('Pro Content', H({ x: 0.4, y: 2.85, w: 6.3, h: 1.1, fontSize: 60, bold: true, italic: true, align: 'center', valign: 'middle' }));
-      s.addText('2026', H({ x: 0.4, y: 3.9, w: 6.3, h: 0.55, fontSize: 24, align: 'center', valign: 'middle' }));
-      s.addShape(p.ShapeType.line, { x: 2.05, y: 4.85, w: 3.0, h: 0, line: { color: SL.red, width: 3 } });
-      s.addText(`สรุปประจำเดือน ${MONTH_FULL[mi]} 2026${repBrand === 'all' ? '' : ' · ' + repBrand}`, H({ x: 0.4, y: 5.1, w: 6.3, h: 0.45, fontSize: 15, color: SL.muted, align: 'center', valign: 'middle' }));
-    }
-    // 2) section page
-    {
-      const s = slide();
+      const s = slide('section');
       if (IMG.ai) s.addImage({ data: IMG.ai, x: 0, y: 0, w: 10.66, h: 7.54 });
       if (IMG.net) s.addImage({ data: IMG.net, x: 4.06, y: 0.34, w: 10.66, h: 7.5 });
       if (IMG.nine) s.addImage({ data: IMG.nine, x: 11.7, y: 0.24, w: 1.35, h: 0.75 });
       s.addText('Update KPI & OKR', H({ x: 6.1, y: 2.65, w: 6.8, h: 0.95, fontSize: 42, bold: true, italic: true, color: SL.red, align: 'center', valign: 'middle' }));
-      s.addText(`1-${lastDay} ${EN_M[mi]}`, H({ x: 6.1, y: 3.5, w: 6.8, h: 0.6, fontSize: 24, bold: true, italic: true, color: '595959', align: 'center', valign: 'middle' }));
+      s.addText(`1-${lastDay} ${EN_M[mi]}`, H({ x: 6.1, y: 3.5, w: 6.8, h: 0.6, fontSize: 26, bold: true, italic: true, color: '1F1F1F', align: 'center', valign: 'middle' }));
     }
 
     // Short VDO per brand
@@ -2660,22 +2667,21 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       const plats = ['TikTok', 'Facebook', 'Instagram'].filter(sel).map(pl => acc(b, pl)).filter(Boolean);
       if (!plats.length) return;
       const s = slide();
-      title(s, [['KPI ', 0], ['2026', 1], [` | ${b === 'Moov' ? 'MOOV Short VDO Review' : 'สรุปผลเดือน ' + mTh}`, 0]]);
-      s.addText(b === 'Moov' ? `📊 สรุปผลการดำเนินงานเดือน ${mTh} (TikTok Review & Reels)` : `การเผยแพร่คอนเทนต์ Short VDO (${plats.map(a => a.platform === 'TikTok' ? 'TikTok' : a.platform + ' Reels').join(' / ')})`,
-        H({ x: 0.5, y: 0.88, w: 11.3, h: 0.4, fontSize: 15, bold: true, color: '333333', valign: 'middle' }));
+      title(s, [[`สรุปผลเดือน ${mTh}`, 0]]);
+      sub(s, `การเผยแพร่คอนเทนต์ Short VDO (${plats.map(a => a.platform === 'TikTok' ? 'TikTok' : a.platform + ' Reels').join(' / ')})`);
       brandLogo(s, b);
       const lab = a => a.platform === 'TikTok' ? 'TikTok VDO' : `${a.platform} Reels`;
       // left: counts and total views
-      panel(s, 0.45, 1.4, 4.35, 5.75, '📊 ผลการดำเนินงาน & ยอดการเข้าถึง');
+      panel(s, 0.45, 1.62, 4.35, 5.5, '📊 ผลการดำเนินงาน & ยอดการเข้าถึง');
       const out = a => mData(a, 'output');
-      s.addShape(p.ShapeType.roundRect, { x: 0.65, y: 2.05, w: 3.95, h: 0.42 + plats.length * 0.27, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
+      s.addShape(p.ShapeType.roundRect, { x: 0.65, y: 2.25, w: 3.95, h: 0.42 + plats.length * 0.27, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
       s.addText([...plats.map(a => ({ text: `${lab(a)}: `, options: { bold: true, bullet: { indent: 12 } } }))].flatMap((r, i) => [r, { text: `${fmt(out(plats[i])[mi])} Clips`, options: { breakLine: true } }])
         .concat([{ text: '*จำนวนต่างกันเนื่องจากรูปแบบสื่อของแต่ละแพลตฟอร์ม', options: { fontSize: 9, color: SL.muted } }]),
-        T({ x: 0.8, y: 2.12, w: 3.7, h: 0.3 + plats.length * 0.27, fontSize: 11.5 }));
-      let y = 2.62 + plats.length * 0.27;
+        T({ x: 0.8, y: 2.32, w: 3.7, h: 0.3 + plats.length * 0.27, fontSize: 11.5 }));
+      let y = 2.8 + plats.length * 0.27;
       s.addText([{ text: 'ยอดการเข้าถึงรวม (Total Views)', options: { bold: true } }, { text: '   *สะสม ณ วันที่เก็บข้อมูล', options: { fontSize: 8.5, color: SL.muted } }], T({ x: 0.65, y, w: 4.0, h: 0.3, fontSize: 11, valign: 'middle' }));
       y += 0.38;
-      const ch = Math.min(0.95, (6.55 - y - 0.15) / plats.length - 0.1);
+      const ch = Math.min(0.9, (6.6 - y - 0.1) / plats.length - 0.1);
       plats.forEach(a => {
         const uv = uploadViews(a.id, mi), n = out(a)[mi];
         s.addShape(p.ShapeType.roundRect, { x: 0.65, y, w: 3.95, h: ch, fill: { color: 'FFFFFF' }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.1 });
@@ -2686,24 +2692,24 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
           T({ x: 2.3, y: y + 0.06, w: 2.15, h: ch - 0.12, align: 'right', valign: 'middle' }));
         y += ch + 0.1;
       });
-      s.addText(bullets(['• TikTok: รวม Campaign / Ads (ไม่รวม Highlight Live)', '• Facebook / Instagram: นับแบบ Organic'], { fontSize: 8.5, color: SL.muted }), T({ x: 0.65, y: 6.62, w: 4.0, h: 0.45 }));
+      s.addText(bullets(['• TikTok: รวม Campaign / Ads (ไม่รวม Highlight Live)', '• Facebook / Instagram: นับแบบ Organic'], { fontSize: 8.5, color: SL.muted }), T({ x: 0.65, y: 6.62, w: 4.0, h: 0.42 }));
       // right: top 5 per platform
-      panel(s, 4.95, 1.4, 7.95, 5.75, '🏆 ลำดับคลิปที่มียอด Views สูงสุด (Top Performance)');
+      panel(s, 4.95, 1.62, 7.95, 5.5, '🏆 ลำดับคลิปที่มียอด Views สูงสุด (Top Performance)');
       const cw = (7.55 - 0.15 * (plats.length - 1)) / plats.length;
       plats.forEach((a, i) => {
         const x = 5.15 + i * (cw + 0.15);
-        s.addShape(p.ShapeType.roundRect, { x, y: 2.05, w: cw, h: 4.9, fill: { color: 'FFFFFF' }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.08 });
-        icon(s, a.platform, x + 0.12, 2.16, 0.26);
-        s.addText(`${{ TikTok: 'TikTok', Facebook: 'FB Reels', Instagram: 'IG Reels' }[a.platform]} Top Ranking`, H({ x: x + 0.45, y: 2.12, w: cw - 0.55, h: 0.34, fontSize: 11, bold: true, valign: 'middle', fit: 'shrink' }));
+        s.addShape(p.ShapeType.roundRect, { x, y: 2.25, w: cw, h: 4.72, fill: { color: 'FFFFFF' }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.08 });
+        icon(s, a.platform, x + 0.12, 2.36, 0.26);
+        s.addText(`${{ TikTok: 'TikTok', Facebook: 'FB Reels', Instagram: 'IG Reels' }[a.platform]} Top Ranking`, H({ x: x + 0.45, y: 2.32, w: cw - 0.55, h: 0.34, fontSize: 11, bold: true, valign: 'middle', fit: 'shrink' }));
         const top = clipsFor(a.id, mi).sort((x1, x2) => x2.views - x1.views).slice(0, 5);
-        if (!top.length) { s.addText('ยังไม่มีรายคลิปของเดือนนี้', T({ x: x + 0.15, y: 2.65, w: cw - 0.3, h: 0.3, fontSize: 10, color: SL.muted, italic: true })); return; }
+        if (!top.length) { s.addText('ยังไม่มีรายคลิปของเดือนนี้', T({ x: x + 0.15, y: 2.85, w: cw - 0.3, h: 0.3, fontSize: 10, color: SL.muted, italic: true })); return; }
         // rows drawn as boxes and text (Google Slides squeezes table columns when it converts)
-        s.addText([{ text: '#', options: {} }], T({ x: x + 0.12, y: 2.55, w: 0.3, h: 0.24, fontSize: 8.5, bold: true, color: SL.muted, align: 'center', valign: 'middle' }));
-        s.addText('คลิป', T({ x: x + 0.5, y: 2.55, w: 1.5, h: 0.24, fontSize: 8.5, bold: true, color: SL.muted, valign: 'middle' }));
-        s.addText('Views', T({ x: x + cw - 0.95, y: 2.55, w: 0.83, h: 0.24, fontSize: 8.5, bold: true, color: SL.muted, align: 'right', valign: 'middle' }));
-        const rh = 0.82;
+        s.addText([{ text: '#', options: {} }], T({ x: x + 0.12, y: 2.72, w: 0.3, h: 0.24, fontSize: 8.5, bold: true, color: SL.muted, align: 'center', valign: 'middle' }));
+        s.addText('คลิป', T({ x: x + 0.5, y: 2.72, w: 1.5, h: 0.24, fontSize: 8.5, bold: true, color: SL.muted, valign: 'middle' }));
+        s.addText('Views', T({ x: x + cw - 0.95, y: 2.72, w: 0.83, h: 0.24, fontSize: 8.5, bold: true, color: SL.muted, align: 'right', valign: 'middle' }));
+        const rh = 0.78;
         top.forEach((c, j) => {
-          const y = 2.85 + j * rh;
+          const y = 3.0 + j * rh;
           if (j) s.addShape(p.ShapeType.line, { x: x + 0.12, y: y - 0.04, w: cw - 0.24, h: 0, line: { color: 'EEEEEE', width: 0.75 } });
           s.addText(String(j + 1), H({ x: x + 0.12, y: y + 0.2, w: 0.3, h: 0.3, fontSize: 10, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle', fill: { color: j < 3 ? SL.red : '9CA3AF' } }));
           s.addText([{ text: cut(c.title, cw > 3 ? 64 : 34), options: { hyperlink: { url: clipUrl(c) }, color: SL.ink, breakLine: true } }, { text: fmtDate(c.posted), options: { fontSize: 7.5, color: SL.muted } }],
@@ -2719,16 +2725,15 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       const accs = ACCOUNTS.filter(a => a.platform === pl && brands.includes(a.brand));
       if (!accs.length) return;
       const s = slide();
-      s.addShape(p.ShapeType.rect, { x: 0.4, y: 0.32, w: 0.08, h: 0.95, fill: { color: SL.red }, line: { color: SL.red } });
-      title(s, [['Objective & Key Result ', 0], ['2026', 1]], 0.25, 28);
-      s.addText(`Period : 1 Jan - ${lastDay} ${EN_M[mi]}`, H({ x: 0.55, y: 0.85, w: 6, h: 0.4, fontSize: 15, valign: 'middle' }));
-      icon(s, pl, 12.25, 0.4, 0.6);
+      title(s, [['Objective & Key Result ', 0], ['2026', 1]], 28);
+      sub(s, `Period : 1 Jan - ${lastDay} ${EN_M[mi]}`);
+      icon(s, pl, 8.75, 0.25, 0.7);
       const krs = accs.flatMap(a => a.metrics.filter(m => m.target).map(m => ({ a, m, e: evalAt(m) }))).filter(x => x.e.li >= 0);
       const rows = krs.length ? krs : accs.flatMap(a => ['views', 'nf', 'er'].map(k => ({ a, m: a.metrics.find(m => m.key === k), e: null })).filter(x => x.m));
-      const rowH = 0.5, ph = Math.min(5.65, 0.85 + rows.length * rowH);
-      panel(s, 0.45, 1.45, 6.75, ph, '📈 ทีมคอนเท้นต์ (Pro. Content)');
+      const rowH = 0.5, ph = Math.min(5.5, 0.85 + rows.length * rowH);
+      panel(s, 0.45, 1.62, 6.75, ph, '📈 ทีมคอนเท้นต์ (Pro. Content)');
       rows.forEach(({ a, m, e }, i) => {
-        const y = 2.1 + i * rowH, sumK = m.kind === 'sum', f = v => sumK ? short(v) : pct(v, 2);
+        const y = 2.27 + i * rowH, sumK = m.kind === 'sum', f = v => sumK ? short(v) : pct(v, 2);
         icon(s, pl, 0.65, y + 0.06, 0.3);
         const label = m.key === 'er' ? 'Engagement' : m.label.replace('Views organic', 'Views').replace('Watch time (นาที)', 'Organic Watch Time (min)');
         const runs = [{ text: `${a.brand} ${label} ` }];
@@ -2743,28 +2748,28 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
         s.addText(runs, T({ x: 1.05, y, w: 4.75, h: 0.42, fontSize: 11.5, valign: 'middle' }));
         if (e) {
           const prog = sumK ? e.progress : e.ratio;
-          s.addText(pct(prog, 2), H({ x: 5.9, y: y + 0.06, w: 1.1, h: 0.32, fontSize: 11, bold: true, align: 'center', valign: 'middle', fill: { color: prog >= 100 ? SL.green : SL.yellow } }));
+          s.addText(pct(prog, 2), H({ x: 5.9, y: y + 0.06, w: 1.1, h: 0.32, fontSize: 11, bold: true, align: 'center', valign: 'middle', color: prog >= 100 ? '052E16' : 'FFFFFF', fill: { color: prog >= 100 ? '4ADE80' : 'E11D2E' } }));
         }
       });
       // YouTube: uploads this month, as in the team file
       if (pl === 'YouTube') {
-        const yy = 1.45 + ph + 0.2;
+        const yy = 1.62 + ph + 0.2;
         if (yy < 6.4) {
-          s.addShape(p.ShapeType.roundRect, { x: 0.45, y: yy, w: 6.75, h: Math.min(1.4, 7.15 - yy), fill: { color: 'FFFFFF' }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.1 });
+          s.addShape(p.ShapeType.roundRect, { x: 0.45, y: yy, w: 6.75, h: Math.min(1.4, 7.1 - yy), fill: { color: 'FFFFFF' }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.1 });
           s.addText([{ text: `จำนวน Content ${EN_M[mi].toUpperCase()}`, options: { bold: true, fontFace: SL.head, breakLine: true } }]
             .concat(accs.map(a => { const x = ytExtra(a.id); return { text: `${a.brand}: วิดีโอ (Long-form) ${x && x.long ? x.long + ' คลิป' : '-'} · วิดีโอสั้น (Shorts) ${x ? (x.shorts || 0) + ' คลิป' : '-'}`, options: { breakLine: true, bullet: { indent: 12 } } }; })),
             T({ x: 0.65, y: yy + 0.12, w: 6.4, h: Math.min(1.2, 7.0 - yy), fontSize: 11 }));
         }
       }
       // right: key insights (team text, or the system draft)
-      panel(s, 7.4, 1.45, 5.5, 5.65, '👁 Key Insights');
-      const up = fitBox(noteVal(`okr-${pl}-update`) || draftUpdate(pl), 5.0, 2.35, 10.5);
-      const nx = fitBox(noteVal(`okr-${pl}-next`) || draftNext(pl), 5.0, 1.95, 10.5);
+      panel(s, 7.4, 1.62, 5.5, 5.5, '👁 Key Insights');
+      const up = fitBox(noteVal(`okr-${pl}-update`) || draftUpdate(pl), 5.0, 2.25, 10.5);
+      const nx = fitBox(noteVal(`okr-${pl}-next`) || draftNext(pl), 5.0, 1.85, 10.5);
       s.addText([{ text: 'Monthly Update :', options: { bold: true, underline: { style: 'sng' }, color: '1E3A8A', breakLine: true } }]
         .concat(up.length ? bullets(up.map(l => /^\s*[-•]/.test(l) ? l : '- ' + l)) : [{ text: '–', options: { breakLine: true, color: SL.muted } }])
         .concat([{ text: ' ', options: { breakLine: true } }, { text: 'Next Step :', options: { bold: true, underline: { style: 'sng' }, color: '1E3A8A', breakLine: true } }])
         .concat(nx.length ? bullets(nx.map(l => /^\s*[-•]/.test(l) ? l : '- ' + l)) : [{ text: '–', options: { color: SL.muted } }]),
-        T({ x: 7.6, y: 2.1, w: 5.1, h: 4.9, fontSize: 10.5 }));
+        T({ x: 7.6, y: 2.27, w: 5.1, h: 4.75, fontSize: 10.5 }));
     };
 
     // Video Analysis per account
@@ -2778,31 +2783,30 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       const sorted = [...pool].sort((x, y) => y.views - x.views), med = median(all.map(c => c.views));
       const tv = all.reduce((x, c) => x + c.views, 0), erAll = tv ? all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 : 0;
       const s = slide();
-      title(s, [['Video Analysis ', 0], [`${VA_LABEL[a.platform]} ${a.brand}`, 1]], 0.3, 28);
-      s.addText(filtered ? `${pool.length} จาก ${all.length} คลิปใน ${mTh} 2026 · ประเภท ${[...slTypes].join(', ')} · คลิปวิวสูงสุดและต่ำสุด` : `${all.length} คลิปใน ${mTh} 2026 · คลิปวิวสูงสุดและต่ำสุดของเดือน`, T({ x: 0.5, y: 0.88, w: 9, h: 0.3, fontSize: 11, color: SL.muted, valign: 'middle' }));
+      title(s, [['Video Analysis ', 0], [`${VA_LABEL[a.platform]} ${a.brand}`, 1]], 28);
+      s.addText(filtered ? `${pool.length} จาก ${all.length} คลิปใน ${mTh} 2026 · ประเภท ${[...slTypes].join(', ')} · คลิปวิวสูงสุดและต่ำสุด` : `${all.length} คลิปใน ${mTh} 2026 · คลิปวิวสูงสุดและต่ำสุดของเดือน`, T({ x: 0.66, y: 0.76, w: 7.8, h: 0.3, fontSize: 11, color: SL.muted, valign: 'middle' }));
       brandLogo(s, a.brand);
       const picks = [['top', sorted[0]], ...(sorted.length > 1 ? [['low', sorted[sorted.length - 1]]] : [])];
       picks.forEach(([kind, c], i) => {
-        const x = 0.45 + i * 6.3, w = 6.13, k = filtered ? `va-${a.id}-${kind}-${c.id}` : `va-${a.id}-${kind}`, y0 = 1.35;
-        panel(s, x, y0, w, 5.8, (kind === 'top' ? '⭐ TOP' : '🔽 Lowest-Viewed') + (filtered ? ' ในประเภทที่เลือก' : ''), { color: kind === 'top' ? SL.red : SL.dark, pill: `Creator : ${noteVal(k + '-creator') || '…'}` });
+        const x = 0.45 + i * 6.3, w = 6.13, k = filtered ? `va-${a.id}-${kind}-${c.id}` : `va-${a.id}-${kind}`, y0 = 1.58;
+        panel(s, x, y0, w, 5.52, (kind === 'top' ? '⭐ TOP VIEWS' : '🔽 Lowest-Viewed') + (filtered ? ' (ประเภทที่เลือก)' : ''), { color: kind === 'top' ? 'D32F2F' : '010101', pill: `Creator : ${noteVal(k + '-creator') || '…'}`, link: clipUrl(c) });
         // clip card
-        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: y0 + 0.65, w: w - 0.4, h: 1.95, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
-        icon(s, a.platform, x + 0.35, y0 + 0.78, 0.3);
+        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: y0 + 0.62, w: w - 0.4, h: 1.88, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
+        icon(s, a.platform, x + 0.35, y0 + 0.74, 0.3);
         s.addText([{ text: cut(c.title, 110), options: { bold: true, hyperlink: { url: clipUrl(c) }, color: SL.ink, breakLine: true } }, { text: `โพสต์ ${fmtDate(c.posted)} · ${c.type || 'ไม่ระบุประเภท'} · ${fmtOf(c)}`, options: { fontSize: 8.5, color: SL.muted } }],
-          T({ x: x + 0.75, y: y0 + 0.74, w: w - 1.1, h: 0.78, fontSize: 10.5 }));
+          T({ x: x + 0.75, y: y0 + 0.7, w: w - 1.1, h: 0.78, fontSize: 10.5 }));
         const nums = [['ยอดดู', fmt(c.views)], ['ไลก์', fmt(c.likes)], ['คอมเมนต์', fmt(c.comments)], ['แชร์', fmt(c.shares)], ['เซฟ', fmt(c.saves)], ['วิว/วัน', fmt(c.vpd)]];
         const nw = (w - 0.6) / nums.length;
         nums.forEach(([lb, v], j) => s.addText([{ text: lb, options: { fontSize: 8, color: SL.muted, breakLine: true } }, { text: v, options: { fontFace: SL.head, bold: true, fontSize: 13 } }],
-          T({ x: x + 0.3 + j * nw, y: y0 + 1.58, w: nw, h: 0.55, valign: 'middle' })));
+          T({ x: x + 0.3 + j * nw, y: y0 + 1.5, w: nw, h: 0.55, valign: 'middle' })));
         s.addText(kind === 'top' ? `วิวสูงกว่าค่ากลางของเดือน ${(c.views / med).toFixed(1)} เท่า · ER ${pct(c.er, 2)} (เฉลี่ยเดือน ${pct(erAll, 2)})` : `วิวเป็น ${(c.views / med * 100).toFixed(0)}% ของค่ากลางของเดือน · ER ${pct(c.er, 2)} (เฉลี่ยเดือน ${pct(erAll, 2)})`,
-          T({ x: x + 0.3, y: y0 + 2.18, w: w - 1.3, h: 0.32, fontSize: 8.5, color: SL.muted, valign: 'middle' }));
-        s.addText('Link >>', T({ x: x + w - 1.0, y: y0 + 2.18, w: 0.75, h: 0.32, fontSize: 9.5, bold: true, color: SL.blue, align: 'right', valign: 'middle', hyperlink: { url: clipUrl(c) } }));
+          T({ x: x + 0.3, y: y0 + 2.1, w: w - 0.6, h: 0.32, fontSize: 8.5, color: SL.muted, valign: 'middle' }));
         // analysis box
-        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: y0 + 2.75, w: w - 0.4, h: 2.9, fill: { color: 'FFFFFF' }, line: { color: '9CA3AF', width: 1, dashType: 'dash' }, rectRadius: 0.1 });
+        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: y0 + 2.62, w: w - 0.4, h: 2.75, fill: { color: 'FFFFFF' }, line: { color: '9CA3AF', width: 1, dashType: 'dash' }, rectRadius: 0.1 });
         const team = [['ด้านเนื้อหา (Content)', 'content'], ['การเปิดคลิป (Hook)', 'hook'], ['การตัดต่อและงานภาพ (Editing & Pacing)', 'edit'], ['สิ่งที่ควรปรับปรุง', 'fix']].map(([lb, f]) => [lb, noteVal(`${k}-${f}`)]);
         s.addText([{ text: kind === 'top' ? 'การวิเคราะห์ (ทำไมถึงดี / เนื้อหา / การตัดต่อ)' : 'การวิเคราะห์ ( ที่ต้องปรับปรุง / เนื้อหา / การตัดต่อ)', options: { bold: true, fontFace: SL.head, fontSize: 11.5, breakLine: true } }]
           .concat(team.flatMap(([lb, v]) => [{ text: lb, options: { bold: true, color: SL.red, breakLine: true } }, { text: v ? cut(v, 150) : '…', options: { breakLine: true, color: v ? SL.ink : SL.muted, bullet: { indent: 12 } } }])),
-          T({ x: x + 0.38, y: y0 + 2.85, w: w - 0.75, h: 2.72, fontSize: 9.5, paraSpaceAfter: 1 }));
+          T({ x: x + 0.38, y: y0 + 2.7, w: w - 0.75, h: 2.6, fontSize: 9.5, paraSpaceAfter: 1 }));
       });
     };
 
@@ -2815,24 +2819,24 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       const chName = (sys && sys.channel) || (a.brand === 'Eloop' ? 'Orsen & Eloop Thailand' : 'Moov Thailand');
       const subs = (sys && sys.followers) || (x2 && x2.subs);
       const s = slide();
-      s.addShape(p.ShapeType.roundRect, { x: 0.5, y: 0.36, w: 0.72, h: 0.5, fill: { color: 'FF0000' }, line: { color: 'FF0000' }, rectRadius: 0.12 });
-      s.addShape(p.ShapeType.triangle, { x: 0.76, y: 0.47, w: 0.26, h: 0.28, rotate: 90, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF' } });
-      s.addText([{ text: 'YouTube', options: { color: 'FF0000' } }, { text: ' Content Performance ' }, { text: `${a.brand}TH`, options: { underline: { style: 'sng' } } }], H({ x: 1.35, y: 0.3, w: 10, h: 0.62, fontSize: 26, bold: true, valign: 'middle' }));
-      s.addText([{ text: 'รายงานประสิทธิภาพช่อง ' }, { text: chName, options: { color: SL.red } }], H({ x: 0.5, y: 1.15, w: 8.8, h: 0.5, fontSize: 21, bold: true, valign: 'middle' }));
-      s.addText(`สรุปข้อมูลสถิติและการเติบโตประจำรอบวันที่ 1 – ${lastDay} ${mTh} 2026`, T({ x: 0.5, y: 1.62, w: 8.8, h: 0.3, fontSize: 11, color: SL.muted, valign: 'middle' }));
+      s.addShape(p.ShapeType.roundRect, { x: 0.66, y: 0.27, w: 0.66, h: 0.46, fill: { color: 'FF0000' }, line: { color: 'FF0000' }, rectRadius: 0.11 });
+      s.addShape(p.ShapeType.triangle, { x: 0.9, y: 0.37, w: 0.24, h: 0.26, rotate: 90, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF' } });
+      s.addText([{ text: 'YouTube', options: { color: 'FF0000' } }, { text: ' Content Performance ' }, { text: `${a.brand}TH`, options: { underline: { style: 'sng' } } }], H({ x: 1.45, y: 0.2, w: 7.0, h: 0.56, fontSize: 24, bold: true, valign: 'middle' }));
+      s.addText([{ text: 'รายงานประสิทธิภาพช่อง ' }, { text: chName, options: { color: SL.red } }], H({ x: 0.45, y: 1.55, w: 8.8, h: 0.46, fontSize: 20, bold: true, valign: 'middle' }));
+      s.addText(`สรุปข้อมูลสถิติและการเติบโตประจำรอบวันที่ 1 – ${lastDay} ${mTh} 2026`, T({ x: 0.45, y: 1.98, w: 8.8, h: 0.28, fontSize: 11, color: SL.muted, valign: 'middle' }));
       s.addText([{ text: '👥 ผู้ติดตาม : ', options: { color: 'FFFFFF' } }, { text: subs ? fmt(subs) : '–', options: { color: 'FFD400' } }],
-        H({ x: 9.45, y: 1.15, w: 3.45, h: 0.62, fontSize: 19, bold: true, align: 'center', valign: 'middle', fill: { color: '111111' }, shape: p.ShapeType.roundRect, rectRadius: 0.31 }));
-      const pw = (12.45 - 0.3) / 3, py = 2.15, phh = 4.95;
+        H({ x: 9.45, y: 1.6, w: 3.45, h: 0.58, fontSize: 18, bold: true, align: 'center', valign: 'middle', fill: { color: '111111' }, shape: p.ShapeType.roundRect, rectRadius: 0.31 }));
+      const pw = (12.45 - 0.3) / 3, py = 2.42, phh = 4.68;
       // key numbers
       panel(s, 0.45, py, pw, phh, '📊 ตัวเลขสำคัญประจำเดือน');
       const nums = [['ยอดการดู (Views)', `${fmt(v[mi])} ครั้ง`, momOf(v[mi], v[mi - 1])], ['ยอดกดชอบ (Likes)', `${fmt(l[mi])} ครั้ง`, momOf(l[mi], l[mi - 1])],
         ['เวลาเข้าชม (Watch Time)', x2 ? `~${x2.wth.toLocaleString('en-US', { maximumFractionDigits: 1 })} ชม.` : '–', x2 && !partial() ? x2.wthMom : null],
         ['ผู้ติดตามใหม่ (Subscribers)', n[mi] == null ? '–' : `+${fmt(n[mi])} คน`, momOf(n[mi], n[mi - 1])]];
       nums.forEach(([lb, val, mo], j) => {
-        const y = py + 0.75 + j * 0.95;
-        s.addShape(p.ShapeType.roundRect, { x: 0.62, y, w: pw - 0.34, h: 0.78, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
-        s.addText(lb, T({ x: 0.75, y, w: 1.7, h: 0.78, fontSize: 9.5, color: SL.muted, valign: 'middle' }));
-        s.addText(val, H({ x: 2.3, y, w: 1.25, h: 0.78, fontSize: 13, bold: true, align: 'right', valign: 'middle' }));
+        const y = py + 0.68 + j * 0.92;
+        s.addShape(p.ShapeType.roundRect, { x: 0.62, y, w: pw - 0.34, h: 0.76, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
+        s.addText(lb, T({ x: 0.75, y, w: 1.7, h: 0.76, fontSize: 9.5, color: SL.muted, valign: 'middle' }));
+        s.addText(val, H({ x: 2.3, y, w: 1.25, h: 0.76, fontSize: 13, bold: true, align: 'right', valign: 'middle' }));
         if (mo != null) s.addText(pctTxt(mo), T({ x: 3.6, y: y + 0.24, w: 0.6, h: 0.3, fontSize: 8.5, bold: true, color: mo >= 0 ? SL.good : SL.crit, align: 'center', valign: 'middle', fill: { color: mo >= 0 ? SL.goodBg : SL.critBg } }));
       });
       // best videos
@@ -2841,8 +2845,8 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       const top = x2 && x2.top ? x2.top.slice(0, 3) : clipsFor(a.id, mi).sort((c1, c2) => c2.views - c1.views).slice(0, 3).map(c => [c.title, fmtOf(c), c.views]);
       if (!top.length) s.addText('ยังไม่มีข้อมูลวิดีโอเด่นของเดือนนี้', T({ x: x1 + 0.2, y: py + 0.75, w: pw - 0.4, h: 0.3, fontSize: 10, color: SL.muted, italic: true }));
       top.forEach((t, j) => {
-        const y = py + 0.75 + j * 1.3;
-        s.addShape(p.ShapeType.roundRect, { x: x1 + 0.17, y, w: pw - 0.34, h: 1.15, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
+        const y = py + 0.68 + j * 1.27;
+        s.addShape(p.ShapeType.roundRect, { x: x1 + 0.17, y, w: pw - 0.34, h: 1.12, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
         s.addText(String(j + 1), H({ x: x1 + 0.3, y: y + 0.38, w: 0.38, h: 0.38, fontSize: 13, bold: true, color: 'FFFFFF', align: 'center', valign: 'middle', fill: { color: SL.red } }));
         s.addText([{ text: cut(t[0], 80), options: { bold: true, breakLine: true } }, { text: `${t[1] ? '(' + t[1] + ') ' : ''}ยอดดู `, options: { fontSize: 9, color: SL.muted } }, { text: `${fmt(t[2])} ครั้ง`, options: { fontSize: 9.5, bold: true, color: SL.red } }],
           T({ x: x1 + 0.82, y: y + 0.08, w: pw - 1.1, h: 1.0, fontSize: 10, valign: 'middle' }));
@@ -2855,7 +2859,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
         .concat(ins.length ? bullets(ins.map(l => /^\s*[-•]/.test(l) ? l : '- ' + l)) : [{ text: 'ทีมยังไม่ได้เขียนในหน้าสรุปรายเดือน', options: { color: SL.muted, breakLine: true } }])
         .concat([{ text: ' ', options: { breakLine: true } }, { text: '✏️ โอกาสต่อยอดคอนเทนต์', options: { bold: true, color: SL.red, breakLine: true } }])
         .concat(nxt.length ? bullets(nxt.map(l => /^\s*[-•]/.test(l) ? l : '- ' + l)) : [{ text: '…', options: { color: SL.muted } }]),
-        T({ x: x3 + 0.22, y: py + 0.68, w: pw - 0.44, h: phh - 0.85, fontSize: 10 }));
+        T({ x: x3 + 0.22, y: py + 0.66, w: pw - 0.44, h: phh - 0.8, fontSize: 10 }));
     };
 
     // YouTube Partner Program: same look as the other pages (white panels, dark header bars, grey rows)
@@ -2864,16 +2868,16 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       const yts = brands.map(b => acc(b, 'YouTube')).filter(a => a && YPP[a.id]);
       if (!yts.length) return;
       const s = slide();
-      s.addShape(p.ShapeType.roundRect, { x: 0.5, y: 0.36, w: 0.72, h: 0.5, fill: { color: 'FF0000' }, line: { color: 'FF0000' }, rectRadius: 0.12 });
-      s.addShape(p.ShapeType.triangle, { x: 0.76, y: 0.47, w: 0.26, h: 0.28, rotate: 90, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF' } });
-      s.addText([{ text: 'สถานะ ' }, { text: 'YouTube', options: { color: 'FF0000' } }, { text: ' Partner Program (YPP)' }], H({ x: 1.35, y: 0.3, w: 10.5, h: 0.62, fontSize: 26, bold: true, valign: 'middle' }));
+      s.addShape(p.ShapeType.roundRect, { x: 0.66, y: 0.27, w: 0.66, h: 0.46, fill: { color: 'FF0000' }, line: { color: 'FF0000' }, rectRadius: 0.11 });
+      s.addShape(p.ShapeType.triangle, { x: 0.9, y: 0.37, w: 0.24, h: 0.26, rotate: 90, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF' } });
+      s.addText([{ text: 'สถานะ ' }, { text: 'YouTube', options: { color: 'FF0000' } }, { text: ' Partner Program (YPP)' }], H({ x: 1.45, y: 0.2, w: 7.0, h: 0.56, fontSize: 24, bold: true, valign: 'middle' }));
       s.addText([{ text: 'สถานะปัจจุบัน: ', options: { bold: true } }, { text: 'ยังไม่ผ่านเกณฑ์การสมัครสร้างรายได้ (Ineligible to Apply)', options: { bold: true, color: SL.red } }, { text: `   ·   ข้อมูล ณ ${YPP.asOf}`, options: { color: SL.muted } }],
-        T({ x: 0.5, y: 0.98, w: 12, h: 0.34, fontSize: 12, valign: 'middle' }));
+        T({ x: 0.66, y: 0.76, w: 8.9, h: 0.32, fontSize: 11, valign: 'middle' }));
       const w = (12.45 - 0.2 * (yts.length - 1)) / yts.length;
       yts.forEach((a, i) => {
         const y0 = YPP[a.id], x = 0.45 + i * (w + 0.2), sys = SYS && SYS[a.id];
         const subs = (sys && sys.followers) || y0.subs;
-        panel(s, x, 1.45, w, 5.65, `▶  ${a.brand}TH`, { pill: subs >= 1000 ? `ผู้ติดตาม ${fmt(subs)} ✅` : `ผู้ติดตาม ${fmt(subs)} / 1,000` });
+        panel(s, x, 1.6, w, 5.52, `▶  ${a.brand}TH`, { pill: subs >= 1000 ? `ผู้ติดตาม ${fmt(subs)} ✅` : `ผู้ติดตาม ${fmt(subs)} / 1,000` });
         // one grey row with a progress bar
         const row = (label, have, need, unit, y) => {
           const met = have >= need, pr = Math.min(1, have / need);
@@ -2886,21 +2890,21 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
           s.addShape(p.ShapeType.roundRect, { x: x + 0.35, y: y + 0.53, w: Math.max(0.07, (w - 0.7) * pr), h: 0.07, fill: { color: met ? '16A34A' : 'FF0000' }, line: { color: met ? '16A34A' : 'FF0000' }, rectRadius: 0.035 });
         };
         const head = (t, y) => s.addText(t, H({ x: x + 0.22, y, w: w - 0.44, h: 0.3, fontSize: 12, bold: true, valign: 'middle' }));
-        head('1. เพื่อเปิดรับเงินสนับสนุน (สมาชิก, Supers)', 2.07);
-        row('เวลาดูคลิปยาว (365 วัน)', y0.hours, 3000, 'ชม.', 2.4);
-        row('ยอดดู Shorts (90 วัน)', y0.shorts, 3e6, 'ครั้ง', 3.1);
-        head('2. เพื่อเปิดโฆษณาเต็มรูปแบบ (รายได้จากโฆษณา)', 3.84);
-        row('เวลาดูคลิปยาว (365 วัน)', y0.hours, 4000, 'ชม.', 4.17);
-        row('ยอดดู Shorts (90 วัน)', y0.shorts, 1e7, 'ครั้ง', 4.87);
-        s.addText('*เลือกสะสมชั่วโมงคลิปยาวหรือยอดดู Shorts อย่างใดอย่างหนึ่ง', T({ x: x + 0.22, y: 5.56, w: w - 0.44, h: 0.24, fontSize: 8.5, color: SL.muted, valign: 'middle' }));
+        head('1. เพื่อเปิดรับเงินสนับสนุน (สมาชิก, Supers)', 2.18);
+        row('เวลาดูคลิปยาว (365 วัน)', y0.hours, 3000, 'ชม.', 2.5);
+        row('ยอดดู Shorts (90 วัน)', y0.shorts, 3e6, 'ครั้ง', 3.2);
+        head('2. เพื่อเปิดโฆษณาเต็มรูปแบบ (รายได้จากโฆษณา)', 3.93);
+        row('เวลาดูคลิปยาว (365 วัน)', y0.hours, 4000, 'ชม.', 4.26);
+        row('ยอดดู Shorts (90 วัน)', y0.shorts, 1e7, 'ครั้ง', 4.96);
+        s.addText('*เลือกสะสมชั่วโมงคลิปยาวหรือยอดดู Shorts อย่างใดอย่างหนึ่ง', T({ x: x + 0.22, y: 5.64, w: w - 0.44, h: 0.24, fontSize: 8.5, color: SL.muted, valign: 'middle' }));
         // recommendation box with a red edge
         const ph = y0.hours / 4000 * 100, ps = y0.shorts / 1e7 * 100;
-        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: 5.86, w: w - 0.4, h: 1.08, fill: { color: 'FEF2F2' }, line: { color: 'FECACA', width: 0.75 }, rectRadius: 0.08 });
-        s.addShape(p.ShapeType.rect, { x: x + 0.2, y: 5.94, w: 0.07, h: 0.92, fill: { color: SL.red }, line: { color: SL.red } });
+        s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: 5.92, w: w - 0.4, h: 1.06, fill: { color: 'FEF2F2' }, line: { color: 'FECACA', width: 0.75 }, rectRadius: 0.08 });
+        s.addShape(p.ShapeType.rect, { x: x + 0.2, y: 6.0, w: 0.07, h: 0.9, fill: { color: SL.red }, line: { color: SL.red } });
         s.addText([{ text: '💡 ข้อเสนอแนะ: ทำแบบไหนง่ายและเร็วที่สุด?', options: { bold: true, color: SL.red, breakLine: true } },
           { text: ph >= ps ? `โฟกัส "คลิปยาว" เป็นหลัก ทำได้แล้ว ${pct(ph, 1)} ของ 4,000 ชม. ขณะที่ Shorts ยังไม่ถึง ${Math.max(1, Math.ceil(ps))}% ของ 10 ล้านครั้ง` : `โฟกัส "Shorts" ทำได้แล้ว ${pct(ps, 1)} ของ 10 ล้านครั้ง`, options: { breakLine: true } },
           { text: 'เน้นคลิปแก้ปัญหา / เปรียบเทียบสินค้า / วิธีใช้งาน / คลิปสอนการใช้งานที่คนเข้าถึงง่าย', options: { color: '4B5563' } }],
-          T({ x: x + 0.4, y: 5.92, w: w - 0.75, h: 0.96, fontSize: 9.5, valign: 'middle' }));
+          T({ x: x + 0.4, y: 5.97, w: w - 0.75, h: 0.96, fontSize: 9.5, valign: 'middle' }));
       });
     };
 
