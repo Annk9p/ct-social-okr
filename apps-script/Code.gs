@@ -1,5 +1,5 @@
 /**
- * CT Social OKR — backend (Google Sheet + Apps Script)
+ * SOCIAL ONE — backend (Google Sheet + Apps Script)
  *
  * Collects TikTok (CSV files dropped in Drive) and YouTube (API, channel owner logs in once)
  * into this spreadsheet, and serves the numbers as JSON to the dashboard on GitHub Pages.
@@ -404,7 +404,7 @@ function dailySync() {
     try { syncInstagram_(id, false); } catch (e) { errors.push(IG_NAMES[id] + ': ' + e.message); }
   });
   try { importTikTok(); } catch (e) { errors.push('TikTok: ' + e.message); }
-  if (errors.length) notify_('CT Social OKR: ดึงข้อมูลไม่สำเร็จ', errors.join('\n'));
+  if (errors.length) notify_('SOCIAL ONE: ดึงข้อมูลไม่สำเร็จ', errors.join('\n'));
 }
 
 function syncYouTubeNow() {
@@ -559,7 +559,7 @@ function showStatus() {
     var url = ''; try { url = ttFolder_(id).getUrl(); } catch (e) { url = 'เปิดไม่ได้: ' + e.message; }
     lines.push((id === 'tt-eloop' ? 'TikTok Eloop' : 'TikTok Moov') + ': นำเข้าล่าสุด ' + (PROPS.getProperty('LAST_OK_' + id) || '–') + '\n  โฟลเดอร์ ' + url);
   });
-  SpreadsheetApp.getUi().alert('สถานะ CT Social OKR', lines.join('\n\n'), SpreadsheetApp.getUi().ButtonSet.OK);
+  SpreadsheetApp.getUi().alert('สถานะ SOCIAL ONE', lines.join('\n\n'), SpreadsheetApp.getUi().ButtonSet.OK);
 }
 
 /* ------------------------------------------------------------------ sheet helpers */
@@ -799,7 +799,7 @@ function fbBackfillPending() {
   var pending = JSON.parse(PROPS.getProperty('FB_BACKFILL') || '[]');
   PROPS.deleteProperty('FB_BACKFILL');
   pending.forEach(function (acc) {
-    try { syncFacebook_(acc, true); } catch (e) { notify_('CT Social OKR: ดึงข้อมูลย้อนหลัง ' + FB_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
+    try { syncFacebook_(acc, true); } catch (e) { notify_('SOCIAL ONE: ดึงข้อมูลย้อนหลัง ' + FB_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
   });
 }
 
@@ -1211,7 +1211,7 @@ function igBackfillPending() {
   var pending = JSON.parse(PROPS.getProperty('IG_BACKFILL') || '[]');
   PROPS.deleteProperty('IG_BACKFILL');
   pending.forEach(function (acc) {
-    try { syncInstagram_(acc, true); } catch (e) { notify_('CT Social OKR: ดึงข้อมูลย้อนหลัง ' + IG_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
+    try { syncInstagram_(acc, true); } catch (e) { notify_('SOCIAL ONE: ดึงข้อมูลย้อนหลัง ' + IG_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
   });
 }
 
@@ -1485,7 +1485,7 @@ function syncTikTokApiAll() {
   var today = Utilities.formatDate(new Date(), TZ, 'yyyy-MM-dd');
   if (errors.length && PROPS.getProperty('TTAPI_NOTIFIED') !== today) { // at most one email a day
     PROPS.setProperty('TTAPI_NOTIFIED', today);
-    notify_('CT Social OKR: ดึงข้อมูล TikTok API ไม่สำเร็จ', errors.join('\n'));
+    notify_('SOCIAL ONE: ดึงข้อมูล TikTok API ไม่สำเร็จ', errors.join('\n'));
   }
 }
 

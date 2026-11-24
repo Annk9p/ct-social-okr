@@ -117,7 +117,7 @@ function ytBackfillPending() {
   var pending = JSON.parse(PROPS.getProperty('YT_BACKFILL') || '[]');
   PROPS.deleteProperty('YT_BACKFILL');
   pending.forEach(function (acc) {
-    try { syncYouTube_(acc, true); } catch (e) { notify_('CT Social OKR: ดึงข้อมูลย้อนหลัง ' + YT_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
+    try { syncYouTube_(acc, true); } catch (e) { notify_('SOCIAL ONE: ดึงข้อมูลย้อนหลัง ' + YT_NAMES[acc] + ' ไม่สำเร็จ', e.message); }
   });
 }
 
