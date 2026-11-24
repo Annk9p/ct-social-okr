@@ -14,10 +14,10 @@ function makeEnv() {
     getMaxRows() { return this.max; } insertRowsAfter(a, n) { this.max += n; } setFrozenRows() {}
     appendRow(v) { this.rows[this.getLastRow()] = v.slice(); } deleteRows(s, n) { this.rows.splice(s - 1, n); } }
   const ss = { getId: () => 'SHEET', getSheetByName: n => sheets[n] || null, insertSheet: n => (sheets[n] = new Sheet(n)), getSheets: () => Object.values(sheets), deleteSheet() {} };
-  const blob = (bytes, type, name) => ({ bytes: Buffer.from(bytes), getName: () => name, getContentType: () => type, getDataAsString: () => Buffer.from(bytes).toString('utf8'), getBytes: () => bytes });
+  const blob = (bytes, type, name) => ({ bytes: Buffer.from(bytes), getName: () => name, getContentType: () => type, getDataAsString: () => Buffer.from(bytes).toString('utf8'), getBytes: () => typeof bytes === 'string' ? [...Buffer.from(bytes, 'utf8')] : bytes });
   const mkFolder = name => { const id = nid('fold'); const f = { id, name, files: [], getId: () => id, getUrl: () => 'https://drive/' + id, createFolder: n => mkFolder(n),
     getFiles() { let i = 0; const l = f.files.slice(); return { hasNext: () => i < l.length, next: () => l[i++] }; },
-    createFile(b) { const fid = nid('file'), t = new Date(Date.now() + idn); const file = { getId: () => fid, getName: () => b.getName(), getBlob: () => b, getLastUpdated: () => t, getDateCreated: () => t }; f.files.push(file); return file; } };
+    createFile(b) { const fid = nid('file'), t = new Date(Date.now() + idn); const file = { getId: () => fid, getName: () => b.getName(), getUrl: () => 'https://drive/' + fid, getBlob: () => b, getLastUpdated: () => t, getDateCreated: () => t }; f.files.push(file); return file; } };
     folders[id] = f; return f; };
   const ctx = {
     console, JSON, Math, Date, String, Number, Object, Array, Error, isFinite, encodeURIComponent, RegExp, parseInt, parseFloat, isNaN,
@@ -37,7 +37,7 @@ function makeEnv() {
     LockService: { getScriptLock: () => ({ tryLock: () => true, releaseLock() {} }) },
     ContentService: { MimeType: { JSON: 'json' }, createTextOutput: t => ({ text: t, setMimeType() { return this; } }) },
     HtmlService: { createHtmlOutput: h => ({ html: h, setTitle() { return this; } }) },
-    ScriptApp: { getProjectTriggers: () => triggers, deleteTrigger(t) { const i = triggers.indexOf(t); if (i >= 0) triggers.splice(i, 1); },
+    ScriptApp: { getOAuthToken: () => 'TOKEN', getProjectTriggers: () => triggers, deleteTrigger(t) { const i = triggers.indexOf(t); if (i >= 0) triggers.splice(i, 1); },
       newTrigger: h => ({ timeBased: () => ({ after: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }), atHour: () => ({ everyDays: () => ({ inTimezone: () => ({ create() {} }) }) }), everyHours: () => ({ create: () => triggers.push({ getHandlerFunction: () => h }) }) }) }) },
     Session: { getEffectiveUser: () => ({ getEmail: () => 'owner@test' }) }, MailApp: { sendEmail: (...a) => mails.push(a) },
     UrlFetchApp: { fetch: () => { throw new Error('no network in test'); } },

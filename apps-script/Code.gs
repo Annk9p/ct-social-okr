@@ -176,6 +176,7 @@ function webApi_(b) {
     case 'igdetect': return { ok: true, report: igDetect_() };
     case 'syncig': return syncIgWeb_(b.acc);
     case 'igdisconnect': return igDisconnect_(b.acc);
+    case 'slides': return saveSlides_(b);
     default: throw new Error('ไม่รู้จักคำสั่ง ' + b.api);
   }
 }
@@ -237,6 +238,38 @@ function syncYtWeb_(acc) {
 }
 
 /** Dashboard upload: save the file into the account's Drive folder, then import right away. */
+/* ------------------------------------------------------------------ monthly slides
+ * The dashboard builds the deck (.pptx) from the same numbers as the monthly report and sends it here.
+ * Drive converts it into a Google Slides file in the team folder. This uses only the Drive access the
+ * script already has, so no new permission is needed. If Drive will not convert it, the .pptx is kept
+ * as is (it still opens in Google Slides from Drive).
+ */
+function saveSlides_(b) {
+  var name = String(b.name || 'Content OKR').replace(/[\\/]/g, '_').slice(0, 150);
+  var bytes = Utilities.base64Decode(String(b.data || ''));
+  if (!bytes.length) throw new Error('ไฟล์สไลด์ว่าง');
+  if (bytes.length > 30 * 1024 * 1024) throw new Error('ไฟล์สไลด์ใหญ่เกิน 30 MB');
+  var folder = folderProp_('SLIDES_FOLDER', 'CT Social OKR · สไลด์สรุปรายเดือน', null);
+  var PPTX = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+  var boundary = 'ctokr' + Date.now();
+  var meta = { name: name, mimeType: 'application/vnd.google-apps.presentation', parents: [folder.getId()] };
+  var payload = Utilities.newBlob('--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + JSON.stringify(meta)
+      + '\r\n--' + boundary + '\r\nContent-Type: ' + PPTX + '\r\n\r\n').getBytes()
+    .concat(bytes, Utilities.newBlob('\r\n--' + boundary + '--\r\n').getBytes());
+  var res = UrlFetchApp.fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name,webViewLink', {
+    method: 'post', contentType: 'multipart/related; boundary=' + boundary, payload: payload,
+    headers: { Authorization: 'Bearer ' + ScriptApp.getOAuthToken() }, muteHttpExceptions: true });
+  if (res.getResponseCode() === 200) {
+    var f = JSON.parse(res.getContentText());
+    log_('slides', '', 'ok', 'สร้าง Google Slides "' + name + '"');
+    return { ok: true, converted: true, name: f.name, url: f.webViewLink || ('https://docs.google.com/presentation/d/' + f.id + '/edit') };
+  }
+  var why = res.getContentText().slice(0, 300);
+  log_('slides', '', 'warn', 'แปลงเป็น Google Slides ไม่ได้ เก็บเป็น .pptx แทน: ' + why);
+  var file = folder.createFile(Utilities.newBlob(bytes, PPTX, name + '.pptx'));
+  return { ok: true, converted: false, name: file.getName(), url: file.getUrl() };
+}
+
 function uploadTikTok_(b) {
   if (['tt-eloop', 'tt-moov'].indexOf(b.acc) < 0) throw new Error('เลือกบัญชี TikTok');
   var name = String(b.name || 'tiktok.csv').replace(/[\\/]/g, '_').slice(0, 200);

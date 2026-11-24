@@ -1090,6 +1090,8 @@ section[data-v] > * { margin-top: 0; margin-bottom: 0; }
 .filter-card .chip, .acc-picker .chip { background: var(--omnix-surface); border: 1px solid var(--omnix-border); }
 .filter-card .chip[aria-pressed="true"], .acc-picker .chip[aria-pressed="true"] { background: var(--omnix-accent-soft); border-color: var(--omnix-accent); }
 select, input[type="text"], input[type="month"], input[type="number"], input[type="password"], .fld input { border-radius: 10px; }
+/* the passcode box always opens above other dialogs (e.g. the slides dialog) */
+#pass-dlg { z-index: 100; }
 /* ---------- all-accounts list (ภาพรวมทั้งหมด) ---------- */
 #v-home .rk-ftitle svg { color: var(--omnix-accent); }
 #v-home .rk-panehead .btn svg { width: 16px; height: 16px; }
@@ -1382,13 +1384,13 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 <div class="drawer" id="drawer" hidden role="dialog" aria-modal="true" aria-labelledby="dr-title">
   <div class="box">
     <h2 id="dr-title">สร้างสไลด์สรุปประจำเดือน</h2>
-    <p style="margin:0;color:var(--ink-2)">ระบบคัดลอกสไลด์เทมเพลตของทีม (หน้าตาเดียวกับไฟล์ Content OKR เดิม) แล้วเติมตัวเลขและข้อความจากหน้าสรุปรายเดือนให้ประมาณ 16 หน้า</p>
+    <p style="margin:0;color:var(--ink-2)">ระบบจัดสไลด์จากตัวเลขและข้อความในหน้าสรุปรายเดือน (เดือนและแบรนด์ที่เลือกอยู่) แล้วบันทึกเป็น Google Slides ในโฟลเดอร์ "CT Social OKR · สไลด์สรุปรายเดือน" ของ Drive ทีม แก้ต่อใน Google Slides ได้เลย</p>
     <ol class="slide-list">
-      <li><span>ปก และ Update KPI &amp; OKR<small>ชื่อเดือน และช่วงวันที่ของข้อมูล</small></span></li>
+      <li><span>ปก และภาพรวมทุกบัญชี<small>ช่วงวันที่ของข้อมูล ตัวเลขรวม และตารางทุกบัญชีพร้อมสถานะ OKR</small></span></li>
       <li><span>Short VDO แยกแบรนด์ (2 หน้า)<small>จำนวนคลิป วิวรวม เทียบเดือนก่อน และ Top 5 TikTok กับ Facebook Reels</small></span></li>
-      <li><span>OKR แยกแพลตฟอร์ม (3 หน้า)<small>TikTok, Facebook, YouTube พร้อม % เทียบเป้า สีสถานะ และ Key Insights ที่ทีมเขียน</small></span></li>
+      <li><span>OKR แยกแพลตฟอร์ม (แพลตฟอร์มละ 1 หน้า)<small>% เทียบเป้า สีสถานะ ข้อสังเกตจากระบบ Monthly Update และ Next Step</small></span></li>
       <li><span>Video Analysis (บัญชีละ 1 หน้า)<small>คลิปวิวสูงสุดและต่ำสุด ตัวเลข และบทวิเคราะห์ 4 ด้าน</small></span></li>
-      <li><span>YouTube Content Performance (2 หน้า)<small>ตัวเลขสำคัญ วิดีโอเด่น 3 อันดับ และข้อแนะนำ</small></span></li>
+      <li><span>YouTube Content Performance (ช่องละ 1 หน้า)<small>ตัวเลขสำคัญ วิดีโอเด่น 3 อันดับ และข้อแนะนำ</small></span></li>
       <li><span>สถานะ YouTube Partner Program<small>ระยะทางถึงเกณฑ์สร้างรายได้ของทั้ง 2 ช่อง</small></span></li>
       <li><span>ข้อสังเกตอัตโนมัติ<small id="dr-insight"></small></span></li>
     </ol>
@@ -2499,7 +2501,349 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
   $('#dr-close').addEventListener('click', () => { drawer.hidden = true; });
   drawer.addEventListener('click', e => { if (e.target === drawer) drawer.hidden = true; });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
-  $('#dr-go').addEventListener('click', () => { $('#dr-msg').innerHTML = `<div class="msg" style="margin:0 0 12px">หน้าตัวอย่าง: ในระบบจริงจะได้ลิงก์ Google Slides ไฟล์ใหม่ "Content OKR ${MONTHS[repMonth]} 2026" ในโฟลเดอร์ของทีม</div>`; });
+  /* ---------- monthly slides: built here as .pptx, saved by the system to Drive as Google Slides ---------- */
+  let pptxLib = null;
+  const loadPptx = () => pptxLib || (pptxLib = new Promise((res, rej) => {
+    if (window.PptxGenJS) return res(window.PptxGenJS);
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+    s.onload = () => window.PptxGenJS ? res(window.PptxGenJS) : rej(new Error('โหลดตัวสร้างสไลด์ไม่สำเร็จ'));
+    s.onerror = () => { pptxLib = null; rej(new Error('โหลดตัวสร้างสไลด์ไม่สำเร็จ ตรวจอินเทอร์เน็ตแล้วลองใหม่')); };
+    document.head.appendChild(s);
+  }));
+  // logos go into the deck as small PNGs (the originals are large)
+  const imgData = (src, size = 240) => new Promise(res => {
+    const im = new Image();
+    im.onload = () => { try { const c = document.createElement('canvas'); c.width = c.height = size; c.getContext('2d').drawImage(im, 0, 0, size, size); res(c.toDataURL('image/png')); } catch (e) { res(null); } };
+    im.onerror = () => res(null);
+    im.src = src;
+  });
+  const SL = { font: 'IBM Plex Sans Thai', ink: '1F2937', muted: '6B7280', line: 'E5E7EB', bg: 'F5F7FA', accent: '5B5BD6', deep: '4F46E5', soft: 'EEF0FF',
+    good: '15803D', warn: 'B45309', crit: 'B91C1C', goodBg: 'DCFCE7', warnBg: 'FEF3C7', critBg: 'FEE2E2',
+    plat: { TikTok: '111111', Facebook: '1877F2', YouTube: 'FF0000', Instagram: 'E1306C' } };
+  const cut = (s, n) => { s = String(s == null ? '' : s).replace(/\s+/g, ' ').trim(); return s.length > n ? s.slice(0, n - 1) + '…' : s; };
+  // keep notes inside their box: estimate wrapped lines (Thai text here runs about 0.5em per character) and cut with …
+  const fitBox = (txt, wIn, hIn, pt) => {
+    const cpl = Math.max(20, Math.floor(wIn * 72 / (pt * 0.56))), cap = Math.floor(hIn * 72 / (pt * 1.32));
+    const out = []; let used = 0;
+    for (const raw of String(txt || '').split('\n').map(l => l.trimEnd()).filter(l => l.trim())) {
+      const need = Math.max(1, Math.ceil(raw.length / cpl));
+      if (used + need <= cap) { out.push(raw); used += need; continue; }
+      const room = cap - used;
+      if (room > 0) out.push(raw.slice(0, room * cpl - 2) + '…'); else if (out.length) out[out.length - 1] += ' …';
+      break;
+    }
+    return out;
+  };
+  const momTxtS = v => v == null ? '' : `${v >= 0 ? '▲ +' : '▼ '}${Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1)}%`;
+  const momCol = v => v == null ? SL.muted : v >= 0 ? SL.good : SL.crit;
+  const stCol = st => ({ good: [SL.good, SL.goodBg], warn: [SL.warn, SL.warnBg], crit: [SL.crit, SL.critBg] }[st] || [SL.muted, 'F3F4F6']);
+
+  async function buildDeck() {
+    const Pptx = await loadPptx();
+    if (repMonth == null) renderReport();
+    const mi = repMonth, short = `${MONTHS[mi]} 2026`, full = `${MONTH_FULL[mi]} 2026`;
+    const lastDay = partial() ? AS_OF.getDate() - 1 : MONTH_DAYS[mi];
+    const brands = ['Eloop', 'Moov'].filter(b => repBrand === 'all' || b === repBrand);
+    const ORDER = ['TikTok', 'Facebook', 'YouTube', 'Instagram'];
+    const accsAll = ACCOUNTS.filter(brandOk).sort((p, q) => ORDER.indexOf(p.platform) - ORDER.indexOf(q.platform) || (p.brand === 'Eloop' ? 0 : 1) - (q.brand === 'Eloop' ? 0 : 1));
+    const logos = {};
+    for (const b of brands) logos[b] = await imgData(`assets/brand-${b.toLowerCase()}.png`);
+
+    const p = new Pptx();
+    p.layout = 'LAYOUT_WIDE'; // 13.33 x 7.5 in
+    p.title = `Content OKR ${short}`; p.company = 'CT'; p.author = 'CT Social OKR';
+    p.theme = { headFontFace: SL.font, bodyFontFace: SL.font };
+    p.defineSlideMaster({ title: 'BASE', background: { color: SL.bg },
+      objects: [{ text: { text: `CT Social OKR · สรุปประจำเดือน ${short}${repBrand === 'all' ? '' : ' · ' + repBrand}`, options: { x: 0.5, y: 7.05, w: 9, h: 0.3, fontFace: SL.font, fontSize: 9, color: SL.muted } } }],
+      slideNumber: { x: 12.3, y: 7.05, w: 0.55, h: 0.3, fontFace: SL.font, fontSize: 9, color: SL.muted, align: 'right' } });
+    const T = o => Object.assign({ fontFace: SL.font, color: SL.ink, fontSize: 12, valign: 'top', margin: 0 }, o);
+    let count = 0;
+    const slide = () => { count++; return p.addSlide({ masterName: 'BASE' }); };
+    const head = (s, title, sub) => {
+      s.addShape(p.ShapeType.roundRect, { x: 0.5, y: 0.42, w: 0.11, h: 0.62, fill: { color: SL.accent }, line: { color: SL.accent }, rectRadius: 0.05 });
+      s.addText(title, T({ x: 0.75, y: 0.36, w: 11.9, h: 0.5, fontSize: 24, bold: true, valign: 'middle' }));
+      if (sub) s.addText(sub, T({ x: 0.75, y: 0.86, w: 11.9, h: 0.3, fontSize: 11.5, color: SL.muted, valign: 'middle' }));
+    };
+    const card = (s, x, y, w, h, fill = 'FFFFFF') => s.addShape(p.ShapeType.roundRect, { x, y, w, h, fill: { color: fill }, line: { color: SL.line, width: 0.75 }, rectRadius: 0.12 });
+    const pill = (s, x, y, w, text, st) => { const [c, bg] = stCol(st); s.addText(text, T({ x, y, w, h: 0.28, fontSize: 9.5, bold: true, color: c, align: 'center', valign: 'middle', fill: { color: bg }, shape: p.ShapeType.roundRect, rectRadius: 0.14 })); };
+    const label = (s, x, y, w, text, color = SL.accent) => s.addText(text, T({ x, y, w, h: 0.3, fontSize: 12, bold: true, color, valign: 'middle' }));
+    // a block of lines; lines that start with "-" become bullets
+    const lines = (s, arr, o) => {
+      const runs = arr.length ? arr.map(l => ({ text: l.replace(/^\s*[-•]\s*/, ''), options: { bullet: /^\s*[-•]/.test(l) ? { indent: 12 } : false, breakLine: true, paraSpaceAfter: 2 } }))
+        : [{ text: o.empty || '–', options: { color: SL.muted, italic: true } }];
+      s.addText(runs, T(Object.assign({ fontSize: 10.5, lineSpacingMultiple: 1.05 }, o, { empty: undefined })));
+    };
+    const evalAt = m => evalMetric(Object.assign({}, m, { data: m.data.slice(0, mi + 1) }));
+
+    // 1) cover
+    {
+      const s = p.addSlide(); count++;
+      s.background = { color: SL.deep };
+      s.addShape(p.ShapeType.ellipse, { x: 8.9, y: -2.2, w: 7, h: 7, fill: { color: '6366F1' }, line: { color: '6366F1' } });
+      s.addShape(p.ShapeType.ellipse, { x: 10.9, y: 4.3, w: 4.2, h: 4.2, fill: { color: '818CF8' }, line: { color: '818CF8' } });
+      s.addText('CONTENT OKR REPORT', T({ x: 0.8, y: 1.45, w: 8, h: 0.4, fontSize: 14, bold: true, color: 'C7D2FE', charSpacing: 3 }));
+      s.addText([{ text: 'สรุปประจำเดือน', options: { breakLine: true } }, { text: full }], T({ x: 0.8, y: 1.95, w: 9.5, h: 2.2, fontSize: 46, bold: true, color: 'FFFFFF', lineSpacingMultiple: 1.0 }));
+      s.addText(`${brands.join(' · ')}  |  ${platforms().join(' · ')}`, T({ x: 0.8, y: 4.3, w: 9.5, h: 0.4, fontSize: 16, color: 'E0E7FF' }));
+      brands.forEach((b, i) => {
+        s.addShape(p.ShapeType.roundRect, { x: 0.8 + i * 1.15, y: 5.0, w: 0.95, h: 0.95, fill: { color: 'FFFFFF' }, line: { color: 'FFFFFF' }, rectRadius: 0.16 });
+        if (logos[b]) s.addImage({ data: logos[b], x: 0.88 + i * 1.15, y: 5.08, w: 0.79, h: 0.79 });
+      });
+      const now = new Date();
+      s.addText(`ข้อมูล 1–${lastDay} ${MONTHS[mi]} 2026${partial() ? ' (เดือนยังไม่จบ)' : ''} · สร้างจากแดชบอร์ด CT Social OKR วันที่ ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`,
+        T({ x: 0.8, y: 6.45, w: 10, h: 0.35, fontSize: 11, color: 'C7D2FE' }));
+    }
+
+    // 2) all accounts at a glance
+    {
+      const s = slide();
+      head(s, 'ภาพรวมทุกบัญชี', `ตัวเลขเดือน ${short} เทียบเดือนก่อน · OKR นับสะสมทั้งปีถึงสิ้นเดือนนี้`);
+      const sum = k => { const v = accsAll.map(a => mData(a, k)[mi]).filter(x => x != null); return v.length ? v.reduce((x, y) => x + y, 0) : null; };
+      const sumP = k => mi ? (() => { const v = accsAll.map(a => mData(a, k)[mi - 1]).filter(x => x != null); return v.length ? v.reduce((x, y) => x + y, 0) : null; })() : null;
+      const counts = { good: 0, warn: 0, crit: 0 };
+      accsAll.forEach(a => a.metrics.filter(m => m.target).forEach(m => { const e = evalAt(m); if (e.li >= 0 && counts[e.status] != null) counts[e.status]++; }));
+      const tot = counts.good + counts.warn + counts.crit;
+      const nfv = sum('nf'), nfp = sumP('nf');
+      const boxes = [
+        ['ยอดวิวรวม', fmtC(sum('views')), momTxtS(momOf(sum('views'), sumP('views'))), momCol(momOf(sum('views'), sumP('views')))],
+        ['ผู้ติดตามเพิ่มสุทธิ', nfv == null ? '–' : (nfv > 0 ? '+' : '') + fmt(nfv), nfv != null && nfp != null && !partial() ? `${nfv - nfp >= 0 ? '▲ +' : '▼ '}${fmt(nfv - nfp)} จากเดือนก่อน` : '', nfv != null && nfp != null && nfv >= nfp ? SL.good : SL.crit],
+        ['คอนเทนต์ที่ลง', fmt(sum('output')), momTxtS(momOf(sum('output'), sumP('output'))), momCol(momOf(sum('output'), sumP('output')))],
+        ['OKR ตามแผน', `${counts.good} / ${tot}`, `เสี่ยง ${counts.warn} · ช้ากว่าแผน ${counts.crit}`, SL.muted],
+      ];
+      boxes.forEach(([k, v, m, c], i) => {
+        const x = 0.5 + i * 3.13;
+        card(s, x, 1.42, 2.95, 1.3);
+        s.addText(k, T({ x: x + 0.22, y: 1.56, w: 2.6, h: 0.3, fontSize: 11, color: SL.muted }));
+        s.addText(v, T({ x: x + 0.22, y: 1.86, w: 2.6, h: 0.5, fontSize: 26, bold: true, valign: 'middle' }));
+        if (m) s.addText(m, T({ x: x + 0.22, y: 2.36, w: 2.6, h: 0.26, fontSize: 10, bold: true, color: c }));
+      });
+      const H = t => ({ text: t, options: { bold: true, color: SL.accent, fill: { color: SL.soft }, align: t === 'บัญชี' || t === 'OKR ทั้งปี' ? 'left' : t === 'คอนเทนต์' ? 'center' : 'right' } });
+      const R = (t, o = {}) => ({ text: t, options: Object.assign({ align: 'right' }, o) });
+      const rows = [['บัญชี', 'วิว', 'เทียบเดือนก่อน', 'ผู้ติดตามเพิ่มสุทธิ', 'ER', 'คอนเทนต์', 'OKR ทั้งปี'].map(H)];
+      accsAll.forEach(a => {
+        const v = mData(a, 'views'), nf = mData(a, 'nf'), er = mData(a, 'er'), out = mData(a, 'output');
+        const mo = momOf(v[mi], v[mi - 1]);
+        const ev = a.metrics.filter(m => m.target).map(evalAt).filter(e => e.li >= 0);
+        const good = ev.filter(e => e.status === 'good').length, worst = [...ev].sort((x, y) => RANK[x.status] - RANK[y.status])[0];
+        rows.push([
+          { text: a.name, options: { bold: true, align: 'left' } },
+          R(fmt(v[mi])), R(momTxtS(mo) || '–', { color: momCol(mo), bold: true }),
+          R(nf[mi] == null ? '–' : (nf[mi] > 0 ? '+' : '') + fmt(nf[mi])), R(er[mi] == null ? '–' : pct(er[mi], 2)), { text: out[mi] == null ? '–' : fmt(out[mi]), options: { align: 'center' } },
+          { text: worst ? `${ST_LABEL[worst.status]} · ตามแผน ${good}/${ev.length}` : 'ไม่มีเป้า', options: { align: 'left', bold: !!worst, color: worst ? stCol(worst.status)[0] : SL.muted } },
+        ]);
+      });
+      s.addTable(rows, { x: 0.5, y: 2.95, w: 12.33, colW: [2.6, 1.5, 1.55, 1.8, 1.0, 1.08, 2.8], fontFace: SL.font, fontSize: 11, color: SL.ink,
+        fill: { color: 'FFFFFF' }, border: { type: 'solid', pt: 0.5, color: SL.line }, rowH: Math.min(0.44, 3.9 / rows.length), valign: 'middle', margin: [0, 8, 0, 8] });
+    }
+
+    // 3) Short VDO, one slide per brand
+    brands.forEach(b => {
+      const plats = ['TikTok', 'Facebook', 'Instagram'].map(pl => ACCOUNTS.find(a => a.brand === b && a.platform === pl)).filter(Boolean);
+      if (!plats.length) return;
+      const s = slide();
+      head(s, `Short VDO · ${b}`, `จำนวนคลิปที่ลง วิวรวมของคลิปที่ลงใน ${short} และ Top 5 คลิปวิวสูงสุด · วิวเป็นยอดสะสมถึงวันที่ดึงข้อมูล`);
+      if (logos[b]) s.addImage({ data: logos[b], x: 12.15, y: 0.38, w: 0.62, h: 0.62 });
+      const gap = 0.2, w = (12.33 - gap * (plats.length - 1)) / plats.length;
+      plats.forEach((a, i) => {
+        const x = 0.5 + i * (w + gap);
+        card(s, x, 1.42, w, 5.45);
+        label(s, x + 0.25, 1.58, w - 0.5, a.platform === 'TikTok' ? 'TikTok' : `${a.platform} Reels`, SL.plat[a.platform]);
+        const out = mData(a, 'output'), n = out[mi], uv = uploadViews(a.id, mi);
+        const stat = (k, v, mo, y) => {
+          s.addText(k, T({ x: x + 0.25, y, w: w - 0.5, h: 0.26, fontSize: 10, color: SL.muted }));
+          s.addText([{ text: v, options: { fontSize: 20, bold: true } }, { text: mo ? '   ' + momTxtS(mo) : '', options: { fontSize: 10.5, bold: true, color: momCol(mo) } }],
+            T({ x: x + 0.25, y: y + 0.26, w: w - 0.5, h: 0.42, valign: 'middle' }));
+        };
+        stat('คลิปที่ลง', n == null ? '–' : fmt(n), momOf(n, out[mi - 1]), 2.0);
+        stat('วิวรวมของคลิปที่ลง', uv ? fmt(uv.v) : '–', uv && uv.mom, 2.75);
+        s.addShape(p.ShapeType.line, { x: x + 0.25, y: 3.6, w: w - 0.5, h: 0, line: { color: SL.line, width: 0.75 } });
+        s.addText('Top 5 คลิปวิวสูงสุด', T({ x: x + 0.25, y: 3.72, w: w - 0.5, h: 0.28, fontSize: 11, bold: true }));
+        const top = clipsFor(a.id, mi).sort((p2, q) => q.views - p2.views).slice(0, 5);
+        if (!top.length) { s.addText('ยังไม่มีรายคลิปของเดือนนี้', T({ x: x + 0.25, y: 4.1, w: w - 0.5, h: 0.3, fontSize: 10.5, color: SL.muted, italic: true })); return; }
+        s.addTable(top.map((c, j) => [
+          { text: String(j + 1), options: { bold: true, color: j < 3 ? SL.accent : SL.muted, align: 'center' } },
+          { text: cut(c.title, 58), options: { hyperlink: { url: clipUrl(c) }, color: SL.ink } },
+          { text: fmtC(c.views), options: { bold: true, align: 'right' } }]),
+          { x: x + 0.15, y: 4.05, w: w - 0.3, colW: [0.35, w - 0.3 - 0.35 - 0.8, 0.8], fontFace: SL.font, fontSize: 9.5, color: SL.ink, rowH: 0.52, valign: 'middle',
+            border: { type: 'none' }, margin: [0, 4, 0, 4] });
+      });
+    });
+
+    // 4) OKR, one slide per platform
+    platforms().forEach(pl => {
+      const accs = ACCOUNTS.filter(a => a.platform === pl && brandOk(a));
+      if (!accs.length) return;
+      const s = slide();
+      head(s, `OKR · ${pl}`, `สะสม 1 ม.ค. – ${lastDay} ${MONTHS[mi]} 2026 · สีสถานะดูจาก Pace (เร็วหรือช้ากว่าเวลาที่ผ่านไป)`);
+      card(s, 0.5, 1.42, 6.55, 5.45);
+      label(s, 0.75, 1.56, 6, 'Key Results', SL.plat[pl] === '111111' ? SL.ink : SL.plat[pl]);
+      const krs = accs.flatMap(a => a.metrics.filter(m => m.target).map(m => ({ a, m, e: evalAt(m) }))).filter(x => x.e.li >= 0);
+      if (!krs.length) {
+        s.addText('ยังไม่มีเป้าหมายของแพลตฟอร์มนี้ · ติดตามตัวเลขในหน้ารายบัญชี', T({ x: 0.75, y: 2.0, w: 6.1, h: 0.4, fontSize: 11, color: SL.muted, italic: true }));
+      } else {
+        const rows = [['แบรนด์', 'ตัวชี้วัด › เป้า', 'ทำได้', '% เป้า', 'สถานะ'].map(t => ({ text: t, options: { bold: true, color: SL.accent, fill: { color: SL.soft }, align: t === 'แบรนด์' || t === 'ตัวชี้วัด › เป้า' ? 'left' : 'right' } }))];
+        krs.forEach(({ a, m, e }) => {
+          const sumK = m.kind === 'sum', f = v => sumK ? fmtC(v) : pct(v, v < 10 ? 2 : 1);
+          const prog = sumK ? e.progress : e.ratio;
+          const lbl = sumK ? ST_LABEL[e.status] : { good: 'ผ่านเกณฑ์', warn: 'ใกล้เป้า', crit: 'ต่ำกว่าเป้า' }[e.status];
+          rows.push([
+            { text: a.brand, options: { bold: true } },
+            { text: `${m.label} › ${f(m.target)}${sumK ? '' : ' (เฉลี่ย)'}` },
+            { text: sumK ? fmt(e.ytd) : pct(e.avg, 2), options: { align: 'right' } },
+            { text: pct(prog, 1), options: { align: 'right', bold: true } },
+            { text: lbl || '–', options: { align: 'right', bold: true, color: stCol(e.status)[0] } }]);
+        });
+        s.addTable(rows, { x: 0.65, y: 2.0, w: 6.25, colW: [0.85, 2.45, 1.15, 0.85, 0.95], fontFace: SL.font, fontSize: 10.5, color: SL.ink,
+          fill: { color: 'FFFFFF' }, border: { type: 'solid', pt: 0.5, color: SL.line }, rowH: Math.min(0.46, 4.6 / rows.length), valign: 'middle', margin: [0, 6, 0, 6] });
+      }
+      const boxes = [
+        ['ข้อสังเกตจากระบบ', autoObs(pl).map(o => '- ' + o).join('\n'), 1.45, 0, 'ทุกตัวชี้วัดตามแผน'],
+        ['Monthly Update', noteVal(`okr-${pl}-update`) || draftUpdate(pl), 2.1, 0, 'ยังไม่มีข้อมูล'],
+        ['Next Step', noteVal(`okr-${pl}-next`) || draftNext(pl), 1.6, 0, '–'],
+      ];
+      let y = 1.42;
+      boxes.forEach(([t, txt, h, maxL, empty]) => {
+        card(s, 7.25, y, 5.58, h);
+        label(s, 7.45, y + 0.1, 5.2, t);
+        lines(s, fitBox(txt, 5.0, h - 0.55, 9.5), { x: 7.45, y: y + 0.42, w: 5.2, h: h - 0.5, fontSize: 9.5, empty });
+        y += h + 0.15;
+      });
+    });
+
+    // 5) Video Analysis, one slide per account that has clips this month
+    const median = arr => { const s2 = [...arr].sort((x, y) => x - y), h = s2.length >> 1; return s2.length % 2 ? s2[h] : (s2[h - 1] + s2[h]) / 2; };
+    accsAll.forEach(a => {
+      const all = clipsFor(a.id, mi);
+      if (!all.length) return;
+      const sorted = [...all].sort((x, y) => y.views - x.views), tv = all.reduce((x, c) => x + c.views, 0);
+      const med = median(all.map(c => c.views)), erAll = tv ? all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 : 0;
+      const s = slide();
+      head(s, `Video Analysis · ${a.name}`, `${all.length} คลิปใน ${short} · คลิปวิวสูงสุดและต่ำสุด พร้อมบทวิเคราะห์ของทีม`);
+      const picks = [['top', sorted[0]], ...(sorted.length > 1 ? [['low', sorted[sorted.length - 1]]] : [])];
+      picks.forEach(([kind, c], i) => {
+        const x = 0.5 + i * 6.27, w = 6.06, k = `va-${a.id}-${kind}`;
+        card(s, x, 1.42, w, 5.45);
+        pill(s, x + 0.25, 1.6, 1.25, kind === 'top' ? '▲ วิวสูงสุด' : '▼ วิวต่ำสุด', kind === 'top' ? 'good' : 'crit');
+        const creator = noteVal(k + '-creator');
+        if (creator) s.addText(`Creator: ${creator}`, T({ x: x + 1.65, y: 1.6, w: w - 1.9, h: 0.28, fontSize: 10, color: SL.muted, valign: 'middle', align: 'right' }));
+        s.addText(cut(c.title, 120), T({ x: x + 0.25, y: 2.0, w: w - 0.5, h: 0.62, fontSize: 12.5, bold: true, hyperlink: { url: clipUrl(c) } }));
+        const nums = [['วิว', fmtC(c.views)], ['ไลก์', fmt(c.likes)], ['คอมเมนต์', fmt(c.comments)], ['แชร์', fmt(c.shares)], ['เซฟ', fmt(c.saves)]];
+        const nw = (w - 0.5) / nums.length;
+        nums.forEach(([lb, v], j) => {
+          s.addShape(p.ShapeType.roundRect, { x: x + 0.25 + j * nw, y: 2.7, w: nw - 0.08, h: 0.62, fill: { color: SL.bg }, line: { color: SL.bg }, rectRadius: 0.08 });
+          s.addText([{ text: v, options: { bold: true, fontSize: 13, breakLine: true } }, { text: lb, options: { fontSize: 8.5, color: SL.muted } }],
+            T({ x: x + 0.25 + j * nw, y: 2.72, w: nw - 0.08, h: 0.58, align: 'center', valign: 'middle' }));
+        });
+        const typeRows = all.filter(x2 => x2.type === c.type), typeAvg = typeRows.reduce((x2, y2) => x2 + y2.views, 0) / (typeRows.length || 1);
+        const facts = [
+          kind === 'top' ? `- วิวสูงกว่าค่ากลางของเดือน ${(c.views / med).toFixed(1)} เท่า (ค่ากลาง ${fmt(med)})` : `- วิวเป็น ${(c.views / med * 100).toFixed(0)}% ของค่ากลางของเดือน (${fmt(med)})`,
+          `- ER ${pct(c.er, 2)} เทียบเฉลี่ยทั้งเดือน ${pct(erAll, 2)}`,
+          `- ประเภท ${c.type || 'ไม่ระบุ'}: วิวเฉลี่ย ${fmtC(typeAvg)} ต่อคลิป (${typeRows.length} คลิป)${c.product ? ` · สินค้า ${c.product}` : ''}`,
+          `- โพสต์ ${fmtDate(c.posted)} · วิวเฉลี่ย ${fmt(c.vpd)} ต่อวัน`];
+        lines(s, facts, { x: x + 0.25, y: 3.45, w: w - 0.5, h: 1.15, fontSize: 10, color: SL.muted });
+        const team = [['เนื้อหา', 'content'], ['การเปิดคลิป (Hook)', 'hook'], ['ตัดต่อและงานภาพ', 'edit'], ['สิ่งที่ควรปรับปรุง', 'fix']]
+          .map(([lb, f]) => [lb, noteVal(`${k}-${f}`)]);
+        s.addText('บทวิเคราะห์ของทีม', T({ x: x + 0.25, y: 4.62, w: w - 0.5, h: 0.28, fontSize: 11, bold: true, color: SL.accent }));
+        s.addText(team.flatMap(([lb, v]) => [{ text: lb + ': ', options: { bold: true } }, { text: v ? cut(v, 150) : '…', options: { breakLine: true, color: v ? SL.ink : SL.muted } }]),
+          T({ x: x + 0.25, y: 4.95, w: w - 0.5, h: 1.8, fontSize: 9.5, paraSpaceAfter: 4 }));
+      });
+    });
+
+    // 6) YouTube content performance, one slide per channel
+    accsAll.filter(a => a.platform === 'YouTube').forEach(a => {
+      const d = k => mData(a, k), v = d('views'), l = d('likes'), n = d('nf');
+      if (v[mi] == null) return;
+      const x2 = YT_EXTRA[a.id] && YT_EXTRA[a.id][mi];
+      const s = slide();
+      head(s, `YouTube Content Performance · ${a.brand}`, `ตัวเลขสำคัญของ ${short} เทียบเดือนก่อน วิดีโอเด่น และข้อแนะนำของทีม`);
+      const nums = [['ยอดการดู (Views)', fmt(v[mi]), momOf(v[mi], v[mi - 1])], ['ยอดกดชอบ (Likes)', fmt(l[mi]), momOf(l[mi], l[mi - 1])],
+        ['เวลาเข้าชม (ชั่วโมง)', x2 ? x2.wth.toLocaleString('en-US', { maximumFractionDigits: 1 }) : '–', x2 && !partial() ? x2.wthMom : null],
+        ['ผู้ติดตามใหม่', n[mi] == null ? '–' : '+' + fmt(n[mi]), momOf(n[mi], n[mi - 1])]];
+      nums.forEach(([k, val, mo], i) => {
+        const x = 0.5 + i * 3.13;
+        card(s, x, 1.42, 2.95, 1.25);
+        s.addText(k, T({ x: x + 0.22, y: 1.55, w: 2.6, h: 0.28, fontSize: 10.5, color: SL.muted }));
+        s.addText(val, T({ x: x + 0.22, y: 1.83, w: 2.6, h: 0.45, fontSize: 22, bold: true, valign: 'middle' }));
+        if (mo != null) s.addText(momTxtS(mo), T({ x: x + 0.22, y: 2.3, w: 2.6, h: 0.25, fontSize: 10, bold: true, color: momCol(mo) }));
+      });
+      card(s, 0.5, 2.85, 6.06, 4.0);
+      label(s, 0.72, 2.98, 5.6, 'วิดีโอเด่น 3 อันดับ', SL.plat.YouTube);
+      if (x2 && x2.top && x2.top.length) {
+        s.addTable(x2.top.slice(0, 3).map((t, j) => [
+          { text: String(j + 1), options: { bold: true, color: SL.accent, align: 'center' } },
+          { text: [{ text: cut(t[0], 70), options: { breakLine: true } }, { text: t[1] || '', options: { fontSize: 8.5, color: SL.muted } }] },
+          { text: fmt(t[2]), options: { bold: true, align: 'right' } }]),
+          { x: 0.6, y: 3.4, w: 5.86, colW: [0.4, 4.36, 1.1], fontFace: SL.font, fontSize: 10, color: SL.ink, rowH: 0.75, valign: 'middle', border: { type: 'none' }, margin: [0, 4, 0, 4] });
+        if (x2.long != null || x2.shorts != null) s.addText(`เดือนนี้ลงวิดีโอยาว ${x2.long || 0} คลิป · Shorts ${x2.shorts || 0} คลิป`, T({ x: 0.72, y: 6.4, w: 5.6, h: 0.3, fontSize: 10, color: SL.muted }));
+      } else s.addText('ยังไม่มีข้อมูลวิดีโอเด่นของเดือนนี้', T({ x: 0.72, y: 3.45, w: 5.6, h: 0.3, fontSize: 10.5, color: SL.muted, italic: true }));
+      [['วิเคราะห์และข้อแนะนำ', noteVal(`yt-${a.id}-ins`), 2.2, 9], ['โอกาสต่อยอดคอนเทนต์', noteVal(`yt-${a.id}-next`), 1.65, 6]].forEach(([t, txt, h, maxL], i) => {
+        const y = i ? 5.2 : 2.85;
+        card(s, 6.77, y, 6.06, h);
+        label(s, 6.97, y + 0.1, 5.6, t);
+        lines(s, fitBox(txt, 5.5, h - 0.55, 9.5), { x: 6.97, y: y + 0.42, w: 5.66, h: h - 0.5, fontSize: 9.5, empty: 'ทีมยังไม่ได้เขียนในหน้าสรุปรายเดือน' });
+      });
+    });
+
+    // 7) YouTube Partner Program
+    {
+      const yts = accsAll.filter(a => a.platform === 'YouTube' && YPP[a.id]);
+      if (yts.length) {
+        const s = slide();
+        head(s, 'สถานะ YouTube Partner Program', `ระยะทางถึงเกณฑ์สร้างรายได้ · ข้อมูล ณ ${YPP.asOf}`);
+        const w = (12.33 - 0.2 * (yts.length - 1)) / yts.length;
+        yts.forEach((a, i) => {
+          const y0 = YPP[a.id], x = 0.5 + i * (w + 0.2);
+          card(s, x, 1.42, w, 5.45);
+          label(s, x + 0.25, 1.58, w - 0.5, a.name, SL.plat.YouTube);
+          const bar = (k, have, need, unit, y) => {
+            const pr = Math.min(1, have / need), met = have >= need;
+            s.addText([{ text: k, options: { bold: true } }, { text: `   ${fmtC(have)} / ${fmtC(need)} ${unit}`, options: { color: SL.muted } }], T({ x: x + 0.25, y, w: w - 0.5, h: 0.3, fontSize: 10.5, valign: 'middle' }));
+            s.addShape(p.ShapeType.roundRect, { x: x + 0.25, y: y + 0.36, w: w - 0.5, h: 0.16, fill: { color: 'EEF0F4' }, line: { color: 'EEF0F4' }, rectRadius: 0.08 });
+            s.addShape(p.ShapeType.roundRect, { x: x + 0.25, y: y + 0.36, w: Math.max(0.12, (w - 0.5) * pr), h: 0.16, fill: { color: met ? '16A34A' : SL.accent }, line: { color: met ? '16A34A' : SL.accent }, rectRadius: 0.08 });
+            s.addText(met ? 'ครบแล้ว ✓' : `ขาดอีก ${fmtC(need - have)} ${unit} · ${pct(pr * 100, pr < 0.01 ? 1 : 0)}`, T({ x: x + 0.25, y: y + 0.56, w: w - 0.5, h: 0.26, fontSize: 9.5, color: met ? SL.good : SL.muted }));
+          };
+          bar('ผู้ติดตาม', y0.subs, 1000, 'คน', 2.05);
+          s.addText('ระดับ 2 · รายได้จากโฆษณา (ทางใดทางหนึ่ง)', T({ x: x + 0.25, y: 3.05, w: w - 0.5, h: 0.3, fontSize: 11, bold: true, color: SL.accent }));
+          bar('ชั่วโมงดูคลิปยาว (365 วัน)', y0.hours, 4000, 'ชม.', 3.45);
+          bar('ยอดดู Shorts (90 วัน)', y0.shorts, 1e7, 'ครั้ง', 4.4);
+          const ph = y0.hours / 4000 * 100, ps = y0.shorts / 1e7 * 100;
+          s.addText(`ทางที่ใกล้กว่า: ${ph >= ps ? `คลิปยาว ทำได้แล้ว ${pct(ph, 1)} ของ 4,000 ชม.` : `Shorts ทำได้แล้ว ${pct(ps, 1)} ของ 10 ล้านวิว`}`,
+            T({ x: x + 0.25, y: 5.5, w: w - 0.5, h: 0.6, fontSize: 10.5, fill: { color: SL.soft }, valign: 'middle', margin: [0, 8, 0, 8] }));
+        });
+      }
+    }
+
+    // 8) what the system noticed
+    {
+      const s = slide();
+      head(s, 'ข้อสังเกตจากระบบ', `สรุปจุดที่ควรติดตามของ ${short} (ระบบเขียนจากตัวเลข · ทีมแก้ข้อความ Monthly Update / Next Step ได้ที่หน้าสรุปรายเดือน)`);
+      const pls = platforms(), w = (12.33 - 0.2 * (pls.length - 1)) / pls.length;
+      pls.forEach((pl, i) => {
+        const x = 0.5 + i * (w + 0.2);
+        card(s, x, 1.42, w, 5.45);
+        label(s, x + 0.22, 1.56, w - 0.44, pl, SL.plat[pl] === '111111' ? SL.ink : SL.plat[pl]);
+        lines(s, autoObs(pl).map(o => '- ' + o), { x: x + 0.22, y: 2.0, w: w - 0.44, h: 4.7, fontSize: 10, empty: 'ทุกตัวชี้วัดตามแผน' });
+      });
+    }
+    return { pptx: p, name: `Content OKR ${MONTHS[mi]} 2026${repBrand === 'all' ? '' : ' · ' + repBrand}`, count };
+  }
+
+  if (location.hostname === 'localhost') window.__ctDeck = buildDeck; // local preview only: lets the deck be checked without saving
+  $('#dr-go').addEventListener('click', async () => {
+    const btn = $('#dr-go'), msg = $('#dr-msg');
+    btn.disabled = true; btn.textContent = 'กำลังสร้าง…';
+    msg.innerHTML = '<div class="msg" style="margin:0 0 12px">กำลังจัดหน้าสไลด์จากตัวเลขในหน้าสรุปรายเดือน…</div>';
+    try {
+      const deck = await buildDeck();
+      const data = await deck.pptx.write({ outputType: 'base64' }); // about 1–2 MB for a 20-slide deck
+      msg.innerHTML = `<div class="msg" style="margin:0 0 12px">ได้ ${deck.count} หน้า กำลังบันทึกเป็น Google Slides ใน Drive ของทีม…</div>`;
+      const j = await admin({ api: 'slides', name: deck.name, data });
+      msg.innerHTML = `<div class="msg" style="margin:0 0 12px">${j.converted ? 'สร้าง Google Slides แล้ว' : 'บันทึกเป็นไฟล์ PowerPoint ใน Drive แล้ว (Drive ไม่ยอมแปลงเป็น Google Slides กดเปิดแล้วเลือก เปิดด้วย Google สไลด์ ได้)'}: <b>${esc(j.name)}</b> · ${deck.count} หน้า
+        <br><a class="btn primary" style="margin-top:10px" href="${esc(j.url)}" target="_blank" rel="noopener">เปิดสไลด์</a></div>`;
+    } catch (e) {
+      msg.innerHTML = e && e.cancel ? '' : `<div class="msg" style="margin:0 0 12px">สร้างสไลด์ไม่สำเร็จ: ${esc(e && e.message || e)}</div>`;
+    } finally { btn.disabled = false; btn.textContent = 'สร้างสไลด์'; }
+  });
 
   /* ---------- all-accounts list (ภาพรวมทั้งหมด) ---------- */
   let hBrand = 'all', hPlat = 'all', hMonthPicked = false;
