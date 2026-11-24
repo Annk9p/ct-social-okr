@@ -1395,6 +1395,9 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
       <div class="sl-pick-lbl" id="sl-pick-lbl">แพลตฟอร์มที่จะใส่ในสไลด์ <small>เลือกได้หลายแพลตฟอร์ม</small></div>
       <div class="rk-chips" id="sl-plats"></div>
       <p class="sl-pick-note" id="sl-plats-note"></p>
+      <div class="sl-pick-lbl" style="margin-top:12px" id="sl-types-lbl">ประเภทคลิปใน Video Analysis <small>เลือกได้หลายประเภท · ไม่เลือก = ทุกประเภท</small></div>
+      <div class="rk-chips" id="sl-types" role="group" aria-labelledby="sl-types-lbl"></div>
+      <p class="sl-pick-note" id="sl-types-note"></p>
     </div>
     <ol class="slide-list">
       <li><span>ปก "Pro Content" และหน้าคั่น Update KPI &amp; OKR<small>หน้าตาเดียวกับไฟล์ Content OKR 2026 ของทีม</small></span></li>
@@ -2509,7 +2512,17 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     return o.length ? 'เช่น ' + o.map(x => `"${x}"`).join(' และ ') : 'ทุกตัวชี้วัดตามแผน';
   }
   // platforms the deck covers (all by default; the last choice is kept while the page is open)
-  let slPlats = null;
+  let slPlats = null, slTypes = null;
+  const slClips = () => ACCOUNTS.filter(a => brandOk(a) && (!slPlats || slPlats.has(a.platform))).flatMap(a => clipsFor(a.id, repMonth));
+  function renderSlTypes() {
+    if (!slTypes) slTypes = new Set(vaTypes);
+    const clips = slClips(), types = [...new Set([...CLIP_TYPES, ...clips.map(c => c.type).filter(Boolean)])];
+    const cnt = t => clips.filter(c => c.type === t).length;
+    [...slTypes].forEach(t => { if (!types.includes(t)) slTypes.delete(t); });
+    $('#sl-types').innerHTML = `<button class="rk-chip" type="button" data-sltype="*" aria-pressed="${!slTypes.size}"><span>ทุกประเภท</span><span class="n">${clips.length}</span></button>`
+      + types.map(t => `<button class="rk-chip" type="button" data-sltype="${esc(t)}" aria-pressed="${slTypes.has(t)}"${cnt(t) || slTypes.has(t) ? '' : ' disabled'}><span>${esc(t)}</span><span class="n">${cnt(t)}</span></button>`).join('');
+    $('#sl-types-note').textContent = slTypes.size ? `Video Analysis เลือกคลิปวิวสูงสุดและต่ำสุดจากประเภท ${[...slTypes].join(', ')} · บัญชีที่ไม่มีคลิปประเภทนี้จะไม่มีหน้า Video Analysis` : 'Video Analysis เลือกคลิปวิวสูงสุดและต่ำสุดจากทุกประเภท';
+  }
   function renderSlPlats() {
     const all = platforms();
     if (!slPlats) slPlats = new Set(all);
@@ -2520,8 +2533,11 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     $('#sl-plats-note').textContent = none ? 'เลือกอย่างน้อย 1 แพลตฟอร์ม' : slPlats.size === all.length ? 'ทุกแพลตฟอร์ม · ปก หน้าคั่น และหน้าของทุกแพลตฟอร์ม'
       : `เฉพาะ ${all.filter(x => slPlats.has(x)).join(', ')} · ปกและหน้าคั่นยังอยู่ หน้า Short VDO แสดงเฉพาะแพลตฟอร์มที่เลือก`;
     $('#dr-go').disabled = none;
+    renderSlTypes();
   }
   document.addEventListener('click', e => {
+    const ty = e.target.closest('[data-sltype]');
+    if (ty && !ty.disabled) { const t = ty.dataset.sltype; if (t === '*') slTypes.clear(); else if (slTypes.has(t)) slTypes.delete(t); else slTypes.add(t); renderSlTypes(); return; }
     const b = e.target.closest('[data-slplat]');
     if (!b) return;
     const pl = b.dataset.slplat;
@@ -2756,18 +2772,19 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     const median = arr => { const s2 = [...arr].sort((x, y) => x - y), h = s2.length >> 1; return s2.length % 2 ? s2[h] : (s2[h - 1] + s2[h]) / 2; };
     const vaSlide = a => {
       if (!a || !sel(a.platform)) return;
-      const all = clipsFor(a.id, mi);
-      if (!all.length) return;
-      const sorted = [...all].sort((x, y) => y.views - x.views), med = median(all.map(c => c.views));
+      const all = clipsFor(a.id, mi), filtered = !!(slTypes && slTypes.size);
+      const pool = filtered ? all.filter(c => slTypes.has(c.type)) : all;
+      if (!pool.length) return;
+      const sorted = [...pool].sort((x, y) => y.views - x.views), med = median(all.map(c => c.views));
       const tv = all.reduce((x, c) => x + c.views, 0), erAll = tv ? all.reduce((x, c) => x + c.likes + c.comments + c.shares + c.saves, 0) / tv * 100 : 0;
       const s = slide();
       title(s, [['Video Analysis ', 0], [`${VA_LABEL[a.platform]} ${a.brand}`, 1]], 0.3, 28);
-      s.addText(`${all.length} คลิปใน ${mTh} 2026 · คลิปวิวสูงสุดและต่ำสุดของเดือน`, T({ x: 0.5, y: 0.88, w: 9, h: 0.3, fontSize: 11, color: SL.muted, valign: 'middle' }));
+      s.addText(filtered ? `${pool.length} จาก ${all.length} คลิปใน ${mTh} 2026 · ประเภท ${[...slTypes].join(', ')} · คลิปวิวสูงสุดและต่ำสุด` : `${all.length} คลิปใน ${mTh} 2026 · คลิปวิวสูงสุดและต่ำสุดของเดือน`, T({ x: 0.5, y: 0.88, w: 9, h: 0.3, fontSize: 11, color: SL.muted, valign: 'middle' }));
       brandLogo(s, a.brand);
       const picks = [['top', sorted[0]], ...(sorted.length > 1 ? [['low', sorted[sorted.length - 1]]] : [])];
       picks.forEach(([kind, c], i) => {
-        const x = 0.45 + i * 6.3, w = 6.13, k = `va-${a.id}-${kind}`, y0 = 1.35;
-        panel(s, x, y0, w, 5.8, kind === 'top' ? '⭐ TOP' : '🔽 Lowest-Viewed', { color: kind === 'top' ? SL.red : SL.dark, pill: `Creator : ${noteVal(k + '-creator') || '…'}` });
+        const x = 0.45 + i * 6.3, w = 6.13, k = filtered ? `va-${a.id}-${kind}-${c.id}` : `va-${a.id}-${kind}`, y0 = 1.35;
+        panel(s, x, y0, w, 5.8, (kind === 'top' ? '⭐ TOP' : '🔽 Lowest-Viewed') + (filtered ? ' ในประเภทที่เลือก' : ''), { color: kind === 'top' ? SL.red : SL.dark, pill: `Creator : ${noteVal(k + '-creator') || '…'}` });
         // clip card
         s.addShape(p.ShapeType.roundRect, { x: x + 0.2, y: y0 + 0.65, w: w - 0.4, h: 1.95, fill: { color: SL.soft }, line: { color: SL.soft }, rectRadius: 0.08 });
         icon(s, a.platform, x + 0.35, y0 + 0.78, 0.3);
