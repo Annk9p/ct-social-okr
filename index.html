@@ -497,6 +497,11 @@ select, input[type="text"], input[type="month"], input[type="number"] { font: in
 .slide-list li { counter-increment: s; display: grid; grid-template-columns: 34px minmax(0, 1fr); gap: 10px; align-items: start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
 .slide-list li::before { content: counter(s); font-weight: 600; color: var(--accent); background: var(--accent-soft); border-radius: 6px; text-align: center; padding: 2px 0; }
 .slide-list small { display: block; color: var(--ink-2); }
+.sl-pick { margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--omnix-surface-2); }
+.sl-pick-lbl { font-weight: 600; margin-bottom: 8px; }
+.sl-pick-lbl small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+.sl-pick-note { margin: 8px 0 0; font-size: 12.5px; color: var(--muted); }
+.sl-pick-note.warn { color: var(--crit-ink, #b91c1c); }
 .clip { color: var(--ink); text-decoration: none; }
 .clip:hover { color: var(--accent); text-decoration: underline; }
 .tag-sel { font-size: 12.5px; padding: 2px 6px; }
@@ -1385,6 +1390,11 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
   <div class="box">
     <h2 id="dr-title">สร้างสไลด์สรุปประจำเดือน</h2>
     <p style="margin:0;color:var(--ink-2)">ระบบจัดสไลด์จากตัวเลขและข้อความในหน้าสรุปรายเดือน (เดือนและแบรนด์ที่เลือกอยู่) แล้วบันทึกเป็น Google Slides ในโฟลเดอร์ "CT Social OKR · สไลด์สรุปรายเดือน" ของ Drive ทีม แก้ต่อใน Google Slides ได้เลย</p>
+    <div class="sl-pick" role="group" aria-labelledby="sl-pick-lbl">
+      <div class="sl-pick-lbl" id="sl-pick-lbl">แพลตฟอร์มที่จะใส่ในสไลด์ <small>เลือกได้หลายแพลตฟอร์ม</small></div>
+      <div class="rk-chips" id="sl-plats"></div>
+      <p class="sl-pick-note" id="sl-plats-note"></p>
+    </div>
     <ol class="slide-list">
       <li><span>ปก "Pro Content" และหน้าคั่น Update KPI &amp; OKR<small>หน้าตาเดียวกับไฟล์ Content OKR 2026 ของทีม</small></span></li>
       <li><span>KPI Short VDO แยกแบรนด์<small>จำนวนคลิป วิวรวม เทียบเดือนก่อน และ Top 5 ของ TikTok, Facebook Reels, Instagram Reels</small></span></li>
@@ -2497,7 +2507,27 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     const o = platforms().flatMap(p => autoObs(p).slice(0, 1));
     return o.length ? 'เช่น ' + o.map(x => `"${x}"`).join(' และ ') : 'ทุกตัวชี้วัดตามแผน';
   }
-  $('#btn-slides').addEventListener('click', () => { $('#dr-title').textContent = `สร้างสไลด์สรุป ${MONTHS[repMonth]} 2026`; $('#dr-insight').textContent = insight(); $('#dr-msg').innerHTML = ''; drawer.hidden = false; $('#dr-close').focus(); });
+  // platforms the deck covers (all by default; the last choice is kept while the page is open)
+  let slPlats = null;
+  function renderSlPlats() {
+    const all = platforms();
+    if (!slPlats) slPlats = new Set(all);
+    [...slPlats].forEach(x => { if (!all.includes(x)) slPlats.delete(x); });
+    $('#sl-plats').innerHTML = all.map(pl => `<button class="rk-chip" type="button" data-slplat="${pl}" aria-pressed="${slPlats.has(pl)}">${pIco(pl)}<span>${pl}</span></button>`).join('');
+    const none = !slPlats.size;
+    $('#sl-plats-note').className = 'sl-pick-note' + (none ? ' warn' : '');
+    $('#sl-plats-note').textContent = none ? 'เลือกอย่างน้อย 1 แพลตฟอร์ม' : slPlats.size === all.length ? 'ทุกแพลตฟอร์ม · ปก หน้าคั่น และหน้าของทุกแพลตฟอร์ม'
+      : `เฉพาะ ${all.filter(x => slPlats.has(x)).join(', ')} · ปกและหน้าคั่นยังอยู่ หน้า Short VDO แสดงเฉพาะแพลตฟอร์มที่เลือก`;
+    $('#dr-go').disabled = none;
+  }
+  document.addEventListener('click', e => {
+    const b = e.target.closest('[data-slplat]');
+    if (!b) return;
+    const pl = b.dataset.slplat;
+    if (slPlats.has(pl)) slPlats.delete(pl); else slPlats.add(pl);
+    renderSlPlats();
+  });
+  $('#btn-slides').addEventListener('click', () => { renderSlPlats(); $('#dr-title').textContent = `สร้างสไลด์สรุป ${MONTHS[repMonth]} 2026`; $('#dr-insight').textContent = insight(); $('#dr-msg').innerHTML = ''; drawer.hidden = false; $('#dr-close').focus(); });
   $('#dr-close').addEventListener('click', () => { drawer.hidden = true; });
   drawer.addEventListener('click', e => { if (e.target === drawer) drawer.hidden = true; });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
@@ -2555,6 +2585,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     const mi = repMonth, mTh = MONTHS[mi], lastDay = partial() ? AS_OF.getDate() - 1 : MONTH_DAYS[mi];
     const brands = ['Eloop', 'Moov'].filter(b => repBrand === 'all' || b === repBrand);
     const acc = (b, p) => ACCOUNTS.find(a => a.brand === b && a.platform === p);
+    const sel = pl => !slPlats || slPlats.has(pl);
     const IMG = {};
     await Promise.all([['bg', 'assets/deck/cover-bg.png'], ['face', 'assets/deck/cover-face.png'], ['ai', 'assets/deck/section-ai.png'], ['net', 'assets/deck/section-network.png'], ['nine', 'assets/deck/logo-9plus.png']]
       .map(async ([k, src]) => { IMG[k] = await imgRaw(src); }));
@@ -2609,7 +2640,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 
     // Short VDO per brand
     const shortSlide = b => {
-      const plats = ['TikTok', 'Facebook', 'Instagram'].map(pl => acc(b, pl)).filter(Boolean);
+      const plats = ['TikTok', 'Facebook', 'Instagram'].filter(sel).map(pl => acc(b, pl)).filter(Boolean);
       if (!plats.length) return;
       const s = slide();
       title(s, [['KPI ', 0], ['2026', 1], [` | ${b === 'Moov' ? 'MOOV Short VDO Review' : 'สรุปผลเดือน ' + mTh}`, 0]]);
@@ -2667,6 +2698,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 
     // OKR per platform
     const okrSlide = pl => {
+      if (!sel(pl)) return;
       const accs = ACCOUNTS.filter(a => a.platform === pl && brands.includes(a.brand));
       if (!accs.length) return;
       const s = slide();
@@ -2722,7 +2754,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     const VA_LABEL = { TikTok: 'Tiktok', Facebook: 'FB Reels', YouTube: 'Short YT', Instagram: 'IG Reels' };
     const median = arr => { const s2 = [...arr].sort((x, y) => x - y), h = s2.length >> 1; return s2.length % 2 ? s2[h] : (s2[h - 1] + s2[h]) / 2; };
     const vaSlide = a => {
-      if (!a) return;
+      if (!a || !sel(a.platform)) return;
       const all = clipsFor(a.id, mi);
       if (!all.length) return;
       const sorted = [...all].sort((x, y) => y.views - x.views), med = median(all.map(c => c.views));
@@ -2758,7 +2790,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 
     // YouTube Content Performance per channel
     const ytSlide = a => {
-      if (!a) return;
+      if (!a || !sel('YouTube')) return;
       const v = mData(a, 'views'), l = mData(a, 'likes'), n = mData(a, 'nf');
       if (v[mi] == null) return;
       const x2 = ytExtra(a.id), sys = SYS && SYS[a.id];
@@ -2810,6 +2842,7 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
 
     // YouTube Partner Program
     const yppSlide = () => {
+      if (!sel('YouTube')) return;
       const yts = brands.map(b => acc(b, 'YouTube')).filter(a => a && YPP[a.id]);
       if (!yts.length) return;
       const s = slide();
@@ -2853,7 +2886,8 @@ select, input[type="text"], input[type="month"], input[type="number"], input[typ
     brands.forEach(b => ytSlide(acc(b, 'YouTube')));
     yppSlide();
     if (platforms().includes('Instagram')) { okrSlide('Instagram'); brands.forEach(b => vaSlide(acc(b, 'Instagram'))); }
-    return { pptx: p, name: `Content OKR ${mTh} 2026${repBrand === 'all' ? '' : ' · ' + repBrand}`, count };
+    const chosen = platforms().filter(sel);
+    return { pptx: p, name: `Content OKR ${mTh} 2026${repBrand === 'all' ? '' : ' · ' + repBrand}${chosen.length < platforms().length ? ' · ' + chosen.join(', ') : ''}`, count };
   }
 
   if (location.hostname === 'localhost') window.__ctDeck = buildDeck; // local preview only: lets the deck be checked without saving
