@@ -1,7 +1,7 @@
 # SOCIAL ONE · ขอบเขตแอป
 
 เวอร์ชันเอกสาร: 24 พ.ย. 2026
-เว็บ: https://annk9p.github.io/ct-social-okr/
+เว็บ: https://annk9p.github.io/social-one/
 (ชื่อเดิม: CT Social OKR)
 
 ---

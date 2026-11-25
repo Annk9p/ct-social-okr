@@ -34,7 +34,7 @@ var TARGETS_2026 = [
 ];
 
 var PROPS = PropertiesService.getScriptProperties();
-var SITE_URL = 'https://annk9p.github.io/ct-social-okr/#setup'; // where the "connected" page links back to
+var SITE_URL = 'https://annk9p.github.io/social-one/#connect'; // where the "connected" page links back to
 var TZ = 'Asia/Bangkok';
 
 /* ------------------------------------------------------------------ menu */
