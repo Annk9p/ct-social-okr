@@ -1373,6 +1373,16 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
 .dash-pair .pop-thumb { width: 112px; }
 @media (max-width: 1180px) { .dash-pair { grid-template-columns: minmax(0, 1fr); } .dash-pair .pop-list { grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); } }
 @media (max-width: 560px) { .dash-pair .pop-item { grid-template-columns: 104px minmax(0, 1fr); } .dash-pair .pop-thumb { width: 104px; } }
+
+/* refresh data button (top bar) */
+.refresh-btn { width: auto; padding: 0 16px 0 14px; gap: 8px; border-radius: 999px; display: inline-flex; align-items: center; font: inherit; font-size: 13.5px; font-weight: 600; white-space: nowrap; }
+.refresh-btn:disabled { cursor: progress; }
+.refresh-btn.is-loading svg { animation: refresh-spin .9s linear infinite; }
+@keyframes refresh-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .refresh-btn.is-loading svg { animation-duration: 2.5s; } }
+@media (max-width: 1536px) { .refresh-btn { width: 42px; padding: 0; justify-content: center; } .refresh-lbl { display: none; } .profile .who { display: none; } }
+@media (min-width: 768px) { .ox-topbar .search-pill { min-width: 170px; } }
+@media (max-width: 767px) { .refresh-btn { order: 3; } }
 </style>
 </head>
 <body>
@@ -1408,6 +1418,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   <label class="top-date" id="top-date" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M16 3v4M8 3v4M3 10h18"/></svg><span class="top-date__lbl">ช่วงเวลา</span><select id="h-month" aria-label="เดือนของข้อมูล"></select></label>
   <div class="lang-seg" role="group" aria-label="Language"><button type="button" data-lang="th" aria-pressed="true" title="ภาษาไทย">TH</button><button type="button" data-lang="en" aria-pressed="false" title="English">EN</button></div>
   <button class="icon-btn" id="btn-theme" type="button" aria-label="สลับธีมสว่าง/มืด" title="สลับธีม"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
+  <button class="icon-btn refresh-btn" id="btn-refresh" type="button" aria-label="รีเฟรชข้อมูล" title="โหลดตัวเลขล่าสุดจากระบบ"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-15.5 6.2L3 16"/><path d="M3 21v-5h5"/><path d="M3 12a9 9 0 0 1 15.5-6.2L21 8"/><path d="M21 3v5h-5"/></svg><span class="refresh-lbl">รีเฟรชข้อมูล</span></button>
   <div class="notif"><button class="icon-btn" id="btn-notif" type="button" aria-label="การแจ้งเตือน" title="การแจ้งเตือน" aria-expanded="false" aria-controls="notif-pop"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg><span class="notif-badge" id="notif-badge" hidden></span></button><div class="notif-pop" id="notif-pop" hidden></div></div>
   <div class="profile"><span class="avatar" aria-hidden="true">CT</span><span class="who">ทีม CT<small>Eloop · Moov</small></span></div>
 </header>
@@ -1709,7 +1720,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   </div>
 </div>
 
-<script src="assets/i18n.js?v=8"></script>
+<script src="assets/i18n.js?v=9"></script>
 <script>
 (function () {
   const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -3726,7 +3737,26 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   async function refreshLive() {
     const j = await (await fetch(DATA_URL, { cache: 'no-store' })).json();
     if (j.ok) { applyLive(j); route(); }
+    return j;
   }
+  // "รีเฟรชข้อมูล" in the top bar: reload the latest numbers the system holds (no passcode; platforms sync on their own schedule)
+  let refreshTimer = null;
+  $('#btn-refresh').addEventListener('click', async () => {
+    const b = $('#btn-refresh'), box = $('#live-state');
+    if (!DATA_URL || b.classList.contains('is-loading')) return;
+    b.classList.add('is-loading'); b.disabled = true; clearTimeout(refreshTimer);
+    box.hidden = false; box.className = 'ox-alert ox-alert--info'; box.textContent = 'กำลังโหลดตัวเลขล่าสุดจากระบบ…';
+    try {
+      const j = await refreshLive();
+      if (!j.ok) throw new Error(j.error || 'ระบบตอบกลับไม่ถูกต้อง');
+      box.className = 'ox-alert ox-alert--success';
+      box.textContent = `อัปเดตข้อมูลแล้ว · ข้อมูลล่าสุดในระบบ ${j.generatedAt || ''} · TikTok ดึงจากแพลตฟอร์มทุกชั่วโมง ส่วน Facebook, YouTube และ Instagram ทุกเช้า 06:00`;
+      refreshTimer = setTimeout(() => { box.hidden = true; }, 6000);
+    } catch (e) {
+      box.className = 'ox-alert ox-alert--danger';
+      box.textContent = `โหลดข้อมูลไม่สำเร็จ (${e.message}) ลองกดอีกครั้ง`;
+    } finally { b.classList.remove('is-loading'); b.disabled = false; }
+  });
 
   function askPass(mode, msg) {
     return new Promise(res => {

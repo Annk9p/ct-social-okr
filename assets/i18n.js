@@ -779,7 +779,15 @@
     "การเชื่อมโยงบัญชี": "account connections",
     "ดูทั้งหมด": "view all",
     "กดดูรายละเอียดเพื่อเปิดหน้ารายบัญชี": "press View details to open the account page",
-    "5 อันดับวิวสูงสุด": "top 5 by views"
+    "5 อันดับวิวสูงสุด": "top 5 by views",
+    "รีเฟรชข้อมูล": "refresh data",
+    "โหลดตัวเลขล่าสุดจากระบบ": "load the latest numbers from the system",
+    "กำลังโหลดตัวเลขล่าสุดจากระบบ…": "Loading the latest numbers from the system…",
+    "อัปเดตข้อมูลแล้ว": "data refreshed",
+    "ข้อมูลล่าสุดในระบบ": "latest data in the system",
+    "TikTok ดึงจากแพลตฟอร์มทุกชั่วโมง ส่วน Facebook, YouTube และ Instagram ทุกเช้า 06:00": "TikTok syncs hourly; Facebook, YouTube and Instagram every morning at 06:00",
+    "โหลดข้อมูลไม่สำเร็จ": "couldn't load data",
+    "ลองกดอีกครั้ง": "try again"
     };
   const EXACT_ONLY = new Set(["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."]);
   const TH = /[฀-๿]/;
