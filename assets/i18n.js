@@ -787,7 +787,11 @@
     "ข้อมูลล่าสุดในระบบ": "latest data in the system",
     "TikTok ดึงจากแพลตฟอร์มทุกชั่วโมง ส่วน Facebook, YouTube และ Instagram ทุกเช้า 06:00": "TikTok syncs hourly; Facebook, YouTube and Instagram every morning at 06:00",
     "โหลดข้อมูลไม่สำเร็จ": "couldn't load data",
-    "ลองกดอีกครั้ง": "try again"
+    "ลองกดอีกครั้ง": "try again",
+    "กำลังอัปเดตเป็นข้อมูลล่าสุด…": "updating to the latest data…",
+    "แสดงข้อมูลที่บันทึกไว้ในเครื่อง (ข้อมูลในระบบเมื่อ": "Showing data saved on this device (system data from",
+    "เพราะโหลดข้อมูลใหม่ไม่สำเร็จ (": "because new data couldn't be loaded (",
+    "กดปุ่มรีเฟรชข้อมูลเพื่อลองอีกครั้ง": "press Refresh data to try again"
     };
   const EXACT_ONLY = new Set(["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."]);
   const TH = /[฀-๿]/;
