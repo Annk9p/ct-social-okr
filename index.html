@@ -735,6 +735,12 @@ body { background: var(--omnix-bg); color: var(--omnix-fg); }
 .icon-btn { display: inline-grid; place-items: center; width: 42px; height: 42px; border-radius: 50%; border: 0; background: var(--omnix-surface); box-shadow: var(--shadow-card); color: var(--omnix-fg-muted); cursor: pointer; }
 .icon-btn:hover { color: var(--omnix-accent); text-decoration: none; }
 .icon-btn svg { width: 18px; height: 18px; }
+.profile .who { white-space: nowrap; }
+.lang-seg { flex: 0 0 auto; display: inline-flex; padding: 4px; gap: 2px; height: 42px; border-radius: 999px; background: var(--omnix-surface); box-shadow: var(--shadow-card); }
+.lang-seg button { font: inherit; font-size: 12.5px; font-weight: 700; letter-spacing: .03em; min-width: 38px; padding: 0 10px; border: 0; border-radius: 999px; background: none; color: var(--omnix-fg-muted); cursor: pointer; }
+.lang-seg button:hover { color: var(--omnix-accent); }
+.lang-seg button[aria-pressed="true"] { background: var(--omnix-accent); color: #fff; }
+.lang-seg button:focus-visible { outline: 2px solid var(--omnix-accent); outline-offset: 2px; }
 .profile { display: flex; align-items: center; gap: 10px; padding-left: 6px; }
 .avatar { display: inline-grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #818cf8, #6366f1); color: #fff; font-weight: 700; font-size: 13px; }
 .profile .who { display: grid; line-height: 1.25; font-weight: 600; font-size: 13.5px; color: var(--omnix-fg); }
@@ -1214,6 +1220,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
 <header class="ox-topbar">
   <label class="search-pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="ค้นหาคลิปจากชื่อ…" aria-label="ค้นหาคลิปจากชื่อ" autocomplete="off"></label>
   <span class="ox-topbar__spacer"></span>
+  <div class="lang-seg" role="group" aria-label="Language"><button type="button" data-lang="th" aria-pressed="true" title="ภาษาไทย">TH</button><button type="button" data-lang="en" aria-pressed="false" title="English">EN</button></div>
   <button class="icon-btn" id="btn-theme" type="button" aria-label="สลับธีมสว่าง/มืด" title="สลับธีม"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg></button>
   <a class="icon-btn" href="#setup" aria-label="ตั้งค่า" title="ตั้งค่า"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></a>
   <div class="profile"><span class="avatar" aria-hidden="true">CT</span><span class="who">ทีม CT<small>Eloop · Moov</small></span></div>
@@ -1494,6 +1501,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   </div>
 </div>
 
+<script src="assets/i18n.js?v=3"></script>
 <script>
 (function () {
   const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -2622,7 +2630,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
     if (slPlats.has(pl)) slPlats.delete(pl); else slPlats.add(pl);
     renderSlPlats();
   });
-  $('#btn-slides').addEventListener('click', () => { renderSlPlats(); $('#dr-title').textContent = `สร้างสไลด์สรุป ${MONTHS[repMonth]} 2026`; $('#dr-insight').textContent = insight(); $('#dr-msg').innerHTML = ''; drawer.hidden = false; $('#dr-close').focus(); });
+  $('#btn-slides').addEventListener('click', () => { if (repMonth == null) repMonth = latestMonth(ACCOUNTS); renderSlPlats(); $('#dr-title').textContent = `สร้างสไลด์สรุป ${MONTHS[repMonth]} 2026`; $('#dr-insight').textContent = insight(); $('#dr-msg').innerHTML = ''; drawer.hidden = false; $('#dr-close').focus(); });
   $('#dr-close').addEventListener('click', () => { drawer.hidden = true; });
   drawer.addEventListener('click', e => { if (e.target === drawer) drawer.hidden = true; });
   document.addEventListener('keydown', e => { if (e.key === 'Escape') drawer.hidden = true; });
@@ -3127,6 +3135,12 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   }
   window.addEventListener('hashchange', route);
   document.addEventListener('click', e => {
+    const b = e.target.closest('[data-lang]');
+    if (!b || !window.I18N || I18N.lang === b.dataset.lang) return;
+    I18N.setLang(b.dataset.lang);
+    route(); // redraw charts (canvas text) in the new language
+  });
+  document.addEventListener('click', e => {
     const b = e.target.closest('[data-brand]');
     if (b) { brandFilter = b.dataset.brand; document.querySelectorAll('#brand-seg button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderOverview(); }
     const o = e.target.closest('[data-open]');
@@ -3364,7 +3378,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
     const liveP = PL.filter(p => ACCOUNTS.some(a => a.platform === p && (LIVE.months[a.id] || []).length)), sampleP = PL.filter(p => !liveP.includes(p));
     b.className = 'ox-alert proto-alert ' + (liveP.length ? 'ox-alert--info' : 'ox-alert--warning');
     b.innerHTML = liveP.length
-      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.join(' และ ')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${sampleP.length ? sampleP.join(' และ ') + ' ยังเป็นตัวอย่างจากชีตเดิม · ' : ''}${liveP.includes('Facebook') ? 'Facebook: Watch time และ Interactions คำนวณจาก API อาจต่างจาก Business Suite · ' : ''}เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
+      ? `<span><b>ข้อมูลจากระบบ</b>${liveP.length > 1 ? liveP.slice(0, -1).join(', ') + ' และ ' + liveP[liveP.length - 1] : liveP.join('')} ดึงอัตโนมัติ อัปเดตล่าสุด ${esc(j.generatedAt || '')} · ${sampleP.length ? sampleP.join(' และ ') + ' ยังเป็นตัวอย่างจากชีตเดิม · ' : ''}${liveP.includes('Facebook') ? 'Facebook: Watch time และ Interactions คำนวณจาก API อาจต่างจาก Business Suite · ' : ''}เดือนที่ระบบยังไม่มีข้อมูลใช้ตัวเลขจากชีต Data OKR 2026</span>`
       : `<span><b>ระบบเชื่อมแล้ว รอข้อมูลเข้า</b>ยังไม่มีไฟล์ TikTok และยังไม่ได้เชื่อม YouTube หรือ Facebook ตัวเลขทั้งหมดในหน้านี้ยังเป็นตัวอย่างจากชีต Data OKR 2026</span>`;
     $('#upload-live').hidden = false;
   }
