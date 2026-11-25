@@ -777,7 +777,8 @@
     "ไม่มีการแจ้งเตือน ระบบดึงข้อมูลปกติ": "No notifications; syncing normally",
     "ดูทั้งหมดในหน้าตั้งค่า": "see all in settings",
     "การเชื่อมโยงบัญชี": "account connections",
-    "ดูทั้งหมด": "view all"
+    "ดูทั้งหมด": "view all",
+    "กดดูรายละเอียดเพื่อเปิดหน้ารายบัญชี": "press View details to open the account page"
     };
   const EXACT_ONLY = new Set(["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."]);
   const TH = /[฀-๿]/;
