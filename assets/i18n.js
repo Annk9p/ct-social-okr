@@ -775,7 +775,8 @@
     "ยังไม่มีคอนเทนต์ที่ติดแท็กแคมเปญใน": "No content tagged campaign in",
     "ระบบยังไม่มีข้อมูลแคมเปญ (ชื่อ ระยะเวลา เป้าหมาย) จึงแสดงคอนเทนต์ที่ติดแท็ก แคมเปญ ไปก่อน · แก้แท็กได้ในหน้าคอนเทนต์": "The system has no campaign records yet (name, dates, goals), so content tagged campaign is shown for now · edit tags on the content page",
     "ไม่มีการแจ้งเตือน ระบบดึงข้อมูลปกติ": "No notifications; syncing normally",
-    "ดูทั้งหมดในหน้าตั้งค่า": "see all in settings"
+    "ดูทั้งหมดในหน้าตั้งค่า": "see all in settings",
+    "การเชื่อมโยงบัญชี": "account connections"
     };
   const EXACT_ONLY = new Set(["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."]);
   const TH = /[฀-๿]/;
