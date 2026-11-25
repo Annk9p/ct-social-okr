@@ -6,11 +6,11 @@ const err = m => ({ getResponseCode: () => 400, getContentText: () => JSON.strin
 ctx.UrlFetchApp.fetch = url => {
   const u = new URL(url), p = Object.fromEntries(u.searchParams), path = u.pathname.replace('/v23.0', '');
   if (/\/insights$/.test(path)) return ok({ data: [{ name: p.metric, values: [] }] });
-  if (path === '/111/video_reels') return ok({ data: [{ id: 'r1', post_id: '111_900', description: 'Reel รีวิว', created_time: '2026-10-05T03:00:00+0000', permalink_url: '/reel/r1', likes: { summary: { total_count: 4 } }, comments: { summary: { total_count: 1 } } }] });
+  if (path === '/111/video_reels') return ok({ data: [{ id: 'r1', post_id: '111_900', description: 'Reel รีวิว', created_time: '2026-10-05T03:00:00+0000', permalink_url: '/reel/r1', picture: 'https://scontent.example/r1.jpg', length: 41.6, likes: { summary: { total_count: 4 } }, comments: { summary: { total_count: 1 } } }] });
   if (path === '/111/posts') {
     if (/attachments/.test(p.fields)) return ok({ data: [
       { id: '111_900', message: 'Reel รีวิว', created_time: '2026-10-05T03:00:00+0000', attachments: { data: [{ media_type: 'video' }] } },
-      { id: '111_901', message: 'รูปสินค้าใหม่\nบรรทัด2', created_time: '2026-10-06T03:00:00+0000', permalink_url: 'https://www.facebook.com/111/posts/901', attachments: { data: [{ media_type: 'photo' }] }, reactions: { summary: { total_count: 12 } }, comments: { summary: { total_count: 2 } }, shares: { count: 3 } },
+      { id: '111_901', message: 'รูปสินค้าใหม่\nบรรทัด2', created_time: '2026-10-06T03:00:00+0000', permalink_url: 'https://www.facebook.com/111/posts/901', full_picture: 'https://scontent.example/901.jpg', attachments: { data: [{ media_type: 'photo' }] }, reactions: { summary: { total_count: 12 } }, comments: { summary: { total_count: 2 } }, shares: { count: 3 } },
       { id: '111_902', message: 'อัลบั้มงานอีเวนต์', created_time: '2026-10-07T03:00:00+0000', attachments: { data: [{ media_type: 'album' }] } },
       { id: '111_903', message: 'อ่านบทความ', created_time: '2026-10-08T03:00:00+0000', attachments: { data: [{ media_type: 'link' }] } },
       { id: '111_904', message: 'สวัสดีวันจันทร์', created_time: '2026-10-09T03:00:00+0000' }] });
@@ -32,6 +32,7 @@ const f = id => c.find(x => x.id === id) || {};
 t('reel stored once as Reel', f('r1').format === 'Reel' && !c.some(x => x.id === '111_900'), c.map(x => [x.id, x.format]));
 t('photo post with counts and views', f('111_901').format === 'รูปภาพ' && f('111_901').likes === 12 && f('111_901').shares === 3 && f('111_901').title === 'รูปสินค้าใหม่' && f('111_901').views > 0, f('111_901'));
 t('album, link, text formats', f('111_902').format === 'อัลบั้ม' && f('111_903').format === 'ลิงก์' && f('111_904').format === 'ข้อความ', c.map(x => [x.id, x.format]));
+t('thumbnails and reel length stored', f('r1').thumb === 'https://scontent.example/r1.jpg' && f('r1').duration === 42 && f('111_901').thumb === 'https://scontent.example/901.jpg' && f('111_902').thumb === '', [f('r1'), f('111_901')]);
 t('view metric fallback remembered', props.FB_POST_METRIC === 'post_impressions');
 const m = d.accounts['fb-eloop'].monthly;
 t('output still counts Reels only', m.output[9] === 1, m.output);

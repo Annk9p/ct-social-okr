@@ -11,7 +11,7 @@
 var TABS = {
   daily: ['date', 'account', 'views', 'likes', 'comments', 'shares', 'pv', 'net_followers', 'followers', 'minutes_watched', 'subs_gained', 'subs_lost', 'source', 'updated_at', 'interactions', 'views_total', 'minutes_total', 'net_growth'],
   monthly: ['month', 'account', 'key', 'value', 'source', 'updated_at'],
-  clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at', 'format'],
+  clips: ['account', 'id', 'title', 'url', 'posted', 'views', 'likes', 'comments', 'shares', 'saves', 'type', 'product', 'boosted', 'source', 'updated_at', 'format', 'thumb', 'duration'],
   yt_top: ['month', 'account', 'rank', 'video_id', 'title', 'format', 'views'],
   yt_channel: ['account', 'as_of', 'channel_title', 'channel_id', 'subscribers', 'long_hours_365', 'shorts_views_90'],
   audience: ['account', 'as_of', 'kind', 'label', 'value'],
@@ -338,7 +338,8 @@ function buildData_() {
   });
   var clips = readTable_('clips').filter(function (r) { return String(r.posted).slice(0, 4) === year; }).map(function (r) {
     return { acc: r.account, id: String(r.id), title: r.title, url: r.url, posted: r.posted, views: +r.views, likes: r.likes === '' ? null : +r.likes, comments: r.comments === '' ? null : +r.comments,
-      shares: r.shares === '' ? null : +r.shares, saves: r.saves === '' ? null : +r.saves, format: r.format || '', type: r.type, product: r.product, boosted: r.boosted === true || r.boosted === 'TRUE' };
+      shares: r.shares === '' ? null : +r.shares, saves: r.saves === '' ? null : +r.saves, format: r.format || '', type: r.type, product: r.product, boosted: r.boosted === true || r.boosted === 'TRUE',
+      thumb: r.thumb || '', duration: r.duration === '' || r.duration == null ? null : +r.duration };
   });
   var ytTop = {};
   readTable_('yt_top').forEach(function (r) {
@@ -880,7 +881,7 @@ function fbNum_(v) {
 
 /** Reels posted from `start`, with play counts. */
 function fbReels_(pid, pt, start) {
-  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,post_id,description,created_time,permalink_url,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)', limit: 100 }, pt);
+  var reels = [], r = fbGraph_(pid + '/video_reels', { fields: 'id,post_id,description,created_time,permalink_url,picture,length,likes.summary(total_count).limit(0),comments.summary(total_count).limit(0)', limit: 50 }, pt);
   for (var guard = 0; guard < 30; guard++) {
     var older = false;
     (r.data || []).forEach(function (v) { if (new Date(v.created_time) >= start) reels.push(v); else older = true; });
@@ -942,7 +943,7 @@ function fbPostInter_(pid, pt, start, end, acc) {
 /** Page posts published from `start` with their format and views (post_media_view, or older names). */
 var FB_POST_VIEW_METRICS = ['post_media_view', 'post_impressions'];
 function fbFeedPosts_(acc, pid, pt, start, end) {
-  var posts = [], r = fbGraph_(pid + '/posts', { fields: 'id,message,created_time,permalink_url,attachments{media_type,type},reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares',
+  var posts = [], r = fbGraph_(pid + '/posts', { fields: 'id,message,created_time,permalink_url,full_picture,attachments{media_type,type},reactions.summary(total_count).limit(0),comments.summary(total_count).limit(0),shares',
     since: Math.floor(start.getTime() / 1000), until: Math.floor(end.getTime() / 1000) + 86400, limit: 100 }, pt);
   for (var guard = 0; guard < 60; guard++) {
     posts = posts.concat(r.data || []);
@@ -1039,6 +1040,7 @@ function syncFacebookImpl_(acc, full) {
         row.likes = v.likes && v.likes.summary ? v.likes.summary.total_count : '';
         row.comments = v.comments && v.comments.summary ? v.comments.summary.total_count : '';
         row.shares = ''; row.saves = ''; row.format = 'Reel';
+        row.thumb = v.picture || row.thumb || ''; if (v.length != null) row.duration = Math.round(+v.length);
         if (v.post_id) reelPosts[String(v.post_id)] = true, reelPosts[String(v.post_id).split('_').pop()] = true;
         row.source = 'facebook-api'; row.updated_at = ts;
       });
@@ -1057,6 +1059,7 @@ function syncFacebookImpl_(acc, full) {
         row.comments = p.comments && p.comments.summary ? p.comments.summary.total_count : '';
         row.shares = p.shares ? p.shares.count : 0; row.saves = '';
         row.format = p.format;
+        row.thumb = p.full_picture || row.thumb || '';
         row.source = 'facebook-api'; row.updated_at = ts;
       });
     } catch (e) { if (e.fbCode === 190) throw e; log_('facebook', acc, 'warn', 'ดึงโพสต์ (รูป/ลิงก์/ข้อความ) ไม่ได้: ' + e.message); }
@@ -1264,7 +1267,7 @@ function igTotals_(acc, ig, pt, from, to) {
 
 /** Reels and videos posted from `start`, with their insights. */
 function igMedia_(acc, ig, pt, start) {
-  var items = [], r = fbGraph_(ig + '/media', { fields: 'id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count', limit: 100 }, pt);
+  var items = [], r = fbGraph_(ig + '/media', { fields: 'id,caption,media_type,media_product_type,permalink,timestamp,like_count,comments_count,thumbnail_url,media_url', limit: 100 }, pt);
   for (var guard = 0; guard < 40; guard++) {
     var older = false;
     (r.data || []).forEach(function (m) {
@@ -1330,6 +1333,7 @@ function syncInstagramImpl_(acc, full) {
         row.likes = v.like_count != null ? v.like_count : ''; row.comments = v.comments_count != null ? v.comments_count : '';
         row.shares = v.ins_shares !== undefined ? v.ins_shares : ''; row.saves = v.ins_saved !== undefined ? v.ins_saved : '';
         if (!row.type) row.type = ttGuessType(title);
+        row.thumb = v.thumbnail_url || (v.media_type !== 'VIDEO' ? v.media_url : '') || row.thumb || '';
         row.format = v.media_product_type === 'REELS' ? 'Reel' : v.media_type === 'CAROUSEL_ALBUM' ? 'อัลบั้ม' : v.media_type === 'IMAGE' ? 'รูปภาพ' : v.media_type === 'VIDEO' ? 'วิดีโอ' : 'อื่นๆ';
         row.source = 'instagram-api'; row.updated_at = ts;
       });
@@ -1525,7 +1529,7 @@ function syncTikTokApiImpl_(acc) {
     // videos posted this year
     var year = +PROPS.getProperty('YEAR'), since = new Date(year, 0, 1).getTime() / 1000, vids = [], cursor = null;
     for (var guard = 0; guard < 60; guard++) {
-      var d = ttCall_(acc, 'post', 'video/list/?fields=id,title,video_description,create_time,share_url,view_count,like_count,comment_count,share_count,duration',
+      var d = ttCall_(acc, 'post', 'video/list/?fields=id,title,video_description,create_time,share_url,cover_image_url,view_count,like_count,comment_count,share_count,duration',
         cursor ? { max_count: 20, cursor: cursor } : { max_count: 20 });
       var older = false;
       (d.videos || []).forEach(function (v) { if (v.create_time >= since) vids.push(v); else older = true; });
@@ -1546,6 +1550,8 @@ function syncTikTokApiImpl_(acc) {
       [['views', 'view_count'], ['likes', 'like_count'], ['comments', 'comment_count'], ['shares', 'share_count']].forEach(function (f) {
         if (v[f[1]] != null) row[f[0]] = Math.max(Number(row[f[0]]) || 0, Number(v[f[1]]) || 0);
       });
+      if (v.cover_image_url) row.thumb = v.cover_image_url;
+      if (v.duration != null) row.duration = +v.duration;
       row.updated_at = now; if (!row.source) row.source = 'tiktok-api'; row.format = row.format || 'วิดีโอ';
     });
     writeTable_('clips', clips);

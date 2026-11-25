@@ -18,7 +18,7 @@ ctx.UrlFetchApp.fetch = (url, opt = {}) => {
     const body = JSON.parse(opt.payload);
     if (!body.cursor) return ok({ data: { videos: [
       { id: '7001', title: 'เดิมจากไฟล์', create_time: Date.parse('2026-11-03T05:00:00Z') / 1000, view_count: 900, like_count: 30, comment_count: 2, share_count: 1 },
-      { id: '7002', title: 'คลิปใหม่ รีวิวฟิล์ม\nบรรทัดสอง', create_time: Date.parse('2026-11-19T05:00:00Z') / 1000, view_count: 120, like_count: 5, comment_count: 0, share_count: 0 },
+      { id: '7002', title: 'คลิปใหม่ รีวิวฟิล์ม\nบรรทัดสอง', create_time: Date.parse('2026-11-19T05:00:00Z') / 1000, view_count: 120, like_count: 5, comment_count: 0, share_count: 0, cover_image_url: 'https://p16.tiktokcdn.com/c7002.jpg', duration: 37 },
     ], cursor: 111, has_more: true }, error: { code: 'ok' } });
     return ok({ data: { videos: [{ id: '6001', title: 'old', create_time: Date.parse('2025-12-20T05:00:00Z') / 1000, view_count: 1 }], cursor: 222, has_more: true }, error: { code: 'ok' } });
   }
@@ -47,6 +47,7 @@ t('live numbers public, token not', st.api && st.live.followers === 14800 && st.
 const c7001 = d.clips.find(x => x.id === '7001'), c7002 = d.clips.find(x => x.id === '7002');
 t('existing clip: larger counts kept, saves and team type kept', c7001.views === 900 && c7001.likes === 40 && c7001.saves === 7 && c7001.type === 'แกะกล่อง', c7001);
 t('new clip added with handle url', c7002 && c7002.title === 'คลิปใหม่ รีวิวฟิล์ม' && c7002.url === 'https://www.tiktok.com/@moovthailand/video/7002' && c7002.saves === null, c7002);
+t('cover image and duration stored', c7002.thumb === 'https://p16.tiktokcdn.com/c7002.jpg' && c7002.duration === 37 && c7001.thumb === '' && c7001.duration === null, [c7001, c7002]);
 t('no 2025 clip', !d.clips.some(x => x.id === '6001'));
 const m = d.accounts['tt-moov'].monthly;
 t('november views from the file stay (not zeroed by follower snapshot)', m.views[10] === 100, m.views);

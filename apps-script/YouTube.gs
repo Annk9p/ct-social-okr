@@ -305,6 +305,7 @@ function ytSaveClips_(acc, uploads, year, end) {
     row.posted = u.postedAt; row.views = u.views; row.likes = u.likes; row.comments = u.comments;
     row.shares = shares[u.id] || 0; row.saves = '';
     row.format = u.live ? 'Live' : isShort ? 'Shorts' : 'วิดีโอยาว';
+    row.thumb = 'https://i.ytimg.com/vi/' + u.id + '/mqdefault.jpg'; row.duration = u.seconds;
     if (!row.type) row.type = ttGuessType(u.title || ''); // keep the team's own label
     row.source = 'youtube-api'; row.updated_at = ts;
   });

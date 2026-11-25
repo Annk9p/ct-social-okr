@@ -20,8 +20,8 @@ ctx.UrlFetchApp.fetch = url => {
     return ok({ data: p.metric.split(',').map(m => ({ name: m, period: 'day', total_value: { value: per[m] * n } })) });
   }
   if (path === '/ig1/media') return ok({ data: [
-    { id: 'm1', caption: 'รีวิว Moov ฟิล์ม\nบรรทัด2', media_type: 'VIDEO', media_product_type: 'REELS', permalink: 'https://www.instagram.com/reel/m1/', timestamp: '2026-10-05T03:00:00+0000', like_count: 40, comments_count: 4 },
-    { id: 'm2', caption: 'รูปสินค้า', media_type: 'IMAGE', media_product_type: 'FEED', permalink: 'https://www.instagram.com/p/m2/', timestamp: '2026-10-06T03:00:00+0000', like_count: 9, comments_count: 0 },
+    { id: 'm1', caption: 'รีวิว Moov ฟิล์ม\nบรรทัด2', media_type: 'VIDEO', media_product_type: 'REELS', permalink: 'https://www.instagram.com/reel/m1/', timestamp: '2026-10-05T03:00:00+0000', like_count: 40, comments_count: 4, thumbnail_url: 'https://cdn.ig/m1.jpg', media_url: 'https://cdn.ig/m1.mp4' },
+    { id: 'm2', caption: 'รูปสินค้า', media_type: 'IMAGE', media_product_type: 'FEED', permalink: 'https://www.instagram.com/p/m2/', timestamp: '2026-10-06T03:00:00+0000', like_count: 9, comments_count: 0, media_url: 'https://cdn.ig/m2.jpg' },
     { id: 'm0', caption: 'old', media_type: 'VIDEO', media_product_type: 'REELS', timestamp: '2025-12-20T03:00:00+0000' }] });
   if (path === '/' && p.ids) { const o = {}; p.ids.split(',').forEach(id => { o[id] = { insights: { data: [{ name: 'views', values: [{ value: 900 }] }, { name: 'shares', values: [{ value: 6 }] }, { name: 'saved', values: [{ value: 3 }] }] } }; }); return ok(o); }
   if (/\/(111|222)\//.test(path) || /\/(111|222)$/.test(path)) return ok({ data: [] }); // Facebook calls not under test
@@ -44,6 +44,7 @@ t('net follower = follows - unfollows', m.nf[0] === 31, m.nf);
 t('output counts reels only', m.output[9] === 1 && m.output[0] === 0, m.output);
 const c = d.clips.filter(x => x.acc === 'ig-eloop');
 t('image kept as a post with its format', c.length === 2 && c.find(x => x.id === 'm2').format === 'รูปภาพ', c);
+t('reel cover and photo image stored', c.find(x => x.id === 'm1').thumb === 'https://cdn.ig/m1.jpg' && c.find(x => x.id === 'm2').thumb === 'https://cdn.ig/m2.jpg', c);
 t('reel in clips with insights', c.find(x => x.id === 'm1').format === 'Reel' && c.find(x => x.id === 'm1').views === 900 && c.find(x => x.id === 'm1').likes === 40 && c.find(x => x.id === 'm1').shares === 6 && c.find(x => x.id === 'm1').saves === 3 && c.find(x => x.id === 'm1').title === 'รีวิว Moov ฟิล์ม', c);
 t('posts_all counts every format', m.posts_all[9] === 2, m.posts_all);
 t('status connected with followers', d.status['ig-eloop'].connected && d.status['ig-eloop'].username === 'eloopth' && d.status['ig-eloop'].followers === 5100 && d.status['ig-eloop'].lastSync, d.status['ig-eloop']);

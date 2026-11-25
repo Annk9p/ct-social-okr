@@ -1329,6 +1329,31 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   .dash-plats { grid-template-columns: minmax(0, 1fr); }
   .dash-camp-stats { grid-template-columns: minmax(0, 1fr); }
 }
+
+/* popular content list (dashboard section 5) */
+.pop-list { overflow: hidden; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 460px), 1fr)); column-gap: 28px; }
+.pop-item { display: grid; grid-template-columns: 128px minmax(0, 1fr) auto; align-items: center; gap: 16px; padding: 14px 0; border-top: 1px solid var(--omnix-border); margin-top: -1px; min-width: 0; }
+.pop-media { display: block; text-decoration: none; }
+.pop-thumb, .dash-thumb { position: relative; overflow: hidden; }
+.pop-thumb { width: 128px; aspect-ratio: 16 / 9; border-radius: 12px; background: var(--omnix-surface-2); display: grid; place-items: center; }
+.pop-thumb .pico { margin: 0; }
+.pop-thumb img, .dash-thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pop-dur { position: absolute; right: 6px; bottom: 6px; padding: 1px 6px; border-radius: 6px; background: rgb(15 23 42 / .75); color: #fff; font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pop-body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.pop-title a, .pop-title span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-weight: 600; line-height: 1.4; color: var(--omnix-fg); text-decoration: none; }
+.pop-title a:hover { color: var(--omnix-accent); }
+.pop-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 6px; font-size: 12.5px; color: var(--muted); }
+.pop-meta .pico { margin: 0; }
+.pop-brand { padding: 0 7px; border-radius: 999px; background: var(--omnix-surface-2); font-size: 11.5px; }
+.pop-stats { display: grid; gap: 8px; text-align: right; }
+.pop-stats b { display: block; font-size: 17px; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.pop-stats small { font-size: 11.5px; color: var(--muted); white-space: nowrap; }
+@media (max-width: 560px) {
+  .pop-item { grid-template-columns: 104px minmax(0, 1fr); }
+  .pop-thumb { width: 104px; }
+  .pop-stats { grid-column: 2; grid-template-columns: auto auto; justify-content: start; gap: 4px 16px; text-align: left; }
+  .pop-stats > div { min-width: 0; } .pop-stats small { white-space: normal; }
+}
 </style>
 </head>
 <body>
@@ -1396,8 +1421,8 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
       </div>
     </div>
     <div class="panel">
-      <div class="rk-panehead"><div><h2>คอนเทนต์ยอดนิยม</h2><p class="desc" id="h-top-desc"></p></div><a class="btn" href="#content">ดูคอนเทนต์ทั้งหมด<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
-      <div class="tbl dash-top" id="h-top"></div>
+      <div class="rk-panehead"><div><h2>คอนเทนต์ยอดนิยม</h2><p class="desc" id="h-top-desc"></p></div><a class="btn" href="#content">ดูทั้งหมด<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
+      <div class="pop-list" id="h-top"></div>
     </div>
     <div class="panel">
       <div class="rk-panehead"><div><h2>ภาพรวมแคมเปญ</h2><p class="desc" id="h-camp-desc"></p></div><a class="btn" href="#campaign">ดูคอนเทนต์แคมเปญ<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 6 6 6-6 6"/></svg></a></div>
@@ -1664,7 +1689,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
   </div>
 </div>
 
-<script src="assets/i18n.js?v=5"></script>
+<script src="assets/i18n.js?v=6"></script>
 <script>
 (function () {
   const MONTHS = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
@@ -3307,13 +3332,14 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
     const top = [...monthClips].sort((x, y) => (y.views || 0) - (x.views || 0)).slice(0, 8);
     $('#h-top-desc').textContent = `${fmt(monthClips.length)} โพสต์ที่ลงใน ${mLabel} · 8 อันดับวิวสูงสุด · วิวเป็นยอดสะสมถึงวันที่ดึงข้อมูล`;
     const titleCell = c => { const t = esc(c.title || '(ไม่มีชื่อ)'); return c.url ? `<a href="${esc(c.url)}" target="_blank" rel="noopener" title="${t}">${t}</a>` : `<span title="${t}">${t}</span>`; };
-    $('#h-top').innerHTML = top.length ? `<table><thead><tr><th>#</th><th style="text-align:left">คอนเทนต์</th><th style="text-align:left">แพลตฟอร์ม</th><th style="text-align:left">วันที่โพสต์</th><th class="dash-num">วิว</th><th class="dash-num">Engagement</th></tr></thead><tbody>`
-      + top.map((c, n) => { const a = accById(c.acc); return `<tr><td class="dash-rank">${n + 1}</td>
-        <td><div class="dash-item"><span class="dash-thumb">${pIco(a.platform)}</span><div class="dash-ttl">${titleCell(c)}<small>${esc(c.format || c.type || '')}</small></div></div></td>
-        <td><span class="dash-plat-cell">${pIco(a.platform)}${esc(a.name)}</span></td>
-        <td>${fmtDate(c.posted)}</td>
-        <td class="dash-num">${fmt(c.views || 0)}</td>
-        <td class="dash-num">${fmt(engC(c))}<small>ER ${pct(c.er, 2)}</small></td></tr>`; }).join('') + '</tbody></table>'
+    const durTxt = s => { s = Math.round(s); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = String(s % 60).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
+    // cover image from the platform (links from TikTok/Facebook/Instagram expire, so the platform icon stays underneath as a fallback)
+    const thumb = (c, a, big) => `<span class="${big ? 'pop-thumb' : 'dash-thumb'}">${pIco(a.platform)}${c.thumb ? `<img src="${esc(c.thumb)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : ''}${big && c.dur ? `<span class="pop-dur">${durTxt(c.dur)}</span>` : ''}</span>`;
+    $('#h-top').innerHTML = top.length ? top.map(c => { const a = accById(c.acc); return `<article class="pop-item">
+        ${c.url ? `<a class="pop-media" href="${esc(c.url)}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">${thumb(c, a, true)}</a>` : `<span class="pop-media">${thumb(c, a, true)}</span>`}
+        <div class="pop-body"><div class="pop-title">${titleCell(c)}</div><div class="pop-meta">${pIco(a.platform)}<span>${esc(a.platform)} · ${fmtDate(c.posted)} ${c.posted.getFullYear()}</span>${a.brand ? `<span class="pop-brand">${esc(a.brand)}</span>` : ''}</div></div>
+        <div class="pop-stats"><div><b>${fmt(c.views || 0)}</b><small>Views</small></div><div><b>${fmt(engC(c))}</b><small>Engagement · ER ${pct(c.er, 2)}</small></div></div>
+      </article>`; }).join('')
       : `<p class="desc" style="padding:8px 0;margin:0">ยังไม่มีคอนเทนต์ที่ลงใน ${mLabel} ตามตัวกรองที่เลือก</p>`;
 
     // ---- Section 6 · campaign overview (content tagged แคมเปญ until campaigns exist in the system) ----
@@ -3325,7 +3351,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
         <div><small>วิวรวม</small><b>${fmtC(campV)}</b></div>
         <div><small>สัดส่วนวิวจากแคมเปญ</small><b>${allV ? pct(campV / allV * 100, 1) : '–'}</b></div>
       </div>`
-      + (camp.length ? `<ul class="dash-camp-list">${camp.slice(0, 5).map(c => { const a = accById(c.acc); return `<li><div class="dash-item"><span class="dash-thumb">${pIco(a.platform)}</span><div class="dash-ttl">${titleCell(c)}<small>${esc(a.name)} · ${fmtDate(c.posted)}</small></div></div><span class="dash-num">${fmt(c.views || 0)}<small>วิว</small></span><span class="dash-num">${fmt(engC(c))}<small>Engagement</small></span></li>`; }).join('')}</ul>`
+      + (camp.length ? `<ul class="dash-camp-list">${camp.slice(0, 5).map(c => { const a = accById(c.acc); return `<li><div class="dash-item">${thumb(c, a, false)}<div class="dash-ttl">${titleCell(c)}<small>${esc(a.name)} · ${fmtDate(c.posted)}</small></div></div><span class="dash-num">${fmt(c.views || 0)}<small>วิว</small></span><span class="dash-num">${fmt(engC(c))}<small>Engagement</small></span></li>`; }).join('')}</ul>`
         : `<p class="desc" style="margin:0">ยังไม่มีคอนเทนต์ที่ติดแท็กแคมเปญใน ${mLabel}</p>`)
       + '<p class="dash-note">ระบบยังไม่มีข้อมูลแคมเปญ (ชื่อ ระยะเวลา เป้าหมาย) จึงแสดงคอนเทนต์ที่ติดแท็ก แคมเปญ ไปก่อน · แก้แท็กได้ในหน้าคอนเทนต์</p>';
 
@@ -3652,7 +3678,7 @@ a.cal-row:hover .cal-rt { color: var(--rk); text-decoration: underline; }
     });
     const liveClipAccs = new Set((j.clips || []).map(c => c.acc));
     for (let i = CLIPS.length - 1; i >= 0; i--) if (liveClipAccs.has(CLIPS[i].acc)) CLIPS.splice(i, 1);
-    (j.clips || []).forEach(c => { const k = mkClip(c.acc, [c.title, c.id, c.posted, c.views, c.likes, c.comments, c.shares, c.saves, c.type || 'สินค้า', c.product || ''], c.url); k.boosted = !!c.boosted; k.format = c.format || ''; CLIPS.push(k); });
+    (j.clips || []).forEach(c => { const k = mkClip(c.acc, [c.title, c.id, c.posted, c.views, c.likes, c.comments, c.shares, c.saves, c.type || 'สินค้า', c.product || ''], c.url); k.boosted = !!c.boosted; k.format = c.format || ''; k.thumb = c.thumb || (/^yt-/.test(c.acc) ? `https://i.ytimg.com/vi/${encodeURIComponent(c.id)}/mqdefault.jpg` : ''); k.dur = c.duration == null ? null : +c.duration; CLIPS.push(k); });
     Object.entries(j.audience || {}).forEach(([id, au]) => {
       const days = {};
       (au.activity || []).forEach(([label, v]) => { const [d, h] = label.split(' '); (days[d] = days[d] || Array(24).fill(null))[+h] = v; });
