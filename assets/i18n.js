@@ -778,7 +778,8 @@
     "ดูทั้งหมดในหน้าตั้งค่า": "see all in settings",
     "การเชื่อมโยงบัญชี": "account connections",
     "ดูทั้งหมด": "view all",
-    "กดดูรายละเอียดเพื่อเปิดหน้ารายบัญชี": "press View details to open the account page"
+    "กดดูรายละเอียดเพื่อเปิดหน้ารายบัญชี": "press View details to open the account page",
+    "5 อันดับวิวสูงสุด": "top 5 by views"
     };
   const EXACT_ONLY = new Set(["จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.", "อา."]);
   const TH = /[฀-๿]/;
